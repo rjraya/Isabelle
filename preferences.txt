@@ -1,3 +1,0 @@
-Verification of Data Structures with Sharing
-Newton Iteration
-Understanding Machine Learning
