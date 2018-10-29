@@ -37,9 +37,38 @@ lemma "(x :: real) \<in> {1..2} \<Longrightarrow> (y :: real) \<in> {3..4}  \<Lo
 
 (*f(x) = x^2-2
 X0 = [1,2]*)
-value "x = 
 
-fun newton_iteration :: "interval \<Rightarrow> function \<Rightarrow> "
+(* derivative with respect to variable given by first parameter *)
+value "DERIV_floatarith 1 (Var 1)"
+value "DERIV_floatarith 1 (Power (Var 1) 2)" (* probably simplify 2 (x * 1) *)
+value "DERIV_floatarith 1 (Cos (Var 1))" (* ? *)
+
+definition midpoint :: "float \<Rightarrow> float \<Rightarrow> (float * float) option" where
+"midpoint a b = (floor((a+b)/2),ceil((a+b)/2))"
+
+fun newton_iteration :: "(float * float) option \<Rightarrow> 
+                         (float \<Rightarrow> float) \<Rightarrow> 
+                         (float * float) option" where
+"newton_iteration i f = midpoint(i) - f(midpoint(i))/F'(i)"
+
+fun newton :: "(float * float) option \<Rightarrow> 
+               (float \<Rightarrow> float) \<Rightarrow> 
+               nat \<Rightarrow>
+               (float * float) option" where
+"newton i f k = 
+  (foldl ( (ai::(float * float) option) \<Rightarrow> 
+           (j::nat) \<Rightarrow> 
+           (newton_iteration ai f)) [1..k] i)"
+
+term "foldl"
+(*
+Theorem 8.1. 
+
+If an interval X(0) contains a zero x of f, then so does X(k) for all
+k = 0,1,2,..., defined by newton. 
+
+Furthermore, the intervals X(k) form a nested sequence  converging to x if 0 \<notin> F.
+*)
 
 
 end
