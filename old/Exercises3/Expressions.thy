@@ -34,16 +34,29 @@ fun plus :: "aexp \<Rightarrow> aexp \<Rightarrow> aexp" where
 "plus a (N i) = (if i = 0 then a else Plus a (N i))" |
 "plus a1 a2 = Plus a1 a2"
 
-lemma "aval (plus a1 a2) s = aval a1 s + aval a2 s"
+lemma aval_plus: "aval (plus a1 a2) s = aval a1 s + aval a2 s"
 apply(induction a1 a2 rule: plus.induct)
 apply(auto)
 done
 
 fun asimp :: "aexp \<Rightarrow> aexp" where
-"asimp (N n) \<Rightarrow> N n" |
-"asimp (V x) \<Rightarrow> V x" |
-"asimp (Plus a1 a2) \<Rightarrow> plus (asimp a1) (asimp a2)"
+"asimp (N n) = N n" |
+"asimp (V x) = V x" |
+"asimp (Plus a1 a2) = plus (asimp a1) (asimp a2)"
 
-lemma "aval (asimp a) = plus (asimp a1) (asimp a2)"
+lemma "aval (asimp a) s = aval a s"
+apply(induction a)
+apply(auto simp add: aval_plus)
+done
+
+fun optimal :: "aexp \<Rightarrow> bool" where
+"optimal (N n) = True" |
+"optimal (V x) = True" |
+"optimal (Plus a1 a2) = 
+ (case (a1,a2) of 
+  (N i,N j) \<Rightarrow> False |
+  (b1,b2) \<Rightarrow> (optimal b1) \<and> (optimal b2))"  
+
+lemma "optimal (asimp_const a)"
 
 end

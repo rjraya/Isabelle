@@ -1,0 +1,7 @@
+http://home.in.tum.de/~hoelzl/
+
+Dear Dr. Hölz,
+
+I am Rodrigo Raya, an undergraduate student at TUM and doing a project with Isabelle this semester. I am reading through your diploma thesis "Proving Real-Valued Inequalities by Computation" and trying out some of the example approximation proposed (like in page 36). But it turns out that the names of the methods are updated (for instance uneq-equations or interpret-inequality-equations).
+
+Is there any updated theory that use
