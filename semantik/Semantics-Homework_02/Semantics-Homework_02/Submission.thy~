@@ -189,15 +189,23 @@ text \<open>Even more importantly, you need to prove that \<open>simplify\<close
 the formula:\<close>
 
 lemma notsimp: "models (simplify \<phi>) = models \<phi> \<Longrightarrow> models (simplify (Not \<phi>)) = models (Not \<phi>)"
-  apply(simp  add: Let_def split: bexp'.split)
-  apply(cases "simplify \<phi>")
-  apply(auto)
+  apply(simp)
+  apply(simp add: Let_def)
+  apply(simp split: bexp'.split)
+  apply(intro conjI)
+  apply(force)
+  apply(force)
+  apply(force)
+  apply(force)
+  apply(force)
 done
   
+
 lemma andlemma: 
       "models (simplify f1) = models f1 \<Longrightarrow>
        models (simplify f2) = models f2 \<Longrightarrow> 
        models (simplify (And f1 f2)) = models (And f1 f2)"
+  apply(simp)
   apply(simp split: bexp'.split)
   apply(intro conjI)
   apply(cases "simplify f1")

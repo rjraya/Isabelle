@@ -12,7 +12,6 @@ by auto
 
 text{* Note the bounded quantification notation: *}
 
-(* force is better than auto instantiating quantifiers *)
 lemma "\<lbrakk> \<forall>xs \<in> A. \<exists>ys. xs = ys @ ys;  us \<in> A \<rbrakk> \<Longrightarrow> \<exists>n. length us = n+n"
 by fastforce
 
@@ -33,33 +32,17 @@ by blast
 
 section{* Sledgehammer *}
 
-(* ctrl-e <uparrow> to put the star on top *)
 lemma "R^* \<subseteq> (R \<union> S)^*"
-  (* find_theorems "_ \<subseteq> \<Longrightarrow> _^* \<subseteq> _^*"*)
-  (*sledgehammer*)
-  by (simp add: rtrancl_mono)
-
+oops
 
 (* Find a suitable P and try sledgehammer: *)
 
-lemma "a # xs = ys @ [a] \<longleftrightarrow> (\<exists>xs'. xs = xs'@[a] \<and> ys = a#xs') \<or> (xs = [] \<and> ys=[])"
-  (*apply(rule exI[where x = ""])*)
-  (*nitpick gives more useful counter-examples*)
-  (*apply(cases ys; cases xs rule: rev_cases)
-    the case splitting is performmed on lists but
-    with empty list or a list with a last element
-    try thm rev_cases*)
-  (* heuristic: apply auto before sledgehammer *)
-  apply auto
-  by (metis Cons_eq_append_conv)
-  (* subgoal sledgehammer sorry 
-    to do something else in the meantime *)
-
+lemma "a # xs = ys @ [a] \<Longrightarrow> P"
+oops
 
 
 section{* Arithmetic *}
 
-(* many arithmetic is in simp *)
 lemma "\<lbrakk> (a::int) \<le> f x + b; 2 * f x < c \<rbrakk> \<Longrightarrow> 2*a + 1 \<le> 2*b + c"
 by arith
 
@@ -72,10 +55,6 @@ by arith
 lemma "(i + j) * (i - j) \<le> i*i + j*(j::int)"
 by (simp add: algebra_simps)
 
-(* 
-   you do computation over lists of booleans, 
-   which is a logarithmic representation
-*)
 lemma "(5::int) ^ 2 = 20+5"
 by simp
 

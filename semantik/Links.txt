@@ -1,4 +1,4 @@
 Course links:
 https://piazza.com/tum.de/fall2018/in2055/home
-https://bitbucket.org/plammich/semantics1819_public/src/10bbb01a8835?at=master
+https://bitbucket.org/plammich/semantics1819_public/src/
 https://competition.isabelle.systems

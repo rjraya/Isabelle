@@ -17,8 +17,6 @@ thm conjI[where ?Q = "B"]
 
 text{* Composition of theorems: OF *}
 
-(* of for substitution of variables by variables*)
-(* OF for substitutions of premises by theorems *)
 thm refl[of "a"]
 thm conjI[OF refl[of "a"] refl[of "b"]]
 thm conjI[OF refl[of "a"]]
@@ -26,18 +24,10 @@ thm conjI[OF _ refl[of "b"]]
 
 
 text{* A simple backward proof: *}
-
-(* assumption works also transitively *)
 lemma "\<lbrakk> A; B \<rbrakk> \<Longrightarrow> A \<and> B"
 apply(rule conjI)
 apply assumption
 apply assumption
 done
-
-(* more used for existential introduction 
-
-thm exI[where x = "some"]
-
-*)
 
 end
