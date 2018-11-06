@@ -4,13 +4,21 @@ begin
 
 text \<open> Reflexive Transitive Closure \<close>
 
+(* Universal predicate *)
+
 inductive P :: "'a \<Rightarrow> bool" where "P x"
+
+thm P.cases
+
 lemma "P x"
 apply(rule P.intros)
-  done
+done
 
+(* The empty predicate *)
 inductive P1 :: "'a \<Rightarrow> bool"
+
 thm P1.cases
+
 lemma "\<not> P1 x"
 apply(auto)
 apply(cases rule: P1.cases)
