@@ -1,0 +1,64 @@
+theory Submission
+  imports Defs
+begin
+
+type_synonym ('q,'l) lts = "'q \<Rightarrow> 'l \<Rightarrow> 'q \<Rightarrow> bool"
+
+inductive word :: "('q,'l) lts \<Rightarrow> 'q \<Rightarrow> 'l list \<Rightarrow> 'q \<Rightarrow> bool" for \<delta> where
+  empty: "word \<delta> q [] q"
+| prepend: "\<lbrakk>\<delta> q l p; word \<delta> p ls r\<rbrakk> \<Longrightarrow> word \<delta> q (l#ls) r"
+
+type_synonym effect = "state \<rightharpoonup> state"
+type_synonym 'q cfg = "('q,effect) lts"
+
+fun eff_list :: "effect list \<Rightarrow> state \<rightharpoonup> state" where
+"eff_list [] s = Some s" |
+"eff_list (e # es) s = (
+  case (e s) of 
+    None \<Rightarrow> None | 
+    Some s' \<Rightarrow> eff_list es s'
+)"
+
+inductive cfg :: "com cfg" where
+  cfg_assign: "cfg (x ::= a) (\<lambda>s. Some (s(x:=aval a s))) (SKIP)"
+| cfg_Seq1:   "cfg (SKIP;;c) (\<lambda>s. Some s) c"
+| cfg_Seq2:   "cfg c1 e c1' \<Longrightarrow> cfg (c1;;c2) e (c1';;c2)"
+| cfg_IfTrue: 
+   "cfg (IF b THEN c1 ELSE c2) (\<lambda>s. if bval b s then Some s else None) c1"
+| cfg_IfFlse: 
+   "cfg (IF b THEN c1 ELSE c2) (\<lambda>s. if bval b s then None else Some s) c2"
+| cfg_While:  "cfg (WHILE b DO c) (\<lambda>s. Some s) (IF b THEN c ;; (WHILE b DO c) ELSE SKIP)"
+
+lemma eq_step1: 
+ "cs \<rightarrow> cs' \<Longrightarrow> (c,s) = cs \<Longrightarrow> (c',s') = cs' \<Longrightarrow> (\<exists>e. cfg c e c' \<and> e s = Some s')"
+  by (induction arbitrary: c s c' s' rule: small_step.induct) (fastforce intro: cfg.intros)+
+
+lemma eq_step_aux: "cfg c e c' \<Longrightarrow> e s = Some s'  \<Longrightarrow> (c, s) \<rightarrow> (c', s')"
+proof(induction c e c' arbitrary: s s' rule: cfg.induct)
+  case (cfg_IfTrue b s c1 c2)
+  then show ?case 
+    by (metis option.distinct(1) option.sel small_step.IfTrue)
+next
+case (cfg_IfFlse b s c1 c2)
+  then show ?case
+    by (metis option.distinct(1) option.inject small_step.IfFalse)
+qed blast+
+
+lemma eq_step2:
+ "\<exists>e. cfg c e c' \<and> e s = Some s' \<Longrightarrow> (c, s) \<rightarrow> (c', s')"
+  using eq_step_aux by blast
+  
+theorem eq_step: "(c,s) \<rightarrow> (c',s') \<longleftrightarrow> (\<exists>e. cfg c e c' \<and> e s = Some s')"
+  by (meson eq_step1 eq_step2)
+
+lemma eq_path: "(c,s) \<rightarrow>* (c',s') \<Longrightarrow> (\<exists>\<pi>. word cfg c \<pi> c' \<and> eff_list \<pi> s = Some s')"
+  apply(induction rule: star.induct)
+  sledgehammer
+
+
+  (*by (induction rule: star_induct) (auto simp add: eq_step word.intros)  *)
+
+theorem eq_path: "(c,s) \<rightarrow>* (c',s') \<longleftrightarrow> (\<exists>\<pi>. word cfg c \<pi> c' \<and> eff_list \<pi> s = Some s')"
+  sorry
+
+end
