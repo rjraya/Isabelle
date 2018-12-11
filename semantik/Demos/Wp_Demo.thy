@@ -215,16 +215,25 @@ section \<open>Proving Partial Correctness\<close>
        here we take into account that a = 2^i where i is the number of iteration
        we have done. since the loop counts down, i = current_n - old_n *)
     apply(rule wlp_whileI[I = see webpage])
-    
+    apply(subst wlp_assign_eq; clarsimp?) 
+    (* ; will apply the rule to all the subgoals *) 
+    (* there is a blowup in the above procedure because we get 2 s each
+       time we apply the assign rule, here is the way to cut it *)
+    apply(subst wlp_eq_eq)
+    apply(subst wlp_assign_eq; clarsimp?)
+    apply(subst wlp_assing_eq; clarsimp?)
+    apply(auto simp: nat_distribs algebra_simps)
+    done
     
     (* Use rule, subst, and simp for VCs. Try (auto simp: nat_distribs algebra_simps) for final VC!
       What might be a good invariant? Insert symbolic I first.
     *)
-    oops
+  oops
     
     
   subsection \<open>Automating the Profs\<close>  
-    
+
+  
   (* Intermediate goals got quite big: Lets simplify them while we go! *)  
     
   lemma "s ''n'' \<ge> 0 \<Longrightarrow> wlp prog_exp (\<lambda>s'. s' ''a'' = 2^nat (s ''n'')) s"  
@@ -239,25 +248,38 @@ section \<open>Proving Partial Correctness\<close>
     Note: This uses (a simple fragment of) the Eisbach language. 
     See Documentation/Tutorials/eisbach if you want to know more!
   *)
+  (*
+    the command method is imported by (see top of the file)
+    it implement the eisbach (afluent to isar) methodology 
+    it was implement for the derivation of verification conditions *)
       
   named_theorems vcg_rules  
     
   declare wlp_ifI[vcg_rules]
   
-  method vcg_step declares vcg_rules = 
+method vcg_step declares vcg_rules = 
       simp only: wlp_seq_eq wlp_skip_eq    wp_seq_eq wp_skip_eq 
     | subst wlp_assign_eq                  wp_assign_eq 
     | rule vcg_rules
+    (* only to avoid blowup 
+       for assignment we want to apply only one step with subst
+       finally i apply one of the introduction rules we have declared 
+       declares is used to add more rules 
+    *)
     \<comment> \<open>One step. Note that we unfold as many seqs or skips as possible, as these won't enlarge the subgoal, 
       so no intermediate simplification is required\<close>
   
   method vcg declares vcg_rules = ( (vcg_step; vcg)? )
     \<comment> \<open>Recursively apply all possible steps, without intermediate simplification\<close>
-    
+
+  (* does simplification before each step *)
   method smartvcg declares vcg_rules = ( (vcg_step; clarsimp?; smartvcg)? )
     \<comment> \<open>Recursively apply all possible steps, with intermediate simplification\<close>
 
-    
+  (* we remove the semantics features with the verification condition 
+     generator, and now everything is written isabelle.
+ 
+     the idea is that verifying those is enough to proof correctness *)
     
   lemma "wlp (prog_min) (\<lambda>s'. s' ''z'' = min (s ''x'') (s ''y'')) s"
     unfolding prog_min_def
@@ -280,11 +302,13 @@ section \<open>Proving Partial Correctness\<close>
     
   (* Better: Annotate the invariants to the loops before proving. 
     (Control which loop gets which invariant, if there are many loops) *)  
+
+  (* redefined while taken a predicate *)
     
   definition "WHILE_annotI (I::state \<Rightarrow> bool) \<equiv> While"
   lemmas wlp_annotate_while = WHILE_annotI_def[symmetric]
   lemmas wlp_while_annotI[vcg_rules] = wlp_whileI[of I,folded WHILE_annotI_def[of I]] for I
-
+  (* a more robust way to annotate the program is to use rewrite *)
     
   lemma "s ''n'' \<ge> 0 \<Longrightarrow> wlp prog_exp (\<lambda>s'. s' ''a'' = 2^nat (s ''n'')) s"  
     unfolding prog_exp_def

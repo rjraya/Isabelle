@@ -1,0 +1,129 @@
+ANNOTATION is jus the identity function, it makes automatic processing atomatically
+VAR are abbreviations for lets VAR term lambda a.function  is "let a = term"
+If one takes a variable that is not altered now we don't have to worry about it. 
+We have modified VCG using the rule we proved in the homework.
+
+Modular proofs (99)
+
+a = 1
+while m > 0
+ n = a; a = 1
+ while n > 0
+  a = 2*a; n = n-1
+ m = m-1
+
+Power-tower function 2^2^2... m times
+
+we inlined the exponentiation program inside the outer loop. 
+We don't have syntax to refer to n inside the first loop, we can only refer to n0
+So we prove each component separately:
+
+a = 1
+while m > 0
+ n = a
+ inline exp_count_down
+ m = m - 1
+
+we can reuse this rule:
+
+[HT P c Q; P s; forall s'. Q s s' ==> Q' s'] ==> wp c Q' s
+
+here c can be the inlined program. We know after executing c that Q s s' holds and
+therefore we prove Q' s'. In particular, we also have insert the Hoare triple corresponding
+to the subprogram. Our postcondition was:
+
+a = 2^{n0} and need to show s ''a'' = 2^{s0 ''n''}
+
+this is why we need two arguments in Q s0 s. The definition of HT is:
+
+HT P c Q = forall s0. P s0 => wp c (lambda s.Q s0 s) s0
+
+with modifies sets we get an approximation of the variables that have been modified by the inner loop:
+
+[HT_mods mods P c Q; P s; ...]  ==> wp c Q' s
+
+the VCG will automatically use this rule if inlined program has been proved with program_spec.
+
+Demo: IMP2/Examples
+
+inline exp_count_down literally pastes the program at the point it is inserted.
+
+thm vcg_rules is the set of rules that have been proved at the given point in the program using prog_spec. 
+In particular, we can find one for exp_count_down.
+
+apply(i_vcg_preprocess; i_vcg_bb?)
+
+is a way to avoid exponential blow up. 
+
+VCG_WHILE stands for a weakest precondition of the while_loop (ptr is instantiated to wp).
+
+to expose the conditions to the vcg we need:
+
+apply(unfold unprogect_VAR)?
+
+doing apply(rule vcg_rules) will do while rule
+
+then we defer two times and we have to proof the weakest precondition of exp_count_down,
+so apply(rule vcg_rules) will fail. We need the thm vcg_frame_rules(2), so we apply it:
+
+apply(rule vcg_frame_rules(2),rule vcg_rules)
+
+where the last rules instantiates the HT with the one I proved for the program. 
+
+then we defer
+we do intermediate simplification i_vcg_bb
+we apply the rules rule vcg_rules
+defer and we have to do the postprocess
+
+apply(all <i_vcg_postprocess>)
+
+.......................Arrays..............................................................
+
+We model arrays as function int => int
+aval (Vidx xi) s we evaluate s in index i
+s(x := (s x)(aval i s:= aval a s))
+first substitusion exchanges the whole array but the second substitution specifies that the
+array has be modified in the index i.
+Array Copy
+Array clear: initialize with zeros, that is, all indexes are mapped to zero.
+a variable is just an array at index 0
+
+Demo IMP2/Examples.thy Array-sum
+
+the VCG guesses which variables are ints and which variables are arrays depending on the use
+we give the them in the program (a[l]).
+
+To reason about arrays we have to reason about functions
+ranges {l..h} is the whole interval,{1..<h} excluding h.
+
+Demo IMP2/Examples.thy Soundness Check
+
+Here we check if an array is sorted.
+If range is empty then sorted.
+Otherwise, iterate over the array checking whether the previous element is smaller than the current element.
+Sledghammer will not be good at index expressions. 
+Unfolding the definition of ran_sorted is only a good idea if sledgehammer finishes it, otherwise
+we should find the write theory of ran_sorted. Also use find_theorems ran_sorted.
+An alternative definition may be use the ran_sorted_alt definition which only uses indexes.
+However, we shold use the first definition for Quickcheck rather than the second because the first
+has quantifiers on bounded variables and the second has two unbounded variables.
+
+Binary search algorithm
+
+while l < h
+ m = (l + h) / 2
+ if a[m] < x then l = m + 1
+ else h = m
+
+if ranges are positive, for vary big arrays this will overflow
+invariant the left subarray is strictly smaller than the goal
+          the right subarray is strictly greater than the goal
+          usual bounds
+
+Demo Binary search
+
+Postconditions can be encoded as definitions.
+
+inductive defs
+apply induction where to generalize
+specify variants and invariants...

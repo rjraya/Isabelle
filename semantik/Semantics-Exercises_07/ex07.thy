@@ -1,0 +1,171 @@
+(*<*)
+theory ex07
+imports "IMP2.VCG"
+begin
+declare [[names_short]]
+(*>*)
+text \<open>\ExerciseSheet{7}{27.11.2018}\<close>
+
+text \<open>\Exercise{While Invariants}\<close>
+(*<*)
+partial_function (option) while where
+  "while b f s = (if b s then while b f (f s) else Some s)"
+  
+lemmas while_unfold = while.simps
+(*>*)
+
+text \<open>
+We have pre-defined a while-combinator
+\begin{center}
+@{term while} :: @{typ "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a option"}
+\end{center}
+such that the following unfolding property holds:
+\begin{center}
+@{thm  while_unfold[no_vars]}
+\end{center}\<close>
+
+text \<open>To prove anything about the computation result of \<open>while\<close> we need to use a proof rule
+with an invariant (similarly to what you have seen for the weakest precondition calculus).
+Prove that the following rule is correct:
+\<close>
+theorem while_invariant:
+  assumes "wf R" and "I s"
+    and "\<And>s. I s \<Longrightarrow> b s \<Longrightarrow> I (f s) \<and> (f s, s) \<in> R"
+  shows "\<exists>s'. I s' \<and> \<not> b s' \<and> while b f s = Some s'"
+  using assms(1,2)
+proof induction
+  case (less s)
+(*<*)
+  show ?case
+  proof (cases "b s")
+    case True
+    from \<open>I s\<close> \<open>b s\<close> have "(f s, s) \<in> R" "I (f s)"
+      by (blast dest: assms(3))+
+    from less.IH[OF this] obtain s' where "I s'" "\<not> b s'" "while b f (f s) = Some s'"
+      by auto
+    with \<open>I s\<close> show ?thesis
+      by (simp add: while_unfold)
+  next
+    case False
+    with \<open>I s\<close> show ?thesis
+      by (simp add: while_unfold)
+  qed
+qed
+(*>*)
+
+text \<open>Here is an example of how we can use this rule:\<close>
+definition
+  "list_sum xs \<equiv> fst (the (while (\<lambda>(s, xs). xs \<noteq> []) (\<lambda>(s, xs). (s + hd xs, tl xs)) (0, xs)))"
+
+lemma list_sum_list_sum:
+  "list_sum xs = sum_list xs"
+proof -
+  let ?I = (*<*)"\<lambda>(s, zs). \<exists>ys. xs = ys @ zs \<and> s = sum_list ys"(*>*)
+
+  let ?R = "{((s, as), (s', bs)). length as < length bs \<and> length bs \<le> length xs}"
+  have "wf ?R"
+    by (rule wf_bounded_measure[where
+          ub = "\<lambda>_. length xs" and f = "\<lambda>(_, ys). length xs - length ys"]) auto
+  have "\<exists> s'. ?I s' \<and> \<not> (\<lambda>(s, xs). xs \<noteq> []) s' \<and>
+    while (\<lambda>(s, xs). xs \<noteq> []) (\<lambda>(s, xs). (s + hd xs, tl xs)) (0, xs) = Some s'"
+    apply (rule while_invariant[OF \<open>wf ?R\<close>])
+     apply simp
+    apply clarsimp
+    subgoal for zs ys
+      apply (rule exI[where x = "ys @ [hd zs]"])
+      apply auto
+      done
+    done
+  then show ?thesis
+    unfolding list_sum_def by auto
+qed
+text \<open>Fill in a suitable invariant!\<close>
+
+text \<open>
+  \Exercise{Weakest Preconditions}
+\<close>
+text \<open>You have seen this definition of the sum of the first \<open>n\<close> natural numbers before:\<close>
+fun sum :: "int \<Rightarrow> int" where
+"sum i = (if i \<le> 0 then 0 else sum (i - 1) + i)"
+
+lemma sum_simps[simp]:
+  "0 < i \<Longrightarrow> sum i = sum (i - 1) + i"
+  "i \<le> 0 \<Longrightarrow> sum i = 0"
+  by simp+
+
+lemmas [simp del] = sum.simps
+
+text \<open>
+  Consider the following program to calculate the sum of the first \<open>n\<close> natural numbers.
+  Find suitable variants and invariants and prove that it fulfills the specification!
+\<close>
+program_spec sum_prog
+  assumes "n \<ge> 0" ensures "s = sum n\<^sub>0"
+  defines \<open>
+    s = 0;
+    i = 0;
+    while (i < n)
+      @variant \<open>nat (n\<^sub>0 - i)\<close>
+      @invariant \<open>n\<^sub>0 = n \<and> 0 \<le> i \<and> i \<le> n \<and> s = sum i\<close>
+    {
+      i = i + 1;
+      s = s + i
+    }
+  \<close>
+  by vcg
+(*<*)
+program_spec sum_prog'
+  assumes "n \<ge> 0" ensures "s = sum n\<^sub>0"
+  defines \<open>
+    s = 0;
+    i = 1;
+    while (i \<le> n)
+      @variant \<open>nat (n\<^sub>0 + 1 - i)\<close>
+      @invariant \<open>n\<^sub>0 = n \<and> 0 \<le> i \<and> i \<le> n + 1 \<and> s = sum (i - 1)\<close>
+    {
+      s = s + i;
+      i = i + 1
+    }
+  \<close>
+  apply vcg_cs
+  subgoal for i
+    apply (cases "i = 0"; simp)
+    done
+  apply (simp add: antisym_conv)
+  done
+(*>*)
+
+text_raw\<open>\clearpage\<close>
+text \<open>Recall the following scheme for squaring a non-negative integer:
+\begin{verbatim}
+  1 2 3 4
+  2 2 3 4
+  3 3 3 4
+  4 4 4 4
+\end{verbatim}
+\<close>
+text \<open>Write down a program that implements this algorithm following the ``count up scheme''
+and prove that it is correct!
+\<close>
+(*<*)
+program_spec sq_prog
+  assumes "n \<ge> 0" ensures "a = n\<^sub>0 * n\<^sub>0"
+  defines \<open>
+    a = 0;
+    z = 1;
+    i = 0;
+    while (i < n)
+      @variant \<open>nat (n\<^sub>0 - i)\<close>
+      @invariant \<open>n\<^sub>0 = n \<and> 0 \<le> i \<and> i \<le> n \<and> a = i * i \<and> z = 2 * i + 1\<close>
+    {
+      a = a + z;
+      z = z + 2;
+      i = i + 1
+    }
+  \<close>
+  by vcg_cs (simp add: algebra_simps)
+(*>*)
+
+(*<*)
+end
+(*>*)
