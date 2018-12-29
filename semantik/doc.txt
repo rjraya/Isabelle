@@ -1,83 +1,82 @@
-(*lemma lib_theorem: "termip step s ? terminating step s"
-  apply(rule iffI)
-  apply (smt accp_induct conversep.intros terminating.simps)
-  apply(induction rule: terminating.induct)
-  by (simp add: accp.intros)
-
-lemma set_version: "termip step s ? s ? termi {(x,y).step x y}"
-  by (simp add: accp_eq_acc converse_unfold)
-
-lemma multi_step: "terminating step s ? (? s'. step?+?+ s s' ? terminating step s')"
-  by (metis accp_downwards lib_theorem reflclp_tranclp rtranclp_converseI 
-            sup2CI terminating.intros tranclp.r_into_trancl)
-
-lemma first_step: "terminating step s ?
-       (? x. step?*?* s x) ?
-       wfP (step¯¯)"
-  by (meson accp_downwards lib_theorem rtranclp_converseI wfP_accp_iff)
-
-lemma second_step:  "terminating step s ?
-       (? x. step?*?* s x) ?
-       (?Q x. x ? Q ? (?z?Q. ?y. step z y ? y ? Q))"
+lemma "
+ (?a. ¬ contains_index (Vidx x i) j ?
+  s' = s(x := (s x)(aval i s := aval a s)) ? 
+  aval j s = aval j s') ?
+ ¬ contains_index (Vidx x i) (Vidx x1a j) ?
+ s' = s(x := (s x)(aval i s := aval a s)) ?
+ aval (Vidx x1a j) s = aval (Vidx x1a j) s'
+"
 proof -
-  assume 0: "terminating step s"
-  assume 1: "(? x. step?*?* s x)"
-  from 0 1 have "wfP (step¯¯)" by (meson first_step)
-  from this have 
-   "(?Q x. x ? Q ? (?z?Q. ?y. (y, z) ? {(x,y).(step¯¯) x y} ? y ? Q))" 
-    by (simp add: wfP_def wf_eq_minimal)
-  from this have
-   "(?Q x. x ? Q ? (?z?Q. ?y. step z y ? y ? Q))" 
-    by simp
-  then show ?thesis by auto
+  assume 0: "(?a. ¬ contains_index (Vidx x i) j ?
+  s' = s(x := (s x)(aval i s := aval a s)) ? 
+  aval j s = aval j s')"
+  assume 1: "¬ contains_index (Vidx x i) (Vidx x1a j)"
+  assume 2: "s' = s(x := (s x)(aval i s := aval a s))"
+  from 1 have "¬ contains_index (Vidx x i) j" by simp
+  from this 0 2 have 3: "aval j s = aval j s'" by simp
+  from this have "aval (Vidx x1a j) s = s x1a (aval j s')" by simp
+  have "aval (Vidx x1a j) s' = s' x1a (aval j s')" by simp
+
+  {assume "x1a = x ? aval j s ? aval i s"
+  have "aval (Vidx x j) s = aval (Vidx x j) s'" 
+    using "2" "3" ‹x1a = x ? aval j s ? aval i s› by auto} 
+
+  {assume "x1a ? x"
+  have "aval (Vidx x1a j) s = aval (Vidx x1a j) s'" 
+    by (simp add: "2" "3" ‹x1a ? x›)}
+  {assume "x1a = x  ? j ? i"
+  have "aval (Vidx x j) s = aval (Vidx x j) s'"
+  }
+
+  show "aval (Vidx x1a j) s = aval (Vidx x1a j) s'" 
+qed
+  oops
+
+
+-------------------------------
+
+
+lemma non_recursive_index: "i ? (Vidx x i)"
+  by (metis One_nat_def add_le_cancel_left aexp.size(6) 
+      le_add_same_cancel1 nat_le_linear not_one_le_zero)
+  
+
+lemma "¬ subterm i i"
+ 
+
+                 
+
+lemma "¬ subterm (Vidx x (Vidx x1a i)) i"
+  
+
+lemma "¬ subterm (Vidx x i) i"
+proof (induction "i" arbitrary: x)
+  case (N x)
+  then show ?case by simp
+next
+  case (Vidx x1a i)
+  then show ?case 
+  proof - 
+    assume 0: "(?x. ¬ subterm (Vidx x i) i)"
+    show "¬ subterm (Vidx x (Vidx x1a i)) (Vidx x1a i)"
+    proof - 
+      have 1: "subterm (Vidx x (Vidx x1a i)) (Vidx x1a i) ? 
+               ((x = x1a ? (Vidx x1a i) = i) ? 
+                subterm (Vidx x (Vidx x1a i)) i)" by simp
+      have 2: "(Vidx x1a i) ? i" by (metis non_recursive_index)
+      from 1 2 have 4: "
+               subterm (Vidx x (Vidx x1a i)) (Vidx x1a i) ? 
+               (subterm (Vidx x (Vidx x1a i)) i)" by simp
+      have "¬ (subterm (Vidx x (Vidx x1a i)) i)" 
+    qed
+  qed  
+  sorry
+next
+case (Unop x1a i)
+  then show ?case sorry
+next
+  case (Binop x1a i1 i2)
+  then show ?case sorry
 qed
 
-lemma wfE_min:
-  assumes wf: "wf R" and Q: "x ? Q"
-  obtains z where "z ? Q" "?y. (y, z) ? R ? y ? Q"
-  using Q wfE_pf[OF wf, of Q] by blast
-
-
-lemma third_step:  
- "terminating step' b ? R a b ?
-  (? x. step'?*?* b x) ?
-  Q = {e.? a. R a e} ?
-  (?z ? Q. ?y. step' z y ? y ? Q)"
-  by (metis mem_Collect_eq second_step)
-
-lemma liber:
- "terminating step' b ? R a b ?
-  Q = {e.(? a. R a e) ? step'?*?* b e} ?
-  (?z ? Q. ?y. (step'?*?* b y ? step' z y) ? y ? Q)"
-proof(cases "? x. step'?*?* b x") 
-  case True
-  note 0 = this
-  assume 1: "terminating step' b" 
-  assume 2: "R a b" 
-  assume 3: "Q = {e.(? a. R a e) ? step'?*?* b e}"       
-  from 0 3 have 4: "Q = {e.? a. R a e}" by auto
-  from 0 1 2 4 have 5: "(?z ? Q. ?y. step' z y ? y ? Q)" 
-    by (metis mem_Collect_eq second_step)
-  from 0 5 have "(?z ? Q. ?y. (step'?*?* b y ? step' z y) ? y ? Q)" by auto
-  from this show ?thesis by simp
-next
-  case False
-  assume 1: "terminating step' b" 
-  assume 2: "R a b" 
-  assume 3: "Q = {e.(? a. R a e) ? step'?*?* b e}"
-  from 3 have 4: "? x ? Q. step'?*?* b x" by auto
-  from 1 2 3 4 have "(?z ? Q. ?y. step' z y ? y ? Q)" 
-  then show ?thesis  sorry
-qed*)
-
-
-(*
-  (* Some code to find the invariant: *)
-  apply auto[1]
-  subgoal for s n?0
-    apply (cases "s ''i'' = 1")
-    apply simp
-    apply(smt char.inject factorial.simps fun_upd_apply list.inject mult.commute mult_nonneg_nonneg)
-    done
-  apply auto
-*)
+ 
