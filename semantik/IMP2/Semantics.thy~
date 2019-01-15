@@ -280,6 +280,7 @@ subsection \<open>Invariants for While-Loops\<close>
     apply (subst wp_while_unfold)
     by (smt STEP wp_conseq)
     
+    
   subsubsection \<open>Standard Forms of While Rules\<close>  
   lemma wlp_whileI:
     assumes INIT: "I \<ss>\<^sub>0"

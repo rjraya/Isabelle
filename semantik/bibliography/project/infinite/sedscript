@@ -1,0 +1,4 @@
+s/seqtc/seq_tc/g
+s/swaptc/swap_tc/g
+s/exttc/ext_tc/g
+s/unittc/unit_tc/g

@@ -1,0 +1,122 @@
+lemma wlp_if_eq: "wlp (IF [c?1,c?2] FI) Q s = 
+ fold (?) (map (? c. if bval (fst c) s then wlp (snd c) Q s else True) [c?1,c?2]) True" 
+  unfolding wlp_def
+  by (smt IfBlock IfBlock_simp empty_iff fold_simps(1) fold_simps(2) 
+          fst_conv insert_iff list.set(1) list.set(2) list.set_intros(1) 
+          list.simps(8) list.simps(9) prod.collapse snd_conv)
+
+definition "and_fold l Q s = 
+  fold (?) (map (? c. if bval (fst c) s then wlp (snd c) Q s else True) l) True"
+
+lemma idempotent_and_fold: "(b ? fold (?) l b) = fold (?) l b" 
+proof(induction l arbitrary: b)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a l)
+  then show ?case by fastforce 
+qed
+
+
+lemma fold_append: "
+ (fold (?) (l1@l2) b) =
+ ((fold (?) l1 b) ? (fold (?) l2 b))
+" 
+proof(induction l1 arbitrary: l2 b)
+  case Nil
+  then show ?case by (simp add: idempotent_and_fold)
+next
+  case (Cons a l1)
+  have "fold (?) ((a # l1) @ l2) True = fold (?) (l1@l2) (a)" by simp
+  then show ?case 
+    by (metis (full_types) Cons.IH fold_simps(2) idempotent_and_fold)
+qed
+   
+lemma and_fold_concat: "and_fold (l1@l2) Q s = (and_fold l1 Q s ? and_fold l2 Q s)"
+  using GCL.fold_append and_fold_def by auto
+
+
+lemma wlp_if_eq1: "
+  fold (?)
+     (map (?c. if bval (fst c) s then ?t. (snd c, s) ??g t ? Q t else True) gcs)
+     True ?
+    ?t. (IF gcs FI, s) ??g t ? Q t
+"
+proof -
+  assume 0: "fold (?)
+     (map (?c. if bval (fst c) s then ?t. (snd c, s) ??g t ? Q t else True) gcs)
+     True"
+  show "?t. (IF gcs FI, s) ??g t ? Q t" 
+  proof 
+    fix t
+    show "(IF gcs FI, s) ??g t ? Q t"
+    proof 
+      assume 1: "(IF gcs FI, s) ??g t"
+      show "Q t"
+      proof -
+        obtain b c i where 
+          "i < length gcs ? (b,c) = gcs ! i ? bval b s ? (c,s) ??g t" 
+          by (metis "1" IfBlockE in_set_conv_nth)
+        then have "?t. (c, s) ??g t ? Q t" 
+      qed
+    qed
+  qed
+qed
+  oops
+
+lemma wlp_if_eq: "wlp (IF gcs FI) Q s = and_fold gcs Q s"
+  unfolding wlp_def and_fold_def
+  apply(rule iffI)
+  defer 1
+  apply(induction "gcs")
+  apply auto[1]
+  apply(simp add: if_splits prod.splits)
+ 
+  oops
+
+------------------------------------------------
+
+lemma 
+"
+(final (c1, s) ?
+        c1 = SKIP ? (c1 = IF gcs FI ? c1 = IF gcs FI;; x) ? (?b c. (b, c) ? set gcs ? ¬ bval b s)) ?
+       (final (c2, s) ?
+        c2 = SKIP ? (c2 = IF gcs FI ? c2 = IF gcs FI;; x) ? (?b c. (b, c) ? set gcs ? ¬ bval b s)) ?
+       final (c1;; c2, s) ?
+       c1;; c2 = SKIP ?
+       (c1;; c2 = IF gcs FI ? c1;; c2 = IF gcs FI;; x) ? (?b c. (b, c) ? set gcs ? ¬ bval b s)"
+  apply(cases "c1 = SKIP")
+  using final_def apply auto[1] 
+  apply(induction c1)
+      apply blast
+     apply (meson Seq2 final_def gsmall_step.Assign)
+  
+  
+   defer 1
+  using final_def 
+ 
+  
+  oops
+
+
+lemma "final (c,s) ? 
+       ((c = SKIP) ? ((c = IF gcs FI ? c = IF gcs FI ;; x) ? (? b c. (b,c) ? set gcs ? ¬ bval b s)))"
+  apply(induction c)
+      apply simp
+  apply simp
+  using final_def apply blast
+    defer 1
+  apply simp
+  
+    apply (simp add: final_def)
+  
+  apply(simp add: final_def)
+  apply(induction   rule: gsmall_step.induct)
+      apply simp
+     apply auto[1]
+  apply simp
+    
+
+lemma "final (c,s) = ((c = SKIP) ? 
+       ((c = IF gcs FI) ? (? b c. (b,c) ? set gcs ? ¬ bval b s)))"
+  

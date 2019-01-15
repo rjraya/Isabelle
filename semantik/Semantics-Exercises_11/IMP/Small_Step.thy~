@@ -32,7 +32,8 @@ where "x \<rightarrow>* y \<equiv> (small_step\<^sup>*\<^sup>* x y)"
 
 (* rtranclp -- reflexive transitive closure (for predicate) *)
 
-term rtranclpterm "rtranclp R"
+term rtranclp
+term "rtranclp R"
 
 (* ctrl-e <up> *   *)
 

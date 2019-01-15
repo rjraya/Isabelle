@@ -23,8 +23,9 @@ IfTrue:  "bval b s \<Longrightarrow> (IF b THEN c\<^sub>1 ELSE c\<^sub>2,s) \<ri
 IfFalse: "\<not>bval b s \<Longrightarrow> (IF b THEN c\<^sub>1 ELSE c\<^sub>2,s) \<rightarrow> (c\<^sub>2,s)" |
 
 While:   "(WHILE b DO c,s) \<rightarrow>
-            (IF b THEN c;; WHILE b DO c ELSE SKIP,s)"
+            (IF b THEN c;; WHILE b DO c ELSE SKIP,s)" |
 
+Until: "(DO c UNTIL b,s) \<rightarrow> (c;;IF b THEN SKIP ELSE DO c UNTIL b,s)"
 
 abbreviation
   small_steps :: "com * state \<Rightarrow> com * state \<Rightarrow> bool" (infix "\<rightarrow>*" 55)
@@ -32,7 +33,8 @@ where "x \<rightarrow>* y \<equiv> (small_step\<^sup>*\<^sup>* x y)"
 
 (* rtranclp -- reflexive transitive closure (for predicate) *)
 
-term rtranclpterm "rtranclp R"
+term rtranclp
+term "rtranclp R"
 
 (* ctrl-e <up> *   *)
 
@@ -66,6 +68,7 @@ inductive_cases IfE[elim!]: "(IF b THEN c1 ELSE c2,s) \<rightarrow> ct"
 thm IfE
 inductive_cases WhileE[elim]: "(WHILE b DO c, s) \<rightarrow> ct"
 thm WhileE
+inductive_cases UntilE[elim]: "(DO c UNTIL b,s) \<rightarrow> ct"
 
 text\<open>A simple property:\<close>
 lemma deterministic:
@@ -201,7 +204,12 @@ next
   also have "(?if, s) \<rightarrow> (c;; ?w, s)" using b by (rule IfTrue)
   also have "(c;; ?w,s) \<rightarrow>* (SKIP,t)" by(rule seq_comp[OF c w])
   finally show "(WHILE b DO c,s) \<rightarrow>* (SKIP,t)" .
+next 
+  case UntilFalse then show ?case sorry
+next 
+  case UntilTrue then show ?case sorry
 qed
+  
 
 text\<open>Each case of the induction can be proved automatically:\<close>
 lemma  "cs \<Rightarrow> t \<Longrightarrow> cs \<rightarrow>* (SKIP,t)"
@@ -222,6 +230,10 @@ next
   case WhileTrue
   thus ?case
     by(metis While seq_comp small_step.IfTrue star_step[of small_step])
+next 
+  case UntilFalse then show ?case sorry
+next 
+  case UntilTrue then show ?case sorry
 qed
 
 lemma small1_big_continue:
