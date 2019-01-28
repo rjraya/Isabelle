@@ -1,0 +1,38 @@
+theory Submission
+  imports Defs
+begin
+
+fun abs_exec :: "instr \<Rightarrow> config \<Rightarrow> config" where
+"abs_exec instr (i,s,stk) = (case instr of
+  LOADI n \<Rightarrow> (i+1,s, n#stk) |
+  LOAD x \<Rightarrow> (i+1,s, s x # stk) |
+  ADD \<Rightarrow> (i+1,s, (hd2 stk + hd stk) # tl2 stk) |
+  STORE x \<Rightarrow> (i+1,s(x := hd stk),tl stk) |
+  JMP n \<Rightarrow>  (n,s,stk) |
+  JMPLESS n \<Rightarrow> (if hd2 stk < hd stk then n else i+1,s,tl2 stk) |
+  JMPGE n \<Rightarrow> (if hd2 stk >= hd stk then n else i+1,s,tl2 stk))"
+
+definition cnv_to_abs :: "instr list \<Rightarrow> instr list" where
+  "cnv_to_abs P = abs_exec (hd P) (0,s,stk)"
+
+
+(*JMP n \<Rightarrow>  (i+1+n,s,stk) |
+  JMPLESS n \<Rightarrow> (if hd2 stk < hd stk then i+1+n else i+1,s,tl2 stk) |
+  JMPGE n \<Rightarrow> (if hd2 stk >= hd stk then i+1+n else i+1,s,tl2 stk))"*)
+
+abbreviation 
+  exec_abs :: "instr list \<Rightarrow> config \<Rightarrow> config \<Rightarrow> bool" ("(_/ \<turnstile>\<^sub>a (_ \<rightarrow>*/ _))" 50)
+where
+  "exec_abs P _ _ \<equiv> False"
+
+theorem cnv_to_abs_correct: "cnv_to_abs P \<turnstile>\<^sub>a c \<rightarrow>* c' \<longleftrightarrow> P \<turnstile> c \<rightarrow>* c'"
+  sorry
+
+definition cnv_to_rel :: "instr list \<Rightarrow> instr list" where
+  "cnv_to_rel P = undefined"
+
+theorem cnv_to_rel_correct:
+  "P \<turnstile>\<^sub>a c \<rightarrow>* c' \<longleftrightarrow> cnv_to_rel P \<turnstile> c \<rightarrow>* c'"
+  sorry
+
+end
