@@ -1,6 +1,8 @@
 theory tut08
-  imports (*"IMP2.VCG"*) "/cygdrive/c/Users/rraya/semantics1819_public/IMP2_transitional/Examples"
-          
+  imports (*"IMP2.VCG"*) 
+   (*"/cygdrive/c/Users/rraya/semantics1819_public/IMP2_transitional/Examples"
+          *)
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/Examples"
 begin
 
 (* if (n mod 2 == 0) then r = (x*x)^(n/2) else  *)
@@ -26,7 +28,7 @@ ensures "r = x\<^sub>0 ^ nat n\<^sub>0"
 defines \<open>
  r = 1;
  while (n \<noteq> 0)
-  @invariant\<open>n \<ge> 0 \<and> n \<le> n\<^sub>0 \<and> r*x^nat n = x\<^sub>0 ^nat n\<^sub>0\<close>
+  @invariant\<open>n \<ge> 0 \<and>  r*x^nat n = x\<^sub>0 ^nat n\<^sub>0\<close>
   @variant\<open>nat n\<close>
  {
   if (n mod 2 == 1) {
@@ -41,7 +43,7 @@ defines \<open>
     (* (2) tells it to rewrite the second occurrence ! 
        (asm) tells to rewrite in the assumption 
         we can also say to rewrite the second part of the assumption with (asm) (2) *)
-    apply(subst (asm) aux[symmetric]) 
+    apply(subst (asm) aux[symmetric])  
     apply(auto simp: algebra_simps)
   done
   apply(simp add: semiring_normalization_rules)
@@ -70,4 +72,21 @@ defines \<open>
    apply auto
   done
 
-end
+program_spec rotate_right
+  assumes "0 < n"
+  ensures "\<forall> i \<in> {0..n}. a i = a\<^sub>0 ((i-1) mod n)"
+defines \<open>
+ i = n-1;
+
+ while (i < n)
+  @invariant\<open>\<forall> j \<in> {i..<n}. a j = a\<^sub>0 (j-1)\<close>
+  @variant\<open>nat (h - l)\<close>
+ {
+   z = a[i];
+   a[i] = a[i-1];
+   i = i + 1
+ }
+\<close>
+
+
+end 

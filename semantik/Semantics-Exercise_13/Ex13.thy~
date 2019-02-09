@@ -48,7 +48,7 @@ next
   from WhileTrue.IH(1) WhileTrue.prems have "\<forall> (x,a) \<in> AA c A. s\<^sub>2 x = aval a s\<^sub>2" .
   from WhileTrue.IH(2)[OF this] have "\<forall> (x,a) \<in> AA (WHILE b DO c) (AA c A). s\<^sub>3 x = aval a s\<^sub>3" .
   then show ?case 
-    apply(simp add: )
+    apply(simp)
     apply(subst (asm) AA_idemp)
     apply simp (* review this! *)
     done

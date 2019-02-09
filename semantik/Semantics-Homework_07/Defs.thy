@@ -1,5 +1,5 @@
 theory Defs
-  imports "IMP2.VCG"
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/vcg/VCG"
 begin
 
 fun factorial :: "int \<Rightarrow> int" where

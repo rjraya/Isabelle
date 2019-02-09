@@ -286,52 +286,20 @@ next
   assume 4: "(\<And>ca A. WHILE b DO c = CP ca A \<Longrightarrow> \<forall>(x, y)\<in>A. s\<^sub>2 x = s\<^sub>2 y \<Longrightarrow> (ca, s\<^sub>2) \<Rightarrow> s\<^sub>3)"
   assume 5: "WHILE b DO c = CP ca A"
   assume 6: "\<forall>(x, y)\<in>A. s\<^sub>1 x = s\<^sub>1 y"
-  from 5 CP_While[of ca A b c] obtain c' where 9: "ca = WHILE b DO c'" by auto
-(* "CP (WHILE b DO c) A = (WHILE b DO CP c (AA (WHILE b DO c) A))" *)
-  from this 5 have "WHILE b DO c = CP (WHILE b DO c') A" by blast
+  from 5 CP_While[of ca A b c] obtain c' where 7: "ca = WHILE b DO c'" by auto
+
+  from this 5 have 8: "WHILE b DO c = CP (WHILE b DO c') A" by blast
   then have "(WHILE b DO c) = (WHILE b DO CP c' (AA (WHILE b DO c') A))" by simp
-  then have "c = CP c' (AA (WHILE b DO c') A)" by blast
+  then have 9: "c = CP c' (AA (WHILE b DO c') A)" by blast
+  from this 2[of c' "(AA (WHILE b DO c') A)"] 6 have 10: "(c', s\<^sub>1) \<Rightarrow> s\<^sub>2" by simp
 
-  from this 2[of c' "(AA (WHILE b DO c') A)"] 6 have 8: "(c', s\<^sub>1) \<Rightarrow> s\<^sub>2" by simp
-(*
-  have "\<forall>a\<in> (A \<inter> AA c A). case a of (x, y) \<Rightarrow> s\<^sub>2 x = s\<^sub>2 y" using "1" "2" by auto
-  then have "(CP (WHILE b DO c) (A \<inter> AA c A), s\<^sub>2) \<Rightarrow> s\<^sub>3" using WhileTrue.IH(2) by auto
-  then have "(WHILE b DO CP c (AA (WHILE b DO c) (A \<inter> AA c A)),s\<^sub>2) \<Rightarrow> s\<^sub>3" by simp
-  then have "(WHILE b DO CP c (AA (WHILE b DO c) (AA (WHILE b DO c) A)),s\<^sub>2) \<Rightarrow> s\<^sub>3" by simp
-  then have "(WHILE b DO CP c (AA (WHILE b DO c) A),s\<^sub>2) \<Rightarrow> s\<^sub>3" using AA_idemp by metis
-  then have "(CP (WHILE b DO c) A,s\<^sub>2) \<Rightarrow> s\<^sub>3" by simp 
-*)
- 
-  from this 4[of ca A] 5  0 have "(ca,s\<^sub>2) \<Rightarrow> s\<^sub>3" sorry
-  from this 8 9 show "(ca, s\<^sub>1) \<Rightarrow> s\<^sub>3"
-    using "0" by auto
-  
+  from  "7" "9" AA_idemp[of ca A] have 11: "WHILE b DO c = CP ca (AA ca A)" by simp
+  from "6" "10" AA_sound[of c' s\<^sub>1 s\<^sub>2 A] have 12: "\<forall>(x, y)\<in>AA c' A. s\<^sub>2 x = s\<^sub>2 y" by auto
+  from  "7" 12 have 13: "\<forall>(x, y)\<in>AA ca A. s\<^sub>2 x = s\<^sub>2 y" by simp
+  from "4"[of ca "(AA ca A)"]  11 13 have "(ca,s\<^sub>2) \<Rightarrow> s\<^sub>3" by blast
 
+  from this 8 10 show "(ca, s\<^sub>1) \<Rightarrow> s\<^sub>3" using "0" "7" by blast
 qed 
-(*
-  case (2 x a A)
-  then show ?case using assign_simp reduce_map by auto
-next
-  case (3 c1 c2 A)
-  from 3(3) obtain t' where 0: "(CP c1 A,s) \<Rightarrow> t' \<and> (CP c2 (AA c1 A),t') \<Rightarrow> t" by auto
-  from this 3(1)[of s t'] 3(4) have 1: "(c1, s) \<Rightarrow> t'" by simp
-  thm AA_sound[of c1 s t']
-  from 0 3(2)[of t' t] AA_sound[of c1 s t' A] 3(4) 1 have 2: "(c2, t') \<Rightarrow> t" by auto
-  from 1 2 show ?case by auto 
-next
-  case (5 b c A)
-  then show ?case
-  proof(cases "bval b s")
-    case True
-    from True 5(2) obtain t' where "(CP c A,s) \<Rightarrow> t' \<and> (WHILE b DO CP c A,t') \<Rightarrow> t" by auto 
-    from this 5(1)[of s] 5(3) obtain t' where "(c,s) \<Rightarrow> t'" by auto
-    from True 5(2) obtain t' where "(CP c A,s) \<Rightarrow> t'" by auto 
-    from True  show ?thesis   sorry
-  next
-    case False from False 5(2) show ?thesis by auto
-  qed
-qed auto
- *) 
 
 corollary CP_correct:
   "c \<sim> CP c {}"

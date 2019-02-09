@@ -1,5 +1,5 @@
 theory tut06
-  imports IMP.Wp_Demo
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Wp_Demo"
 begin
 
 definition Max :: com where 
@@ -11,7 +11,10 @@ lemma [simp]: "\<not>(a::int) < b \<Longrightarrow> max a b = a" by simp
 
 lemma "wp Max (\<lambda>s'. s' ''c'' = max (s' ''a'') (s' ''b'')) s"
   unfolding Max_def
-  by smartvcg (* unfolding wp_if_eq wp_assign_eq by simp *)
+  by smartvcg
+  (*unfolding wp_if_eq 
+  unfolding wp_assign_eq 
+  by simp*) 
   (*apply(subst wp_if_eq)
   apply(simp split: if_split)
   apply(simp only: wp_assign_eq)
@@ -68,7 +71,9 @@ lemma "wlp Sum (\<lambda>s'. s' ''x'' = sum (s ''n'')) s"
 done
 
 lemma
-fwd_Assign: "P s \<Longrightarrow> wp (x ::= a) (\<lambda>s'. \<exists> s. P s \<and> s' = s(x := aval a s)) s"
+fwd_Assign: 
+  "P s \<Longrightarrow>
+   wp (x ::= a) (\<lambda>s'. \<exists> s. P s \<and> s' = s(x := aval a s)) s"
   unfolding wp_assign_eq
   apply auto
   done
@@ -78,9 +83,9 @@ lemmas fwd_Assign' = wp_conseq[OF fwd_Assign]
 lemma  "a = s ''a'' \<Longrightarrow> b = s ''b'' \<Longrightarrow>
         wp Max (\<lambda>s'. s' ''c'' = max a b \<and> s ''a'' = a \<and> s ''b'' = b) s"
   unfolding Max_def
-  apply(rule wp_ifI)
-  apply(rule fwd_Assign', simp)+
-   apply auto
+  apply(rule wp_ifI)  
+   apply (rule fwd_Assign'; auto)
+  apply (rule fwd_Assign'; auto)
   done
   
  

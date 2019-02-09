@@ -150,26 +150,19 @@ lemma AA_idemp: "AA c (AA c A) = AA c A" by (auto simp: AA_gen_kill)
 lemma AA_monotone: "A \<subseteq> B \<Longrightarrow> AA c A \<subseteq> AA c B" by(auto simp: AA_gen_kill)
 
 theorem AA_sound:
-  "(c,s) \<Rightarrow> s'  \<Longrightarrow> \<forall> (x,y) \<in> A. s x = s y \<Longrightarrow> \<forall> (x,y) \<in> AA c A. s' x = s' y"
+  "(c,s) \<Rightarrow> s'  \<Longrightarrow> \<forall> (x,y) \<in> A. s x = s y \<Longrightarrow> 
+   \<forall> (x,y) \<in> AA c A. s' x = s' y"
 proof(induction arbitrary: A rule: big_step_induct)
   case (Assign x1 a s)
-  then show ?case 
-  proof(cases "a")
-    case (V x2)
-    then show ?thesis
-    proof(cases "x1 = x2")
-      case True from V this Assign show ?thesis by simp 
-    next
-      case False from V this Assign show ?thesis by auto  
-    qed  
-  qed auto
+  then show ?case  by (cases "a",cases,auto)
 next
-  case (Seq c\<^sub>1 s\<^sub>1 s\<^sub>2 c\<^sub>2 s\<^sub>3)
-  then show ?case by fastforce
+  case Seq then show ?case by fastforce
 next
   case (WhileTrue b s\<^sub>1 c s\<^sub>2 s\<^sub>3)
-  from WhileTrue.prems WhileTrue.IH(1) have "\<forall>a\<in>AA c A. case a of (x, y) \<Rightarrow> s\<^sub>2 x = s\<^sub>2 y" by simp
-  from this WhileTrue.IH(2) have "\<forall>a\<in>AA (WHILE b DO c) (AA c A). case a of (x, y) \<Rightarrow> s\<^sub>3 x = s\<^sub>3 y" by simp
+  from WhileTrue.prems WhileTrue.IH(1) 
+  have "\<forall>a\<in>AA c A. case a of (x, y) \<Rightarrow> s\<^sub>2 x = s\<^sub>2 y" by simp
+  from this WhileTrue.IH(2) 
+  have "\<forall>a\<in>AA (WHILE b DO c) (AA c A). case a of (x, y) \<Rightarrow> s\<^sub>3 x = s\<^sub>3 y" by simp
   then show ?case by(simp add: AA_idemp)
 qed auto
 
@@ -208,10 +201,10 @@ lemma to_map_eq:
   using assms unfolding to_map_def
   by (auto del: ext intro!: ext) (metis (mono_tags, lifting) old.prod.case someI_ex)
 
-lemma reduce_map: "\<forall>a\<in>A. case a of (x, y) \<Rightarrow> s x = s y \<Longrightarrow> aval (subst (to_map A) a) s = aval a s"
+lemma reduce_map: 
+  "\<forall>a\<in>A. case a of (x, y) \<Rightarrow> s x = s y \<Longrightarrow> 
+          aval (subst (to_map A) a) s = aval a s"
   by (simp add: to_map_eq subst_lemma)
-
-thm fun_upd_def assign_simp
 
 theorem CP_correct1:
   assumes "(c, s) \<Rightarrow> t" "\<forall>(x,y)\<in>A. s x = s y"
@@ -228,9 +221,9 @@ next
   from "1" "2" show ?case by auto
 next
   case (WhileTrue b s\<^sub>1 c s\<^sub>2 s\<^sub>3)
-  from WhileTrue.IH(1)[of "(A \<inter> AA c A)"] WhileTrue.prems 
+  from WhileTrue.IH(1)[of "A \<inter> AA c A"] WhileTrue.prems 
   have 0: "(CP c (A \<inter> AA c A), s\<^sub>1) \<Rightarrow> s\<^sub>2" by simp
-  from AA_sound[of c s\<^sub>1 s\<^sub>2 "(A \<inter> AA c A)"] WhileTrue.hyps(2) WhileTrue.prems 
+  from AA_sound[of c s\<^sub>1 s\<^sub>2 "A \<inter> AA c A"] WhileTrue.hyps(2) WhileTrue.prems 
   have 1: "\<forall>a\<in> AA c (A \<inter> AA c A). case a of (x, y) \<Rightarrow> s\<^sub>2 x = s\<^sub>2 y" by simp  
 
   from AA_idemp AA_distr have 2: "AA c (A \<inter> AA c A) = AA c A" by auto

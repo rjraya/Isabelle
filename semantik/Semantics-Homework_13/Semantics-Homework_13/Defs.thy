@@ -1,5 +1,6 @@
 theory Defs
-  imports "IMP.Big_Step"
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Big_Step"
+
 begin
 
 class vars = fixes vars :: "'a \<Rightarrow> vname set"
