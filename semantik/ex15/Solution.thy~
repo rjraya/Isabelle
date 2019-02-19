@@ -1,0 +1,91 @@
+(*<*)
+theory Solution
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/doc/Examples"
+
+begin
+(*>*)
+
+text \<open>\ExerciseSheet{15}{05.~02.~2019}\<close>
+
+text \<open>\Exercise{Program Verification} (Pen \& Paper)\<close>
+
+paragraph \<open>Solution\<close>
+
+lemma "
+ 0 \<le> h\<^sub>0 \<Longrightarrow>
+       (\<forall>t. 0 \<le> t \<and> t < i \<longrightarrow> a\<^sub>0 t = 0) \<and>
+       (\<forall>t. j < t \<and> t < h\<^sub>0 \<longrightarrow> a\<^sub>0 t = 1) \<and>
+       h\<^sub>0 - (j + 1) = i \<and> (0 \<le> i \<and> i \<le> j \<and> j \<le> h\<^sub>0 \<or> i = j + 1) \<Longrightarrow>
+       (i < j \<and> a\<^sub>0 i = 0) \<and> a\<^sub>0 j = 1 \<Longrightarrow>
+       (\<forall>t. 0 \<le> t \<and> t < i + 1 \<longrightarrow> a\<^sub>0 t = 0) \<and>
+       (\<forall>t. j - 1 < t \<and> t < h\<^sub>0 \<longrightarrow> a\<^sub>0 t = 1) \<and>
+       h\<^sub>0 - (j - 1 + 1) = i + 1 \<and>
+       (0 \<le> i + 1 \<and> i + 1 \<le> j - 1 \<and> j - 1 \<le> h\<^sub>0 \<or> i + 1 = j - 1 + 1)"
+proof -
+  assume 1: " 0 \<le> h\<^sub>0" 
+  assume 2: "(\<forall>t. 0 \<le> t \<and> t < i \<longrightarrow> a\<^sub>0 t = 0)"
+  assume 3: "(\<forall>t. j < t \<and> t < h\<^sub>0 \<longrightarrow> a\<^sub>0 t = 1)"
+  assume 4: "h\<^sub>0 - (j + 1) = i \<and> (0 \<le> i \<and> i \<le> j \<and> j \<le> h\<^sub>0 \<or> i = j + 1)"
+  assume 5: "(i < j \<and> a\<^sub>0 i = 0) \<and> a\<^sub>0 j = 1"
+  from 2 5
+  have 6: "(\<forall> t. 0 \<le> t \<and> t < i + 1 \<longrightarrow> a\<^sub>0 t = 0)" 
+    
+  proof -
+    
+  qed
+qed
+
+program_spec check_anbn 
+  assumes "0\<le>h"
+  ensures "(i=j+1) \<longleftrightarrow> 
+           ((\<forall> t. 0 \<le> t \<and> t < i \<longrightarrow> a t = 0) \<and>
+            (\<forall> t. i \<le> t \<and> t < h \<longrightarrow> a t = 1))"
+  defines \<open>
+    i = 0;
+    j = h - 1;
+    while (i<j \<and> a[i] == 0 \<and> a[j] == 1) 
+      @variant \<open>j-i+1\<close>
+      @invariant \<open>
+       (\<forall> t. 0 \<le> t \<and> t < i \<longrightarrow> a t = 0) \<and>
+       (\<forall> t. j < t \<and> t < h \<longrightarrow> a t = 1) \<and>
+       h - (j+1) = i \<and>
+       (0 \<le> i \<and> i \<le> j \<and>  j \<le> h \<or> i = j+1)
+        \<close>
+    {
+      i=i+1; 
+      j=j-1
+    }
+  \<close>
+  apply vcg
+      apply simp
+     apply auto[1]
+  
+  
+
+text \<open>
+  \Exercise{Hoare-Logic} (Pen \& Paper)
+\<close>
+
+text \<open>Solution:
+
+  \<^enum> No. Consider \<open>t \<noteq> t'\<close>, and \<open>R = UNIV\<close>. Then \<open>(c,s) \<Rightarrow> t\<close> and \<open>(c,s) \<Rightarrow> t'\<close> for any \<open>s\<close>.
+  \<^enum> \<open>wlp (REL R) Q s = (\<forall>t. (s, t) \<in> R \<longrightarrow> Q t)\<close>
+  \<^enum>
+    \<^descr>[Soundness] We first show \<open>(REL R, s) \<Rightarrow> t \<longleftrightarrow> (s, t) \<in> R\<close>. In the \<open>\<longrightarrow>\<close>-direction this follows
+    by rule inversion on the big step, and in the \<open>\<longleftarrow>\<close>-direction we use rule \<open>Rel\<close>.
+    Now \begin{align*}
+      & & \<open>wlp (REL R) Q s\<close> \\
+      & \<open>\<longleftrightarrow>\<close> & \<open>(\<forall>t. (REL R, s) \<Rightarrow> t \<longrightarrow> Q t)\<close> \\
+      & \<open>\<longleftrightarrow>\<close> & \<open>(\<forall>t. (s, t) \<in> R \<longrightarrow> Q t)\<close>
+    \end{align*}
+    \<^descr>[Completeness] We need to show \<open>HT_partial (wlp c Q) (REL R) Q\<close>.
+    \begin{align*}
+      & & \<open>HT_partial (wlp c Q) (REL R) Q\<close> \\
+      & \<open>\<longleftrightarrow>\<close> & \<open>(\<forall>s. wlp c Q s \<longrightarrow> wlp c Q s)\<close> \\
+      & \<open>\<longleftrightarrow>\<close> & \<open>True\<close>
+    \end{align*}
+\<close>
+
+(*<*)
+end
+(*>*)
