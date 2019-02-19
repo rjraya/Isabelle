@@ -211,7 +211,10 @@ fun ccomp :: "com \<Rightarrow> instr list" where
    in cb @ cc\<^sub>1 @ JMP (size cc\<^sub>2) # cc\<^sub>2)" |
 "ccomp (WHILE b DO c) =
  (let cc = ccomp c; cb = bcomp b False (size cc + 1)
-  in cb @ cc @ [JMP (-(size cb + size cc + 1))])"
+  in cb @ cc @ [JMP (-(size cb + size cc + 1))])" |
+"ccomp (DO c UNTIL b) =
+ (let cc = ccomp c; cb = bcomp b True 1
+  in cc @ cb @ [JMP (-(size cb + size cc + 1))])" 
 
 
 value "ccomp
@@ -260,6 +263,22 @@ next
     apply (rule exec_append_trans[OF bcomp_correct]; simp)
     apply ((rule exec_append_trans, assumption); simp)
     by fastforce
+next
+  case (UntilFalse b s\<^sub>2 c s\<^sub>1 s\<^sub>3)
+  then show ?case sorry
+next
+  case (UntilTrue c s s' b)
+  let ?cc = "ccomp c"
+  let ?cb = "bcomp b False (size ?cc + 1)"
+  let ?cw = "ccomp(DO c UNTIL b)"
+  from UntilTrue(3)[of stk] have "?cw \<turnstile> (0,s,stk) \<rightarrow>* (size (ccomp c),s',stk)" by auto
+  moreover from \<open>bval b s'\<close> have "?cw \<turnstile> (size ?cc,s',stk) \<rightarrow>* (size ?cw,s',stk)"
+    using bcomp_correct[of 1 b True s' stk]
+    apply auto 
+    sorry
+  ultimately show ?case
+    apply simp
+    sorry
 qed (fastforce intro!: bcomp_correct)+
 
 end

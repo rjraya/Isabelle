@@ -4,11 +4,6 @@ begin
 
 paragraph \<open>Question 1\<close>
 
-lemma end_while:
-   "(WHILE b DO c,s) \<Rightarrow> t \<Longrightarrow> \<not> bval b t"
-  apply(induction "WHILE b DO c" s t rule: big_step_induct)
-  by simp
-
 lemma aval_inv:
  "(c,s) \<Rightarrow> t \<Longrightarrow> vars c \<inter> vars a = {} \<Longrightarrow>  aval a s = aval a t" 
 proof(induction  rule: big_step_induct)
@@ -38,24 +33,21 @@ proof(induction  rule: big_step_induct)
     then show ?case using bval.simps(4) by blast
   qed auto
 qed auto
-  
-
-lemma while_inv:
- "(WHILE b DO c,s) \<Rightarrow> t \<Longrightarrow> vars c \<inter> vars b = {} \<Longrightarrow> bval b s \<longleftrightarrow> bval b t"
+ 
+theorem ex1:
+  "(WHILE b DO c, s) \<Rightarrow> t \<Longrightarrow> vars c \<inter> vars b = {} \<Longrightarrow> \<not> bval b s"
 proof(induction "WHILE b DO c" s t rule: big_step_induct)
   case (WhileFalse s)
   then show ?case by simp 
 next
   case (WhileTrue s\<^sub>1 s\<^sub>2 s\<^sub>3)
-  from WhileTrue.prems WhileTrue.hyps(2) bool_inv have 1: "bval b s\<^sub>1 = bval b s\<^sub>2" by simp
-  from WhileTrue.prems WhileTrue.hyps(5) have 2: "bval b s\<^sub>2 = bval b s\<^sub>3" by simp
-  from 1 2 show ?case by simp 
+  from WhileTrue.prems WhileTrue.hyps(5)
+  have 1: "\<not> bval b s\<^sub>2" by simp
+  from WhileTrue.prems WhileTrue.hyps(2) 
+       bool_inv[of c s\<^sub>1 s\<^sub>2 b] 1
+  show "\<not> bval b s\<^sub>1" by simp
 qed
-   
-theorem ex1:
-  "(WHILE b DO c, s) \<Rightarrow> t \<Longrightarrow> vars c \<inter> vars b = {} \<Longrightarrow> \<not> bval b s"
-   by (simp add: while_inv end_while) 
-  
+     
 
 paragraph \<open>Question 2\<close>
 
@@ -70,16 +62,19 @@ theorem ex2:
   "no c \<Longrightarrow> \<forall> s. \<exists> t. (c, s) \<Rightarrow> t"
 proof(induction c)
   case (Seq c1 c2)
-  then have 0: "\<forall>s. \<exists>a. (c1, s) \<Rightarrow> a" "\<forall>s. \<exists>a. (c2, s) \<Rightarrow> a" by auto
+  then have 0: "\<forall>s. \<exists>a. (c1, s) \<Rightarrow> a" 
+               "\<forall>s. \<exists>a. (c2, s) \<Rightarrow> a" by auto
   {
     fix s
-    from 0 obtain t1 t2 where 1: "(c1, s) \<Rightarrow> t1" "(c2,t1) \<Rightarrow> t2" by blast
+    from 0 obtain t1 t2 where 1: 
+     "(c1, s) \<Rightarrow> t1" "(c2,t1) \<Rightarrow> t2" by blast
     then have "\<exists>a. (c1;;c2, s) \<Rightarrow> a" by auto  
   }   
   then show ?case by simp
 next
   case (If b c1 c2)
-  then have 0: "\<forall>s. \<exists>a. (c1, s) \<Rightarrow> a" "\<forall>s. \<exists>a. (c2, s) \<Rightarrow> a" by auto
+  then have 0: "\<forall>s. \<exists>a. (c1, s) \<Rightarrow> a" 
+               "\<forall>s. \<exists>a. (c2, s) \<Rightarrow> a" by auto
   {
     fix s
     from 0 obtain t1 t2 where 1: "(c1, s) \<Rightarrow> t1" "(c2,s) \<Rightarrow> t2" by blast
@@ -99,10 +94,8 @@ qed auto
 
 fun AA :: "com \<Rightarrow> (vname \<times> vname) set \<Rightarrow> (vname \<times> vname) set" where
  "AA SKIP A = A" |
- "AA (x::= a) A = (
-   case a of (V y) \<Rightarrow> (if x = y then A else ({(x,y)} \<union> {(x',y'). (x',y') \<in> A \<and> x' \<noteq> x \<and> y' \<noteq> x})) |
-                 _ \<Rightarrow> {(x',y'). (x',y') \<in> A \<and> x' \<noteq> x \<and> y' \<noteq> x}
-  )" |
+ "AA (x::= V y) A = insert (x,y) {(a,b). x \<noteq> a \<and> x \<noteq> b \<and> (a,b) \<in> A}" |
+ "AA (x::= a) A = {(a,b). x \<noteq> a \<and> x \<noteq> b \<and> (a,b) \<in> A}" | 
  "AA (c1;;c2) A = (AA c2 (AA c1 A))" |
  "AA (IF b THEN c1 ELSE c2) A = AA c1 A \<inter> AA c2 A" |
  "AA (WHILE b DO c) A = A \<inter> AA c A"
@@ -110,14 +103,10 @@ fun AA :: "com \<Rightarrow> (vname \<times> vname) set \<Rightarrow> (vname \<t
 fun gen :: "com \<Rightarrow> (vname \<times> vname) set" and kill :: "com \<Rightarrow> (vname \<times> vname) set" where
   "gen SKIP = {}" |
   "kill SKIP = {}" |
-  "gen (x::=a) = (
-    case a of (V y) \<Rightarrow> (if x = y then {} else {(x,y)}) |
-                  _ \<Rightarrow> {}
-  )" |
-  "kill (x::=a) = (
-    case a of (V y) \<Rightarrow> (if x = y then {} else {(x',y'). (x' = x \<and> y \<noteq> y') \<or> (y' = x \<and> x' \<noteq> x)}) |
-                  _ \<Rightarrow> {(x',y'). x' = x \<or> y' = x}
-  )" |
+  "gen (x ::= V y) =  {(x,y)}" |
+  "kill (x ::= V y) = {(x',y'). x=x' \<and> y \<noteq> y' \<or> x' \<noteq> x \<and> x = y'}" |
+  "gen (x ::= a) = {}" |
+  "kill (x ::= a) = {(x',y'). x = x' \<or> x = y'}" |
   "gen (c1;;c2) = (gen c1 - kill c1)  \<union> gen c2" |
   "kill (c1;;c2) = (kill c1 - gen c2) \<union> kill c2" |
   "gen (IF b THEN c1 ELSE c2) = gen c1 \<inter> gen c2" |

@@ -68,55 +68,16 @@ begin
     lemma wlp_conseq: "wlp c P s \<Longrightarrow> \<lbrakk>\<And>s. P s \<Longrightarrow> Q s\<rbrakk> \<Longrightarrow> wlp c Q s" by auto
   end    
 
+
   subsection \<open>Weakest Liberal Precondition of While\<close>
-      
+
   lemma wlp_while_unfold: 
     "wlp (WHILE b DO c) Q s 
     = (if bval b s then wlp c (wlp (WHILE b DO c) Q) s else Q s)"
     apply (subst wlp_equiv[OF while_unfold])
     apply (simp add: wlp_eq')
     done
-
-   theorem wlp_whileI':
-  assumes INIT: "I s\<^sub>0"
-  assumes STEP: "\<And>s. I s \<Longrightarrow> (if bval b s then wlp c I s else Q s)"
-  shows "wlp (WHILE b DO c) Q s\<^sub>0"
-    apply(simp add: wlp_while_unfold)
-     apply(rule conjI)
-      defer 1
-      apply (simp add: INIT STEP)
-     apply(rule impI)
-     apply(cut_tac INIT)
-     apply(simp add: wlp_def)
-     apply(induction "WHILE b DO c" s\<^sub>0 t rule: big_step_induct )
-
-  oops
-
-  theorem wlp_whileI':
-  assumes INIT: "I s\<^sub>0"
-  assumes STEP: "\<And>s. I s \<Longrightarrow> (if bval b s then wlp c I s else Q s)"
-  shows "wlp (WHILE b DO c) Q s\<^sub>0"
-    apply(unfold wlp_def; clarify)
-    subgoal for t 
-  by(cut_tac INIT  ; 
-     induction "WHILE b DO c" s\<^sub>0 t rule: big_step_induct ;
-     (meson assms wlp_def)+ ) 
-  oops
-
-  theorem wlp_whileI'1:
-  assumes INIT: "I s\<^sub>0"
-  assumes STEP: "\<And>s. I s \<Longrightarrow> (if bval b s then wlp c I s else Q s)"
-  shows "wlp (WHILE b DO c) Q s\<^sub>0"
-    unfolding wlp_def
-  proof clarify
-    fix t 
-    show "(WHILE b DO c, s\<^sub>0) \<Rightarrow> t \<Longrightarrow> Q t" 
-      apply(insert INIT)
-      apply(induction "WHILE b DO c" s\<^sub>0 t rule: big_step_induct)
-      apply(meson STEP)
-      apply(meson  wlp_while_unfold wlp_conseq 
-  qed
-                             
+  
   lemma wlp_whileI':
     assumes INIT: "I s\<^sub>0"
     assumes STEP: "\<And>s. I s \<Longrightarrow> (if bval b s then wlp c I s else Q s)"
@@ -149,7 +110,7 @@ begin
   
 
 section \<open>Proving Partial Correctness\<close>
-
+thm while_unfold
   
   text \<open>Equivalent form of while-rule, where invariant preservation
      assumption is independent of postcondition.\<close>
@@ -415,10 +376,8 @@ section \<open>Total Correctness\<close>
     unfolding prog_exp_def
     apply (subst wp_annotate_while[where 
           I="\<lambda>s'. s' ''a'' = 2 ^ nat (s ''n'' - s' ''n'') \<and> 0 \<le> s' ''n'' \<and> s' ''n'' \<le> s ''n''" 
-      and R = "measure (\<lambda>s. undefined nat (s ''n'') s)"]
+      and R = "measure (\<lambda>s. undefined (s ''n''))"]
       )
-    (* if we didnt have 0 \<le> s' ''n'', we would have to do a shift *)
-    (* to see what is happening we may write (\<lambda>s. undefined nat (s ''n'') s) *)
     apply smartvcg  
     apply (auto simp: algebra_simps nat_distribs) 
     oops

@@ -170,8 +170,8 @@ next
     using ptype_eq_Rty taval_elims(2) by blast 
 next
   case (Plus_ty \<Gamma> a1 \<tau> a2)
-  then show ?case
-    by (metis ptype.simps(1) ptype.simps(2) taval_elims(4))
+  from taval_elims(4)[of a1 a2 s v] Plus_ty ptype.simps
+   show ?case by metis
 next
   case (Vidx_Ity \<Gamma> i a v)
   from \<open>taval (Vidx a i) s v\<close>  show ?case 
@@ -188,32 +188,38 @@ qed
 
 theorem aprogress: "\<Gamma> \<turnstile> a : \<tau> \<Longrightarrow> \<Gamma> \<turnstile> s \<Longrightarrow> \<exists>v. taval a s v"
 proof(induction rule: atyping.induct)
-case (Ic_ty \<Gamma> i)
-  then show ?case using taval_Ic by auto
+  case (Ic_ty \<Gamma> i) then show ?case using taval.intros(1) by auto
 next
-  case (Rc_ty \<Gamma> r)
-  then show ?case using taval_Rc by blast
+  case (Rc_ty \<Gamma> r) then show ?case using taval.intros(2) by blast
 next
   case (Plus_ty \<Gamma> a1 \<tau> a2)
-  then obtain v1 v2 where v: "taval a1 s v1" "taval a2 s v2" by blast
+  then obtain v1 v2 where 
+  v: "taval a1 s v1" "taval a2 s v2" by blast
   show ?case
   proof (cases v1)
-    case Iv
-    with Plus_ty v show ?thesis 
-      by (metis (full_types)  apreservation ptype.elims ptype_eq_Rty taval_PlusInt taval_PlusReal ty.distinct(2))
+    case (Iv i)
+    from apreservation[of \<Gamma> a1 \<tau> s v1]  Plus_ty.hyps(1) Plus_ty.prems v(1)
+    have "ptype v1 = \<tau>" by simp
+    from this ptype.simps(1)[of i] Iv 
+    have "\<tau> = Ity" by simp
+    from this Plus_ty.hyps(2) Plus_ty.prems apreservation[of \<Gamma> a2 \<tau> s v2] v(2)
+    have "ptype v2 = Ity"  by auto
+    then obtain j where "v2 = (Iv j)" by auto
+    from v this Iv taval.intros(3)[of a1 s i a2 j]
+     show ?thesis by auto
   next
     case Rv
     with Plus_ty v show ?thesis
       by (metis (full_types) apreservation ptype.elims ptype_eq_Ity taval_PlusInt taval_PlusReal ty.distinct(2))
   qed
 next
-case (Vidx_Ity \<Gamma> i a)
+  case (Vidx_Ity \<Gamma> i a)
   then show ?case 
     by (metis apreservation ptype.elims styping_def taval_Ia ty.distinct(1) type.elims)
 next
   case (Vidx_Rty \<Gamma> i a)
-then show ?case 
-  by (metis apreservation ptype.elims taval_Ia taval_Ra ty.distinct(1) type.elims) 
+  then show ?case 
+    by (metis apreservation ptype.elims taval_Ia taval_Ra ty.distinct(1) type.elims) 
 qed
 
 theorem bprogress: "\<Gamma> \<turnstile> b \<Longrightarrow> \<Gamma> \<turnstile> s \<Longrightarrow> \<exists>v. tbval b s v"
@@ -235,26 +241,17 @@ qed (auto intro: tbval.intros)
   
 theorem progress:
   "\<Gamma> \<turnstile> c \<Longrightarrow> \<Gamma> \<turnstile> s \<Longrightarrow> c \<noteq> SKIP \<Longrightarrow> \<exists>cs'. (c,s) \<rightarrow> cs'"
- proof(induction rule: ctyping.induct)
-case (Skip_ty \<Gamma>)
-then show ?case  by simp
+proof(induction rule: ctyping.induct)
+   case (Skip_ty \<Gamma>) then show ?case  by simp
 next
-  case (Seq_ty \<Gamma> c1 c2)
-  then show ?case by simp (metis Seq1 Seq2)
+  case (Seq_ty \<Gamma> c1 c2) then show ?case by simp (metis Seq1 Seq2)
 next
   case (If_ty \<Gamma> b c1 c2)
-  then obtain bv where "tbval b s bv" by (metis bprogress)
-  show ?case
-  proof(cases bv)
-    assume "bv"
-    with \<open>tbval b s bv\<close> show ?case by simp (metis IfTrue)
-  next
-    assume "\<not>bv"
-    with \<open>tbval b s bv\<close> show ?case by simp (metis IfFalse)
-  qed
+  then obtain bv where 1: "tbval b s bv" by (metis bprogress)
+  from IfTrue IfFalse 1 show ?case
+    by(cases bv, (metis (full_types))+)
 next
-case (While_ty \<Gamma> b c)
-  then show ?case by (metis While)
+  case (While_ty \<Gamma> b c) then show ?case by (metis While)
 next
   case (AssignIdx_ty \<Gamma> i a \<tau> x)
   from this(1) this(4) 
@@ -296,12 +293,12 @@ theorem styping_preservation:
   "(c,s) \<rightarrow> (c',s') \<Longrightarrow> \<Gamma> \<turnstile> c \<Longrightarrow> \<Gamma> \<turnstile> s \<Longrightarrow> \<Gamma> \<turnstile> s'"
 proof(induction rule: small_step_induct)
   case (AssignIdxI v s iv i idx a f)
-  then show ?case 
-  proof -
-   have "\<forall>cs. \<Gamma> cs = type (s cs)" by (metis AssignIdxI.prems(2) styping_def)
-   then show ?thesis 
-   using AssignIdxI.hyps(3) styping_def by auto
- qed
+  from AssignIdxI.prems(2) styping_def[of \<Gamma> s]
+  have "\<And>cs. type (s cs) = \<Gamma> cs" by metis 
+  from this styping_def[of \<Gamma> "s(a := Ia (f(idx := iv)))"]
+       AssignIdxI.hyps(3) 
+  show ?case 
+    by (metis fun_upd_apply type.simps(1))
 next
   case (AssignIdxR v s rv i idx a f)
   then show ?case  
@@ -351,12 +348,23 @@ theorem ctyping_preservation:
 abbreviation small_steps :: "com * state \<Rightarrow> com * state \<Rightarrow> bool" (infix "\<rightarrow>*" 55)
   where "x \<rightarrow>* y == star small_step x y"
 
+thm star_induct[]
 corollary type_sound:
   "(c,s) \<rightarrow>* (c',s') \<Longrightarrow> \<Gamma> \<turnstile> c \<Longrightarrow> \<Gamma> \<turnstile> s \<Longrightarrow> c' \<noteq> SKIP
    \<Longrightarrow> \<exists>cs''. (c',s') \<rightarrow> cs''"
-apply(induction rule:star_induct)
-apply (metis progress)
-by (metis styping_preservation ctyping_preservation)
+proof(induction rule: star_induct)
+  case (refl c s)
+  then show ?case by(metis progress)
+next
+  case (step c s c' s' c'' s'')
+  from styping_preservation[of c s c' s' \<Gamma>] 
+       step.prems(1-2) step.hyps(1) 
+  have 1: "\<Gamma> \<turnstile> s'" by simp
+  from ctyping_preservation[of c s c' s' \<Gamma>]
+       step.hyps(1) step.prems(1) 
+  have 2: "\<Gamma> \<turnstile> c'" by simp
+  from 1 2 step.IH step.prems(3) show ?case by simp
+qed
 
 text \<open>Hint: Note that the original proofs are highly automated. Do not expect your proofs
 to be quite as automated!

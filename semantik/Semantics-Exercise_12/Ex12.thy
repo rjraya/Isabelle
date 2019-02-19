@@ -1,5 +1,5 @@
 theory Ex12
-  imports "IMP.Types" 
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Types"
 begin
 
 fun atype :: "tyenv \<Rightarrow> aexp \<Rightarrow> ty option" where
@@ -13,8 +13,8 @@ fun atype :: "tyenv \<Rightarrow> aexp \<Rightarrow> ty option" where
  )"
 
 lemma atyping_atype: "(\<Gamma> \<turnstile> a : \<tau>) = (atype \<Gamma> a = Some \<tau>)"
-  apply(induction \<Gamma> a rule: atype.induct)
-  apply(auto split: if_splits option.splits)
+  apply(induction a)
+  apply(auto split: option.splits)
   done
 
 fun bok :: "tyenv \<Rightarrow> bexp \<Rightarrow> bool" where

@@ -1,5 +1,6 @@
 theory Ex14
-  imports "IMP.Small_Step" "IMP.Live"
+  imports "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Small_Step"
+          "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Live"
 begin
 
 lemma [simp]: "s1 = s2 on X \<Longrightarrow> vars a \<subseteq> X \<Longrightarrow> aval a s1 = aval a s2"
@@ -15,9 +16,14 @@ lemma small_step_confinement: "(c,s) \<rightarrow> (c',s') \<Longrightarrow> s =
   by(induction rule: small_step_induct,auto) 
 
 lemma small_steps_confinement: "(c,s) \<rightarrow>* (c',s') \<Longrightarrow> s = s' on UNIV - vars c"
-  apply(induction rule: star_induct,simp)
-  using small_step_confinement vars_subsetD 
-  by (metis DiffD2 DiffI UNIV_I subsetCE )
+proof(induction rule: star_induct)
+  case (step c s c' s1) 
+  from small_step_confinement[of c s c' s1] step.hyps(1)
+  have 1: "s = s1 on UNIV - vars c" by simp
+  from vars_subsetD[of c s c' s1] step.IH step.hyps(1)
+  have 2: "s1 = s' on UNIV - vars c" by blast
+  from 1 2 show ?case by auto
+qed simp
 
 lemma small_step_indep:
  "(c,s) \<rightarrow> (c',s') \<Longrightarrow> s = t on X \<Longrightarrow> vars c \<subseteq> X \<Longrightarrow> 
@@ -41,9 +47,6 @@ next
   with \<open>(c,t) \<rightarrow> (c1,t1)\<close>  show ?case by(blast intro: star_step)
 qed
   
-  
-  
-thm star_induct
 lemma small_steps_SeqE: 
  "(c1;;c2,s) \<rightarrow>* (SKIP,s') \<Longrightarrow> 
   \<exists> t. (c1,s) \<rightarrow>* (SKIP,t) \<and> (c2,t) \<rightarrow>* (SKIP,s')"
@@ -66,25 +69,33 @@ theorem Seq_equiv_Seq_reorder:
   assumes vars: "vars c1 \<inter> vars c2 = {}"
   shows "(c1 ;; c2) \<sim>\<^sub>s (c2 ;; c1)" 
 proof -
-  {
-    fix c1 c2 s t
-    assume A: "(c1;;c2,s) \<rightarrow>* (SKIP,t)" and vars: "vars c1 \<inter> vars c2 = {}"
-    thm small_steps_indep small_steps_confinement small_steps_SeqE seq_comp
-    from A(1) small_steps_SeqE[of c1 c2 s t] obtain s1 where 
-     c1: "(c1, s) \<rightarrow>* (SKIP, s1)" and c2: "(c2, s1) \<rightarrow>* (SKIP, t)" by blast
-    from small_steps_confinement[OF c2] small_steps_confinement[OF c1]
-      have s1_t: "s1 = t on UNIV -vars c2" and s1_s: "s = s1 on UNIV -vars c1" 
+  { fix s t and c1 c2 :: com
+    assume A: "vars c1 \<inter> vars c2 = {}" "(c1 ;; c2, s) \<rightarrow>* (SKIP, t)"
+    from small_steps_SeqE[OF A(2)] obtain s1 where
+      c1: "(c1, s) \<rightarrow>* (SKIP, s1)" and c2: "(c2, s1) \<rightarrow>* (SKIP, t)"
+      by blast
+    from small_steps_confinement[OF c2] small_steps_confinement[OF c1] have
+      "s1 = t on UNIV - vars c2" and s1_s: "s1 = s on UNIV - vars c1"
       by auto
     from small_steps_indep[OF c2 s1_s] A(1) obtain t1 where
-      step1: "(c2,s) \<rightarrow>* (SKIP,t1)" "t = t1 on UNIV - vars c1" sorry
-   
-
-    from this seq_comp[of c2 t' t c1]
-    have "(c2;;c1,s) \<rightarrow>* (SKIP,t)" 
-    proof -
-
-    qed
-  } with vars show ?thesis unfolding equiv_com_def by (metis Int_commute)
+      step1: "(c2, s) \<rightarrow>* (SKIP, t1)" "t = t1 on UNIV - vars c1"
+      by blast
+    from small_steps_confinement[OF step1(1)] have "s = t1 on UNIV - vars c2" .
+    from small_steps_indep[OF c1 this] A(1) obtain t' where
+      step2: "(c1, t1) \<rightarrow>* (SKIP, t')" "s1 = t' on UNIV - vars c2"
+      by blast
+    from small_steps_confinement[OF step2(1)] have "t1 = t' on UNIV - vars c1" .
+    from seq_comp[OF step1(1) step2(1)] have steps: "(c2 ;; c1, s) \<rightarrow>* (SKIP, t')" .
+    moreover have "t' = t"
+      using \<open>t1 = t' on UNIV - vars c1\<close> \<open>t = t1 on UNIV - vars c1\<close>
+      using \<open>s1 = t' on UNIV - vars c2\<close> \<open>s1 = t on UNIV - vars c2\<close>
+      using \<open>vars c1 \<inter> vars c2 = {}\<close>
+      by(simp add: set_eq_iff) (metis DiffI ext iso_tuple_UNIV_I)
+    ultimately have "(c2 ;; c1, s) \<rightarrow>* (SKIP, t)"
+      by simp
+  } note * = this
+  from *[of c1 c2] *[of c2 c1] show ?thesis
+    using vars unfolding equiv_com_def by blast
 qed
 
 end

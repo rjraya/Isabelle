@@ -19,7 +19,13 @@ fun ccomp_opt :: "com \<Rightarrow> instr list" where
  (let cc = ccomp_opt  c; cb = bcomp b False (size cc + 1)
   in cb @ cc @ [JMP (-(size cb + size cc + 1))])"
 
-
+lemma ccomp_opt_if:
+  assumes "c\<^sub>2 \<noteq> SKIP"
+  shows
+  "ccomp_opt (IF b THEN c\<^sub>1 ELSE c\<^sub>2) =
+  (let cc\<^sub>1 = ccomp_opt c\<^sub>1; cc\<^sub>2 = ccomp_opt c\<^sub>2; cb = bcomp b False (size cc\<^sub>1 + 1)
+   in cb @ cc\<^sub>1 @ JMP (size cc\<^sub>2) # cc\<^sub>2)"
+  using assms by (cases c\<^sub>2) auto
 
 lemma ccomp_bigstep:
   "(c,s) \<Rightarrow> t \<Longrightarrow> ccomp_opt c \<turnstile> (0,s,stk) \<rightarrow>* (size(ccomp_opt c),t,stk)"
@@ -39,7 +45,7 @@ next
   case (WhileTrue b s1 c s2 s3)
   let ?cc = "ccomp_opt c"
   let ?cb = "bcomp b False (size ?cc + 1)"
-  let ?cw = "ccomp(WHILE b DO c)"
+  let ?cw = "ccomp_opt(WHILE b DO c)"
   have "?cw \<turnstile> (0,s1,stk) \<rightarrow>* (size ?cb,s1,stk)"
     using \<open>bval b s1\<close> by (fastforce intro!: bcomp_correct)
   moreover
@@ -52,12 +58,44 @@ next
   have "?cw \<turnstile> (0,s2,stk) \<rightarrow>* (size ?cw,s3,stk)" by(rule WhileTrue.IH(2))
   ultimately show ?case by(blast intro: star_trans)
 next
-  case (IfFalse b s c2 t c1) thus ?case 
+  case (IfFalse b s c2 t c1) 
+  let ?cc1 = "ccomp_opt c1"
+  let ?cc2 = "ccomp_opt c2"
+  show ?case
+  proof(cases "c2 = SKIP")
+    case True
+    let ?cb = "bcomp b False (size ?cc1)"
+    from True show ?thesis using IfFalse(1-2) 
+      using bcomp_correct[of "size ?cc1" b False s stk] by auto
+  next
+    case False 
+    let ?cb = "bcomp b False (size ?cc1 + 1)"
+    from ccomp_opt_if[of c2 b c1] False
+    have "ccomp_opt (IF b THEN c1 ELSE c2) =
+          ?cb @ ?cc1 @ (JMP (size ?cc2) # ?cc2)" by simp
+    from this  show ?thesis using IfFalse(1) IfFalse(3) 
+      using bcomp_correct[of "size ?cc1 + 1" b False s stk] by force
+  qed  
 next
-  case (IfTrue b s c1 t c2) thus ?case apply auto
-    apply (rule exec_append_trans[OF bcomp_correct]; simp)
-    apply ((rule exec_append_trans, assumption); simp)
-    by fastforce
+  case (IfTrue b s c1 t c2) 
+  let ?cc1 = "ccomp_opt c1"
+  let ?cc2 = "ccomp_opt c2"
+  show ?case
+  proof(cases "c2 = SKIP")
+    case True
+    let ?cb = "bcomp b False (size ?cc1)"
+    from True show ?thesis using IfTrue(1) IfTrue(3)
+      using bcomp_correct[of "size ?cc1" b False s stk] by force
+  next
+    case False 
+    let ?cb = "bcomp b False (size ?cc1 + 1)"
+    from ccomp_opt_if[of c2 b c1] False
+    have "ccomp_opt (IF b THEN c1 ELSE c2) =
+          ?cb @ ?cc1 @ (JMP (size ?cc2) # ?cc2)" by simp
+    from this show ?thesis using IfTrue
+      using bcomp_correct[of "size ?cc1 + 1" b False s stk] 
+      sorry
+  qed  
 qed (fastforce intro!: bcomp_correct)+
 
 

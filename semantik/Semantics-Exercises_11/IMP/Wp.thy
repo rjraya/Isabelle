@@ -104,16 +104,16 @@ begin
       case (UntilTrue s s') with STEP[of \<open>s\<close>] 
       show ?case unfolding wlp_def by auto  
     next
-      case (UntilFalse s s' t)
-      with STEP[of s] have "I s'" unfolding wlp_def by auto
-      then show ?case
-        using STEP UntilFalse.hyps(1) UntilFalse.hyps(2) UntilFalse.hyps(5) wlp_def by auto 
+      case (UntilFalse s' s t)
+      from UntilFalse(1) UntilFalse(2) STEP[of s] 
+           UntilFalse.prems
+      have "I s'" unfolding wlp_def by simp
+      from this UntilFalse(5) show ?case by simp
     qed
   qed
 
 section \<open>Proving Partial Correctness\<close>
 
-  
   text \<open>Equivalent form of while-rule, where invariant preservation assumption is independent of postcondition.\<close>
   lemma wlp_whileI:
     assumes INIT: "I s\<^sub>0"
@@ -300,16 +300,16 @@ section \<open>Total Correctness\<close>
     apply (subst wp_while_unfold)
     by (smt STEP wp_conseq)
 
- lemma wp_until_unfold: "wp (DO c UNTIL b) Q s = 
-      wp c (\<lambda> s'. if bval b s' then Q s' else (wp (WHILE b DO c) Q) s') s"
-    apply (subst wp_equiv[OF until_unfold])
-   apply (simp add: wp_eq')
-   apply(rule arg_cong2[where f = "wp c"])
-   apply(rule ext)
+lemma wp_until_unfold: 
+  "wp (DO c UNTIL b) Q s = 
+   wp c (\<lambda> s'. if bval b s' then Q s' else (wp (DO c UNTIL b) Q s')) s"
+  apply (subst wp_equiv[OF until_unfold])
+  apply (subst wp_eq'(3)) 
+  apply(rule arg_cong2[where f = "wp c"])
+    apply(rule ext)
     apply(subst wp_if_eq)
     apply simp
-    apply(subst wp_skip_eq)
-   sorry
+  by(subst wp_skip_eq,simp,simp)
 
 lemma wp_untilI':
     assumes WF: "wf R"
@@ -317,7 +317,14 @@ lemma wp_untilI':
     assumes STEP: "\<And>s. I s \<Longrightarrow> 
       wp c (\<lambda> s'. if bval b s' then Q s' else I s' \<and> (s',s)\<in>R) s"
     shows "wp (DO c UNTIL b) Q s\<^sub>0"
-    sorry
+  using WF INIT
+proof(induction)
+  case (less s)
+  then show "wp (DO c UNTIL b) Q s"
+    apply(subst wp_until_unfold[of c b Q s])
+    thm wp_conseq  STEP[of s] less.IH
+    using STEP[of s] by(rule wp_conseq,simp,simp)
+qed
     
    text \<open>Detailed Isar proof of @{thm [source] wp_whileI'}:\<close>
   lemma 
@@ -345,7 +352,7 @@ lemma wp_untilI':
       qed
     qed
   qed
-          
+  
   text \<open>Equivalent form of while-rule, where invariant preservation assumption is independent of postcondition.\<close>
   lemma wp_whileI:
     assumes WF: "wf R"

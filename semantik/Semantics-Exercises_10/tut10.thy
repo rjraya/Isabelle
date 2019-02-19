@@ -1,5 +1,7 @@
 theory tut10
-  imports "IMP2.VCG" "IMP2.Examples"
+  imports 
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/automation/IMP2_VCG"
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/doc/Examples"
           
 begin
 
@@ -20,6 +22,9 @@ theorem
   apply (induction \<pi> c s t rule: big_step_induct)
   apply auto
   by (metis PCall domI)
+
+
+
  
 procedure_spec pop (stack,ptr) returns (x,stack,ptr)
   assumes "ptr > 0"
@@ -34,11 +39,16 @@ procedure_spec push (x,stack,ptr) returns (stack,ptr)
   for x
 defines 
 \<open>stack[ptr] = x; ptr = ptr + 1 \<close>
-  by vcg_cs fastforce
+  apply vcg_cs 
+  by fastforce
+
+
+
   
 procedure_spec (partial) dfs
   assumes "0 \<le> x \<and> 0 \<le> s"
-  ensures "b = 1 \<longrightarrow> x \<in> (Edges a)\<^sup>* `` {s}" defines \<open>
+  ensures "b = 1 \<longrightarrow> x \<in> (Edges a)\<^sup>* `` {s}" 
+defines \<open>
   b = 0;
   clear stack[];
   (stack,i) = push(s,stack,i);
@@ -46,6 +56,7 @@ procedure_spec (partial) dfs
     @invariant \<open>0 \<le> i \<and> 
     stack ` {0..<(if b = 1 then i + 1 else i)} \<subseteq> (Edges a)\<^sup>* `` {s}
     \<and> (b = 1 \<longrightarrow> stack i = x)\<close>
+    @variant\<open> 0\<close>
   {
     (next,stack,i) = pop(stack,i);
     if (next == x) {

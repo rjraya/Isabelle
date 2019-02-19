@@ -265,20 +265,58 @@ next
     by fastforce
 next
   case (UntilFalse b s\<^sub>2 c s\<^sub>1 s\<^sub>3)
-  then show ?case sorry
+  let ?cc = "ccomp c"
+  let ?cb = "bcomp b True 1"
+  let ?cu = "ccomp(DO c UNTIL b)"
+  let ?jmp = "[JMP (- (size ?cb + size ?cc + 1))]"
+  from UntilFalse.IH exec_appendR[of ?cc]
+  have "?cu \<turnstile> (0, s\<^sub>1, stk) \<rightarrow>* (size ?cc, s\<^sub>2, stk)" by simp
+  moreover
+  from  UntilFalse(1) bcomp_correct[of 1 b True s\<^sub>2 stk]
+  have "?cb \<turnstile> (0, s\<^sub>2, stk) \<rightarrow>* (size ?cb, s\<^sub>2, stk)" 
+    by auto
+  from this 
+       exec_appendL_if[of "?cc" "size ?cc" "?cb" s\<^sub>2 stk
+                          "size ?cb" s\<^sub>2 stk]
+       exec_appendR[of "?cc @ ?cb"]
+       ccomp.simps(6)[of c b]
+  have "?cu \<turnstile> (size ?cc, s\<^sub>2, stk) \<rightarrow>* 
+              (size ?cb + size ?cc, s\<^sub>2, stk)" 
+    by(simp add: exec_appendL_if[of "?cc" "size ?cc" "?cb" s\<^sub>2 stk
+                          "size ?cb" s\<^sub>2 stk])
+  moreover 
+  have "?jmp \<turnstile> (0, s\<^sub>2, stk) \<rightarrow>* (- (size ?cb + size ?cc), s\<^sub>2, stk)"
+    by force
+  from this 
+  have "?cu \<turnstile> (size ?cb + size ?cc, s\<^sub>2, stk) \<rightarrow>* 
+              (0, s\<^sub>2, stk)"
+    by fastforce
+  ultimately
+  show ?case using UntilFalse.IH[of stk] by auto
 next
   case (UntilTrue c s s' b)
   let ?cc = "ccomp c"
-  let ?cb = "bcomp b False (size ?cc + 1)"
-  let ?cw = "ccomp(DO c UNTIL b)"
-  from UntilTrue(3)[of stk] have "?cw \<turnstile> (0,s,stk) \<rightarrow>* (size (ccomp c),s',stk)" by auto
-  moreover from \<open>bval b s'\<close> have "?cw \<turnstile> (size ?cc,s',stk) \<rightarrow>* (size ?cw,s',stk)"
-    using bcomp_correct[of 1 b True s' stk]
-    apply auto 
-    sorry
-  ultimately show ?case
-    apply simp
-    sorry
+  let ?cb = "bcomp b True 1"
+  let ?cu = "ccomp(DO c UNTIL b)"
+  from UntilTrue.IH exec_appendR[of ?cc]
+  have 1: "?cu \<turnstile> (0, s, stk) \<rightarrow>* (size ?cc, s', stk)" by simp
+  
+  from  UntilTrue(2) bcomp_correct[of 1 b True s' stk]
+  have "?cb \<turnstile> (0, s', stk) \<rightarrow>* (size ?cb + 1, s', stk)" by simp
+  from this 
+       exec_appendL_if[of "?cc" "size ?cc" "?cb" s' stk
+                          "size ?cb + 1" s' stk]
+       exec_appendR[of "?cc @ ?cb"]
+       ccomp.simps(6)[of c b]
+  have 2: "?cu \<turnstile> (size ?cc, s', stk) \<rightarrow>* 
+              (size ?cb + size ?cc + 1, s', stk)" 
+    by(simp add: exec_appendL_if[of "?cc" "size ?cc" "?cb" s' stk
+                          "size ?cb + 1" s' stk])
+  from 1 2 have "ccomp (DO c UNTIL b) \<turnstile> (0, s, stk) \<rightarrow>* (size (bcomp b True 1) + size (ccomp c) + 1, s', stk)"
+   using star_trans by simp
+    moreover
+  have "size (ccomp (DO c UNTIL b)) = size ?cb + size ?cc + 1" by auto
+  ultimately show ?case by metis
 qed (fastforce intro!: bcomp_correct)+
 
 end

@@ -91,8 +91,25 @@ begin
     are available here!
   *)  
   
-  
-  
+   lemma wlp_untilI':
+    assumes INIT: "I s\<^sub>0"
+    assumes STEP: "\<And>s. I s \<Longrightarrow> wlp c (\<lambda> s'. if bval b s' then Q s' else I s') s"
+    shows "wlp (DO c UNTIL b) Q s\<^sub>0"
+     unfolding wlp_def
+  proof clarify
+    fix t
+    assume "(DO c UNTIL b, s\<^sub>0) \<Rightarrow> t"
+    thus "Q t" using INIT
+    proof (induction "DO c UNTIL b" s\<^sub>0 t rule: big_step_induct)
+      case (UntilTrue s s') with STEP[of \<open>s\<close>] 
+      show ?case unfolding wlp_def by auto  
+    next
+      case (UntilFalse s s' t)
+      with STEP[of s] have "I s'" unfolding wlp_def by auto
+      then show ?case
+        using STEP UntilFalse.hyps(1) UntilFalse.hyps(2) UntilFalse.hyps(5) wlp_def by auto 
+    qed
+  qed
 
 section \<open>Proving Partial Correctness\<close>
 
@@ -282,9 +299,27 @@ section \<open>Total Correctness\<close>
     apply induction
     apply (subst wp_while_unfold)
     by (smt STEP wp_conseq)
+
+ lemma wp_until_unfold: "wp (DO c UNTIL b) Q s = 
+      wp c (\<lambda> s'. if bval b s' then Q s' else (wp (WHILE b DO c) Q) s') s"
+    apply (subst wp_equiv[OF until_unfold])
+   apply (simp add: wp_eq')
+   apply(rule arg_cong2[where f = "wp c"])
+   apply(rule ext)
+    apply(subst wp_if_eq)
+    apply simp
+    apply(subst wp_skip_eq)
+   sorry
+
+lemma wp_untilI':
+    assumes WF: "wf R"
+    assumes INIT: "I s\<^sub>0"
+    assumes STEP: "\<And>s. I s \<Longrightarrow> 
+      wp c (\<lambda> s'. if bval b s' then Q s' else I s' \<and> (s',s)\<in>R) s"
+    shows "wp (DO c UNTIL b) Q s\<^sub>0"
+    sorry
     
-    
-  text \<open>Detailed Isar proof of @{thm [source] wp_whileI'}:\<close>
+   text \<open>Detailed Isar proof of @{thm [source] wp_whileI'}:\<close>
   lemma 
     assumes WF: "wf R"
     assumes INIT: "I s\<^sub>0"

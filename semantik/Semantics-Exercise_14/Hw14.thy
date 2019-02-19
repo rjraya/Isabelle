@@ -44,7 +44,7 @@ theorem mono:
   shows "f x \<subseteq> f y"
 proof -
   from continuous[of "{x,y}"] have rewrite: "f (x \<union> y) = f(x) \<union> f(y)" by auto
-  from this inc have "x \<union> y = y" by auto
+  from inc have "x \<union> y = y" by auto
   from this have 1: "f(x \<union> y) = f(y)" by simp
   from rewrite have 2: "f(x) \<subseteq> f(x \<union> y)" by simp
   from 1 2 show "f(x) \<subseteq> f(y)" by simp
@@ -77,15 +77,14 @@ qed
 
 theorem lfp_le: "lfp f \<subseteq> \<Union> {(f^^i){}|i. True}" (is "_ \<subseteq> \<Union> ?S")
 proof -
-  have "(f^^0) {} = {}" by simp
   from continuous[of ?S] 
-  have 0: "f (\<Union>{(f ^^ i) {} |i. True}) = UNION {(f ^^ i) {} |i. True} f" by blast
-  then have 1: "... =  \<Union> {(f ^^ (i+1)) {} |i. True}" by auto
+  have 1: "f (\<Union>{(f ^^ i) {} |i. True}) = \<Union> {(f ^^ (i+1)) {} |i. True}" by auto
   then have 2: "... = ((f^^0) {}) \<union> (\<Union> {(f ^^ (i+1)) {} |i. True})" by simp
   then have 3: "... = \<Union> {(f ^^ (i+1)) {} |i. True}" by simp
-  from 0 1 2 3 have 4: "f (\<Union>{(f ^^ i) {} |i. True}) = \<Union> {(f ^^ (i+1)) {} |i. True}" by simp
-  have lower: "lfp f \<subseteq> x" if "f x \<subseteq> x" for x using that unfolding lfp_def by auto
-  from lower[of "\<Union>{(f ^^ i) {} |i. True}"] 4 show " lfp f \<subseteq> \<Union>{(f ^^ i) {} |i. True}" by blast
+  have 4: "f (\<Union>{(f ^^ i) {} |i. True}) = \<Union> {(f ^^ (i+1)) {} |i. True}" 
+    using "1" by auto
+  from lfp_lowerbound[of f "\<Union>{(f ^^ i) {} |i. True}"] 4 
+  show "lfp f \<subseteq> \<Union>{(f ^^ i) {} |i. True}" by blast
 qed
 
 corollary 

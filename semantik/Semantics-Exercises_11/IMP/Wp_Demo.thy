@@ -70,7 +70,7 @@ begin
 
 
   subsection \<open>Weakest Liberal Precondition of While\<close>
-      
+
   lemma wlp_while_unfold: 
     "wlp (WHILE b DO c) Q s 
     = (if bval b s then wlp c (wlp (WHILE b DO c) Q) s else Q s)"
@@ -110,7 +110,7 @@ begin
   
 
 section \<open>Proving Partial Correctness\<close>
-
+thm while_unfold
   
   text \<open>Equivalent form of while-rule, where invariant preservation
      assumption is independent of postcondition.\<close>
@@ -381,7 +381,104 @@ section \<open>Total Correctness\<close>
     apply smartvcg  
     apply (auto simp: algebra_simps nat_distribs) 
     oops
-    
-  
+
+    section \<open>Completeness of until rule\<close>
+
+lemma wlp_until_unfold:
+  "wlp (DO c UNTIL b) Q s = 
+   wlp c (\<lambda> s. if bval b s then Q s else wlp (DO c UNTIL b) Q s) s"
+  apply(subst wlp_equiv[OF until_unfold])
+  apply(subst wlp_seq_eq)
+  apply(subst wlp_if_eq[abs_def])
+  apply(subst wlp_skip_eq)
+  apply(simp)
+  done
+
+text \<open>Idea: Use \<open>wlp\<close> as invariant\<close>
+lemma wlp_untilI'_complete:
+  assumes "wlp (DO c UNTIL b) Q s\<^sub>0"
+  obtains I where
+    "I s\<^sub>0"
+    "\<And>s. I s \<Longrightarrow> wlp c (\<lambda>s'. if bval b s' then Q s' else I s') s"
+proof 
+  let ?I = "wlp (DO c UNTIL b) Q"
+  {
+    show "?I s\<^sub>0" by fact
+  next
+    fix s
+    assume "?I s"
+    then show "wlp c (\<lambda>s'. if bval b s' then Q s' else ?I s') s"
+      apply(subst (asm) wlp_until_unfold)
+      by(assumption)
+  }  
+qed
+
+text \<open>Idea: Remaining loop iterations as variant\<close>
+
+inductive count_it for b c where
+  "(c, s) \<Rightarrow> s' \<Longrightarrow> bval b s' \<Longrightarrow> count_it b c s 1"
+| "\<lbrakk>(c,s) \<Rightarrow> s'; \<not> bval b s'; count_it b c s' n \<rbrakk> \<Longrightarrow> count_it b c s (Suc n)"  
+
+lemma count_it_determ:
+  "count_it b c s n \<Longrightarrow> count_it b c s n' \<Longrightarrow> n' = n"
+  apply(induction arbitrary: n' rule: count_it.induct)
+  by(metis big_step_determ count_it.cases)+
+
+lemma count_it_ex:   
+  assumes "(DO c UNTIL b,s) \<Rightarrow> t"
+  shows "\<exists>n. count_it b c s n"
+  using assms
+  apply(induction "DO c UNTIL b" s t rule: big_step_induct)
+  apply(force intro: count_it.intros(2))
+  apply(force intro: count_it.intros(1))
+  done
+
+definition "variant b c s \<equiv> THE n. count_it b c s n"
+
+lemma variant_decreases:
+  assumes STEPB: "\<not> bval b s'" 
+  assumes STEPC: "(c,s) \<Rightarrow> s'" 
+  assumes TERM: "(DO c UNTIL b,s') \<Rightarrow> t"
+  shows "variant b c s' < variant b c s"
+proof -
+  from count_it_ex[OF TERM] obtain n' where CI': "count_it b c s' n'" ..
+  moreover from count_it.intros(2)[OF STEPC STEPB this] have "count_it b c s (Suc n')" .
+  ultimately have "variant b c s' = n'" "variant b c s = Suc n'" 
+    unfolding variant_def using count_it_determ by blast+
+  thus ?thesis by simp 
+qed
+
+lemma wp_until_unfold:
+  "wp (DO c UNTIL b) Q s = wp c (\<lambda> s. if bval b s then Q s else wp (DO c UNTIL b) Q s) s"
+  apply(subst wp_equiv[OF until_unfold])
+  apply(subst wp_seq_eq)
+  apply(subst wp_if_eq[abs_def])
+  apply(subst wp_skip_eq)
+  apply (simp)
+  done
+
+lemma wp_untilI'_complete:
+  fixes b c
+  defines "R\<equiv>measure (variant b c)"
+  assumes "wp (DO c UNTIL b) Q s\<^sub>0"
+  obtains I where
+    "wf R"
+    "I s\<^sub>0"
+    "\<And>s. I s \<Longrightarrow> wp c (\<lambda>s'. if bval b s' then Q s' else I s' \<and> (s',s)\<in>R) s"
+proof   
+  show \<open>wf R\<close> unfolding R_def by auto
+  let ?I = "wp (DO c UNTIL b) Q"
+  {
+    show "?I s\<^sub>0" by fact
+  next
+    fix s
+    assume "?I s"
+    then show "wp c (\<lambda>s'. if bval b s' then Q s' else ?I s' \<and> (s',s)\<in>R) s"
+      apply (subst (asm) wp_until_unfold) 
+      apply clarsimp
+      apply (auto simp: wp_def R_def intro: variant_decreases split: if_split_asm)
+      done
+  }  
+qed
     
 end

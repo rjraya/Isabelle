@@ -1,5 +1,7 @@
 theory Ex13
-  imports "IMP.Small_Step" "IMP.Def_Init"
+  imports
+  "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Small_Step"
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Def_Init"
 begin
 
 (*an example of mutually recursive equations*)
@@ -45,8 +47,10 @@ proof(induction arbitrary: A rule: big_step_induct)
   case (Seq c\<^sub>1 s\<^sub>1 s\<^sub>2 c\<^sub>2 s\<^sub>3) then show ?case by fastforce
 next
   case (WhileTrue b s\<^sub>1 c s\<^sub>2 s\<^sub>3)
-  from WhileTrue.IH(1) WhileTrue.prems have "\<forall> (x,a) \<in> AA c A. s\<^sub>2 x = aval a s\<^sub>2" .
-  from WhileTrue.IH(2)[OF this] have "\<forall> (x,a) \<in> AA (WHILE b DO c) (AA c A). s\<^sub>3 x = aval a s\<^sub>3" .
+  from WhileTrue.IH(1) WhileTrue.prems 
+  have "\<forall> (x,a) \<in> AA c A. s\<^sub>2 x = aval a s\<^sub>2" .
+  from WhileTrue.IH(2)[OF this] 
+  have "\<forall> (x,a) \<in> AA (WHILE b DO c) (AA c A). s\<^sub>3 x = aval a s\<^sub>3" .
   then show ?case 
     apply(simp)
     apply(subst (asm) AA_idemp)

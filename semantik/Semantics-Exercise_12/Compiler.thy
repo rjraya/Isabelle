@@ -2,7 +2,10 @@
 
 section "Compiler for IMP"
 
-theory Compiler imports "IMP.Big_Step" "IMP.Small_Step"
+theory Compiler 
+  imports 
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Big_Step"
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP/Small_Step"
 begin
 
 subsection "List setup"
