@@ -26,16 +26,19 @@ text\<open>
 fun add :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
 "add 0 n = n" |
 "add (Suc m) n = Suc(add m n)"
-
+thm add.simps
+thm add.induct
 text\<open>
- explain how structural induction works over a datatype
+ e0xplain how structural induction works over a datatype
  use inference rule notation
 \<close>
 thm nat.induct
-
+thm add.induct
 lemma add_02: "add m 0 = m"
-
-  oops
+  apply(induction m)
+   apply simp
+  by simp
+  
 
 subsection\<open>Datatype list\<close>
 
@@ -66,8 +69,10 @@ text\<open>
 \<close>
 
 theorem rev_rev[simp]: "rev (rev xs) = xs"
-
-  oops
+ apply(induction xs)
+   apply simp
+  apply auto
+  done
 
 subsection\<open>Datatype tree\<close>
 
@@ -92,7 +97,10 @@ text\<open>
  show its induction scheme and simplification rules.
 \<close>
 fun sep :: "'a \<Rightarrow> 'a list \<Rightarrow> 'a list" where
-"sep a l = undefined" 
+"sep a [] = []" |
+"sep a [c] = [c]" | 
+"sep a (x # xs) = x # a # sep a xs" 
+thm sep.induct
 
 subsection\<open>Datatype option\<close>
 
@@ -117,8 +125,8 @@ text\<open>
  this proposition:
 \<close>
 lemma "sq 3 = 9"
-  
-  oops
+  apply(simp add: sq_def)
+  done
 
 section\<open>Basic reasoning techniques\<close>
 
@@ -143,10 +151,17 @@ fun itrev :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
 "itrev [] ys = ys" |
 "itrev (x#xs) ys = itrev xs (x#ys)"
 
+
+lemma mi_lema: "itrev xs ys = rev xs @ ys"
+  apply(induction xs arbitrary: ys)
+   apply simp
+  apply simp
+  done
+
 lemma "itrev xs [] = rev xs"
 apply(induction xs)
-apply(auto)
-  oops
+apply(auto simp add: mi_lema)
+  done
 
 subsection\<open>Computation Induction\<close>
 
@@ -168,8 +183,9 @@ fun sept :: "'a \<Rightarrow> 'a list \<Rightarrow> 'a list" where
 "sept a (x#y#zs) = x # a # sept a (y#zs)"
 
 lemma "map f (sept a xs) = sept (f a) (map f xs)"
-
-  oops
+  apply(induction a xs rule: sept.induct)
+  apply auto
+  done
 
 subsection\<open>Simplification\<close>
 
@@ -183,7 +199,7 @@ text\<open>Using additional rules:\<close>
 lemma "(a+b)*(a-b) = a*a - b*(b::int)"
 apply(simp add: algebra_simps)
 done
-
+thm algebra_simps
 text\<open>Giving a lemma the simp-attribute:\<close>
 declare algebra_simps [simp]
 

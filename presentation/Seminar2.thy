@@ -40,7 +40,8 @@ by blast
 section\<open>Sledgehammer\<close>
 
 lemma "R^* \<subseteq> (R \<union> S)^*"
-oops
+  by (simp add: rtrancl_mono)
+
 
 text\<open>
  Intuition is needed:
@@ -59,7 +60,8 @@ lemma "\<forall> (k::nat) \<ge> 8. \<exists> i j. k = 3*i + 5*j" by arith
 text\<open>
  If unsure you can try method try0
 \<close>
-lemma "(n::int) mod 2 = 1 \<Longrightarrow> (n+n) mod 2 = 0" oops
+lemma "(n::int) mod 2 = 1 \<Longrightarrow> (n+n) mod 2 = 0" 
+  by presburger 
 
 text\<open>
  Special rules may be added to simp
@@ -110,13 +112,12 @@ inductive ev :: "nat \<Rightarrow> bool" where
 ev0: "ev 0" |
 evSS: "ev n \<Longrightarrow> ev (Suc(Suc n))"
 
-thm ev0 evSS ev.intros
-thm ev.induct
-
 text\<open>Using the introduction rules: \<close>
 lemma "ev (Suc(Suc(Suc(Suc 0))))"
-
-  oops
+  apply(rule evSS)
+  apply(rule evSS)
+  apply(rule ev0)
+  done
 
 text\<open>A recursive definition of evenness: \<close>
 fun evn :: "nat \<Rightarrow> bool" where
@@ -126,8 +127,12 @@ fun evn :: "nat \<Rightarrow> bool" where
 
 text\<open>A simple example of rule induction: \<close>
 lemma "ev n \<longleftrightarrow> evn n"
-
-  oops
+  apply(standard)
+   apply(induction n rule: ev.induct)
+    apply simp
+   apply simp
+  apply(induction n rule: evn.induct)
+  using ev.intros by auto
 
 text\<open>The power of arith: \<close>
 lemma "ev n \<Longrightarrow> \<exists>k. n = 2*k"

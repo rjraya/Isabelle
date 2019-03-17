@@ -6,7 +6,7 @@ section\<open>ISAR\<close>
 
 subsection\<open>Running example\<close>
 text\<open>
- ISAR stands for Intelligible semi-automated language.
+ ISAR stands for Intelligible semi-automated reasoning.
 
  It makes proofs look like normal mathematical proofs.
 
@@ -18,6 +18,7 @@ lemma "\<not> surj(f :: 'a \<Rightarrow> 'a set)"
 proof
   assume 0: "surj f"
   from 0 have 1: "\<forall>A. \<exists>a. A = f a" by(simp add: surj_def)
+  (*have "a \<in> f a \<longleftrightarrow> a \<notin> f a"*)
   from 1 have 2: "\<exists>a. {x. x \<notin> f x} = f a" by blast
   from 2 show "False" by blast
 qed
