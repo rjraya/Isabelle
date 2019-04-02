@@ -7,7 +7,7 @@ begin
 section\<open>Geometric sum\<close>
 
 text\<open>
- First example of periodic modulo k arithmetical function
+ First example of peridic modulo k arithmetical function
 \<close>
 
 lemma exp_dvd:
@@ -80,73 +80,42 @@ qed
 
 section\<open>Finite Fourier series\<close>
 
-lemma lagrange_exists:
-  assumes d: "distinct (map fst zs_ws)"
-  shows "(\<exists> (p :: complex poly).
-    degree p \<le> (length zs_ws)-1 \<and>
-    (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y))" 
-proof -
-  let ?p = "lagrange_interpolation_poly zs_ws"
-  have 0: "degree ?p \<le> (length zs_ws - 1)"
-    using degree_lagrange_interpolation_poly by auto
-  from d have 1: "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly ?p x = y"
-    using lagrange_interpolation_poly by auto
-  from 0 1 show ?thesis by auto
-qed
+thm fundamental_theorem_of_algebra
+thm polyfun_roots_card
 
-lemma lagrange_unique:
-  assumes o: "length zs_ws > 0" (* implicit in theorem *)
-  assumes d: "distinct (map fst zs_ws)"
-  assumes 1: "degree (p1 :: complex poly) \<le> (length zs_ws)-1 \<and>
-               (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p1 x = y)"
-  assumes 2: "degree (p2 :: complex poly) \<le> (length zs_ws)-1 \<and>
-               (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p2 x = y)"
-  shows "p1 = p2" 
-proof(cases "p1 - p2 = 0")
-  case True then show ?thesis by simp
-next
-  case False
-   have "\<And> x. x \<in> set (map fst zs_ws) \<Longrightarrow> poly (p1-p2) x = 0"
-   using 1 2 by(auto simp add: field_simps)
-   from this d have 3: "card {x. poly (p1-p2) x = 0} \<ge> length zs_ws"
-   proof(induction zs_ws)
-     case Nil then show ?case by simp
-   next
-     case (Cons z_w zs_ws)
-     from  False poly_roots_finite
-     have f: "finite {x. poly (p1 - p2) x = 0}" by blast
-     from Cons have "set (map fst (z_w # zs_ws)) \<subseteq> 
-                    {x. poly (p1 - p2) x = 0}"
-       by auto
-     then have i: "card (set (map fst (z_w # zs_ws))) \<le>
-              card {x. poly (p1 - p2) x = 0}" 
-       using card_mono f by blast
-     have "length (z_w # zs_ws) \<le> card (set (map fst (z_w # zs_ws)))"
-       using Cons.prems(2) distinct_card by fastforce 
-     from this i show ?case by simp 
-   qed
-   from 1 2 have 4: "degree (p1 - p2) \<le> (length zs_ws)-1" 
-     using degree_diff_le by blast
- 
-   have "p1 - p2 = 0"  
-  proof(rule ccontr)
-    assume "p1 - p2 \<noteq> 0"
-    then have "card {x. poly (p1-p2) x = 0} \<le> degree (p1-p2)"
-      using poly_roots_degree by blast
-    then have "card {x. poly (p1-p2) x = 0} \<le> (length zs_ws)-1"
-      using 4 by auto
-    then show "False" using 3 o by linarith
-  qed
-  then show ?thesis by simp 
-qed
+lemma "
+ distinct xs \<Longrightarrow>
+ (\<forall> x \<in> set xs. poly p x = 0) \<Longrightarrow>
+ degree p \<le> (length xs) - 1 \<Longrightarrow>
+ p = 0
+"
+  oops
 
 lemma lagrange:
- "length zs_ws > 0 \<Longrightarrow>
-  distinct (map fst zs_ws) \<Longrightarrow>
+ "distinct (map fst zs_ws) \<Longrightarrow>
   (\<exists>! (p :: complex poly).
     degree p \<le> (length zs_ws)-1 \<and>
     (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y))"
-  using lagrange_exists lagrange_unique by auto
-
+proof -
+  let ?p = "lagrange_interpolation_poly zs_ws"
+  have 0: "degree ?p \<le>
+        (length zs_ws - 1)"
+    using degree_lagrange_interpolation_poly by auto
+  assume a1: "distinct (map fst zs_ws)"
+  then have 1: "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly ?p x = y"
+    using lagrange_interpolation_poly by auto
+  fix q
+  assume a2: "
+    (degree q \<le> (length zs_ws)-1 \<and>
+    (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly q x = y))"
+  have "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly (?p-q) x = 0"
+    using 1 a2
+    by(auto simp add: field_simps)
+  then have "\<And> x. poly (?p - q) x = poly 0 x"
+    using 1 a1 a2 
+   
+  then have "q = lagrange_interpolation_poly zs_ws"
+    
+qed
 
 end
