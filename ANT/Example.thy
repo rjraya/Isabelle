@@ -2,6 +2,7 @@ theory Example
   imports 
     Polynomial_Interpolation.Lagrange_Interpolation
     Polynomial_Factorization.Fundamental_Theorem_Algebra_Factorized
+    "HOL-Analysis.Complex_Transcendental"
 begin
 
 section\<open>Geometric sum\<close>
@@ -80,16 +81,17 @@ qed
 
 section\<open>Finite Fourier series\<close>
 
+subsection\<open>Lagrange property\<close>
+
 lemma lagrange_exists:
   assumes d: "distinct (map fst zs_ws)"
-  shows "(\<exists> (p :: complex poly).
-    degree p \<le> (length zs_ws)-1 \<and>
-    (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y))" 
+  defines e: "(p :: complex poly) == lagrange_interpolation_poly zs_ws"
+  shows "degree p \<le> (length zs_ws)-1 \<and>
+         (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y)" 
 proof -
-  let ?p = "lagrange_interpolation_poly zs_ws"
-  have 0: "degree ?p \<le> (length zs_ws - 1)"
+  from e have 0: "degree p \<le> (length zs_ws - 1)"
     using degree_lagrange_interpolation_poly by auto
-  from d have 1: "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly ?p x = y"
+  from e d have 1: "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly p x = y"
     using lagrange_interpolation_poly by auto
   from 0 1 show ?thesis by auto
 qed
@@ -146,7 +148,51 @@ lemma lagrange:
   (\<exists>! (p :: complex poly).
     degree p \<le> (length zs_ws)-1 \<and>
     (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y))"
-  using lagrange_exists lagrange_unique by auto
+  using lagrange_exists lagrange_unique by blast
 
+subsection\<open>Roots of unit\<close>
+
+lemma "(j::nat)*pi-(i::nat)*pi = ((j::nat)-(i::nat))*pi"
+  apply(auto simp add: algebra_simps)
+  oops
+
+lemma roots_of_unit_equal:
+ assumes w: "k > 0"
+ defines "f  == (\<lambda> m k. exp (-(2*pi*m/(k::nat))*\<i>))"
+ assumes e: "f i k = f j k"
+ shows "(i :: nat) = (j :: nat)"
+proof -
+  let ?arg1 = "-(2*pi*i/(k::nat))*\<i>"
+  let ?arg2 = "-(2*pi*j/(k::nat))*\<i>"
+  from e f_def
+  have "exp ?arg1 = exp ?arg2" by blast
+  from this exp_eq 
+  obtain n :: int where "?arg1 = ?arg2 +(2 * n * pi) * \<i>" by blast
+  then have "?arg1 - ?arg2 = (2 * n * pi) * \<i>" by simp
+  have "?arg1 - ?arg2 =((2*j*pi/(k::nat)) - (2*i*pi/(k::nat)))*\<i>"
+    by(auto simp add: algebra_simps)
+  have "... = ((2*j*pi-2*i*pi)/(k::nat))*\<i>"
+    by(auto simp add: divide_simps)    
+  have "... = ((2*(j-i)*pi)/(k::nat))*\<i>"
+    using w apply(auto simp add: ac_simps)
+qed
+
+lemma roots_of_unit:
+ "\<exists>! (p :: complex poly). 
+   (\<forall> m. (ws ! m) = pol p exp (-(2*pi*m/k)*\<i>))
+    \<and> 
+   (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
+proof -
+  let ?k = "length ws"
+  let ?t = "[0..<?k]"
+  
+  let ?f = "\<lambda> m. exp (-(2*pi*m/k)*\<i>)"
+  let ?z = "map (\<lambda> m. ?f m)  ?t"
+  have "\<And> i j. i mod ?k \<noteq> j mod ?k \<Longrightarrow> ?f i \<noteq> ?f j"
+    
+  have "distinct ?z" oops
+  
+qed
+  
 
 end
