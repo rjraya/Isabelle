@@ -198,19 +198,38 @@ proof -
 qed
 
 lemma roots_of_unit:
- "\<exists>! (p :: complex poly). 
-   (\<forall> m. (ws ! m) = pol p exp (-(2*pi*m/k)*\<i>))
+  assumes "length ws > 0"
+  shows "
+  \<exists>! (p :: complex poly).
+   (\<forall> m. (ws ! m) = pol p exp (-(2*m/(k::int))*pi*\<i>))
     \<and> 
    (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
 proof -
   let ?k = "length ws"
-  let ?t = "[0..<?k]"
-  
-  let ?f = "\<lambda> m. exp (-(2*pi*m/k)*\<i>)"
+  let ?t = "[0..<?k]"  
+  let ?f = "\<lambda> m. exp (-(2*m/(?k::int))*pi*\<i>)"
   let ?z = "map (\<lambda> m. ?f m)  ?t"
-  have "\<And> i j. i mod ?k \<noteq> j mod ?k \<Longrightarrow> ?f i \<noteq> ?f j"
-    
-  have "distinct ?z" oops
+  {
+  fix i j
+  assume b: "0 \<le> i \<and> i < ?k \<and> 0 \<le> j \<and> j < ?k \<and> i \<noteq> j"
+  have "?z ! i \<noteq> ?z ! j"
+  proof(rule ccontr)
+    assume c: "?z ! i = ?z ! j"
+    from b have 1: "?z ! i = exp (-(2*i/(?k::int))*pi*\<i>)" by simp
+    from b have 2: "?z ! j = exp (-(2*j/(?k::int))*pi*\<i>)" by simp
+    from 1 2 c have "exp (-(2*i/(?k::int))*pi*\<i>) = exp (-(2*j/(?k::int))*pi*\<i>)"
+      by simp
+    from this roots_of_unit_equal[of ?k i j] assms
+    have "int i mod int (length ws) = int j mod int (length ws)"
+      sledgehammer
+      
+    using roots_of_unit_equal[of ?k] 
+  }
+  have "distinct ?z"
+    apply(induction "?z")
+     apply simp
+    using roots_of_unit_equal 
+    oops
   
 qed
   
