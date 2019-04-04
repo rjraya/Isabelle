@@ -198,19 +198,20 @@ proof -
 qed
 
 lemma roots_of_unit:
- "\<exists>! (p :: complex poly). 
+  assumes "length ws > 0"
+  shows "
+  \<exists>! (p :: complex poly).
    (\<forall> m. (ws ! m) = pol p exp (-(2*pi*m/k)*\<i>))
     \<and> 
    (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
 proof -
   let ?k = "length ws"
-  let ?t = "[0..<?k]"
-  
-  let ?f = "\<lambda> m. exp (-(2*pi*m/k)*\<i>)"
+  let ?t = "[0..<?k]"  
+  let ?f = "\<lambda> m. exp (-(2*pi*m/?k)*\<i>)"
   let ?z = "map (\<lambda> m. ?f m)  ?t"
-  have "\<And> i j. i mod ?k \<noteq> j mod ?k \<Longrightarrow> ?f i \<noteq> ?f j"
-    
-  have "distinct ?z" oops
+  have "distinct ?z" 
+    using roots_of_unit_equal 
+    oops
   
 qed
   
