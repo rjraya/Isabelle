@@ -79,6 +79,13 @@ proof -
   from this 4 show ?thesis by auto
 qed
 
+theorem geometric_sum:
+ assumes 0: "(k::nat) \<ge> 1"
+ defines "g(n::nat) == (\<Sum>m \<in> {0..(k::nat)-1}. exp ((2*pi*m*n*\<i>) / k))"
+ shows "\<not> k dvd n \<Longrightarrow> g(n) = 0" and 
+       "k dvd n \<Longrightarrow> g(n) = k"
+  using case_1 case_2 "0" g_def by auto
+ 
 section\<open>Finite Fourier series\<close>
 
 subsection\<open>Lagrange property\<close>
@@ -152,20 +159,6 @@ lemma lagrange:
 
 subsection\<open>Roots of unit\<close>
 
-lemma "(j::nat)*pi-(i::nat)*pi = ((j::nat)-(i::nat))*pi"
-  apply(auto simp add: algebra_simps)
-  oops
-
-  find_theorems "_/_ - _/_ = _/_"
-
-theorem "c \<noteq> 0 \<Longrightarrow> (a::real)/c - (b)/c = (a-b)/c"
-   by(auto simp add: field_simps)
-theorem "c \<noteq> 0 \<Longrightarrow> (a::nat)/c - (b::nat)/c = (a-b)/c"
-  by(auto simp add: field_simps)
-theorem "(c::nat) \<noteq> 0 \<Longrightarrow> ((a::nat)/c) = a * (1/c)"
-  try0
-  oops
-
 lemma roots_of_unit_equal:
  assumes w: "k > 0"
  defines "f  == (\<lambda> m k. exp (-((2*m/(k::int))*pi)*\<i>))"
@@ -197,11 +190,54 @@ proof -
   then show ?thesis by algebra
 qed
 
+lemma div_minus:
+  fixes n :: int
+  assumes n_bounds: "0 \<le> n \<and> n < k"
+  assumes m_bounds: "0 \<le> m \<and> m < k"
+  assumes r_bounds: "0 \<le> r \<and> r < k"
+  shows "k dvd (n-r) \<longleftrightarrow> n = r"
+proof(rule iffI) 
+ assume dvd: "k dvd (n-r)"
+ then show "n = r"
+ proof(cases "n > r")
+  case True then show ?thesis 
+   using dvd n_bounds r_bounds zdvd_imp_le by force
+ next
+  case False
+   have rev: "k dvd (n-r) \<longleftrightarrow> k dvd (r-n)"
+    by (simp add: dvd_diff_commute)
+   from this False have "r = n"
+    using dvd n_bounds r_bounds zdvd_imp_le by fastforce
+   then show ?thesis by simp        
+ qed
+next
+  assume "n = r" then show "k dvd n - r" by simp
+qed
+
+lemma extended_altdef:
+ assumes gr: "k \<ge> degree p"  
+ shows "\<exists> a. poly p (z::complex) = (\<Sum>i\<le>k. a(i) * z ^ i)"
+proof -
+  have 1: "poly p z = (\<Sum>i\<le>degree p. coeff p i * z ^ i)"
+    using poly_altdef[of p z] by simp
+  have "k \<ge> degree p \<Longrightarrow> poly p z = (\<Sum>i\<le>k. coeff p i * z ^ i)"
+  proof(induction k)
+    case 0 then show ?case  by(simp add: poly_altdef) 
+  next
+    case (Suc k) 
+    then show ?case
+      using "1" le_degree not_less_eq_eq by fastforce
+  qed  
+  then show ?thesis using gr by blast
+qed
+
 lemma roots_of_unit:
   assumes "length ws > 0"
+  defines "k == length ws"
   shows "
   \<exists>! (p :: complex poly).
-   (\<forall> m. (ws ! m) = pol p exp (-(2*m/(k::int))*pi*\<i>))
+   (degree p \<le> k - 1) \<and>
+   (\<forall> m. (ws ! m) = poly p (exp (-(2*m/(k::int))*pi*\<i>)))
     \<and> 
    (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
 proof -
@@ -213,24 +249,43 @@ proof -
   fix i j
   assume b: "0 \<le> i \<and> i < ?k \<and> 0 \<le> j \<and> j < ?k \<and> i \<noteq> j"
   have "?z ! i \<noteq> ?z ! j"
-  proof(rule ccontr)
-    assume c: "?z ! i = ?z ! j"
+  proof -
+    {assume c: "?z ! i = ?z ! j"
     from b have 1: "?z ! i = exp (-(2*i/(?k::int))*pi*\<i>)" by simp
     from b have 2: "?z ! j = exp (-(2*j/(?k::int))*pi*\<i>)" by simp
-    from 1 2 c have "exp (-(2*i/(?k::int))*pi*\<i>) = exp (-(2*j/(?k::int))*pi*\<i>)"
+    from 1 2 c have 3: "exp (-(2*i/(?k::int))*pi*\<i>) = exp (-(2*j/(?k::int))*pi*\<i>)"
       by simp
     from this roots_of_unit_equal[of ?k i j] assms
     have "int i mod int (length ws) = int j mod int (length ws)"
-      sledgehammer
-      
-    using roots_of_unit_equal[of ?k] 
+      by (simp)
+    from this assms have "i mod ?k = j mod ?k" 
+      using b by auto
+    from this b have "i = j" by auto
+    from this b have  "False" by auto}
+    then show ?thesis by blast
+  qed
   }
-  have "distinct ?z"
-    apply(induction "?z")
-     apply simp
-    using roots_of_unit_equal 
-    oops
+  then have d: "distinct ?z" 
+    by (simp add: distinct_conv_nth)
+  let ?zs_ws = "zip ?z ws"
+  from lagrange[of "?zs_ws"] have 
+    "\<exists>!p. degree p \<le> ?k - 1 \<and>
+       (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly p x = y) "
+    using d assms by auto 
+  then obtain p where 
+    ps: "degree p \<le> ?k - 1 \<and>
+     (\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)" by blast
+  fix z w 
+  fix m :: int and r :: int
+  assume a2: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k"
+  assume a1: "(z, w) \<in> set ?zs_ws"
+  (*then have "\<exists> a. poly p z = (\<Sum>i<?k. a(i) * z ^ i)"
+    using poly_altdef*)
+  from ps a1 have "w = poly p z" by simp
+  then have "w*?f (m*r) = (poly p z)*?f (m*r)" by simp
   
+    
+  from ps have "poly p z = w"
 qed
   
 
