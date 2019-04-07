@@ -161,30 +161,30 @@ subsection\<open>Roots of unit\<close>
 
 lemma roots_of_unit_equal:
  assumes w: "k > 0"
- defines "f  == (\<lambda> m k. exp (-((2*m/(k::int))*pi)*\<i>))"
+ defines "f  == (\<lambda> m k. exp (((2*m/(k::int))*pi)*\<i>))"
  assumes e: "f (i::int) k = f (j::int) k"
  shows "i mod k = j mod k"
 proof -
-  let ?arg1 = "-((2*i/k)*pi)*\<i>"
-  let ?arg2 = "-((2*j/k)*pi)*\<i>"
+  let ?arg1 = "((2*i/k)*pi)*\<i>"
+  let ?arg2 = "((2*j/k)*pi)*\<i>"
   from e f_def
   have "exp ?arg1 = exp ?arg2" by auto
   from this exp_eq 
   obtain n :: int where "?arg1 = ?arg2 +(2 *n*pi)*\<i>" by blast
   then have e1: "?arg1 - ?arg2 = 2*n*pi*\<i>" by simp
-  have e2: "?arg1 - ?arg2 = 2*(j-i)*(1/k)*pi*\<i>"
+  have e2: "?arg1 - ?arg2 = 2*(i-j)*(1/k)*pi*\<i>"
     by(auto simp add: algebra_simps)
-  from e1 e2 have "2*n*pi*\<i> = 2*(j-i)*(1/k)*pi*\<i>" by simp
-  then have "2*n*pi*\<i>*\<i> = 2*(j-i)*(1/k)*pi*\<i>*\<i>"
+  from e1 e2 have "2*n*pi*\<i> = 2*(i-j)*(1/k)*pi*\<i>" by simp
+  then have "2*n*pi*\<i>*\<i> = 2*(i-j)*(1/k)*pi*\<i>*\<i>"
     by(auto simp add: field_simps)
-  then have "2*n*pi*(-1) = 2*(j-i)*(1/k)*pi*(-1)"
+  then have "2*n*pi*(-1) = 2*(i-j)*(1/k)*pi*(-1)"
     using i_squared complex_i_not_zero 
     by (metis mult_cancel_right of_real_eq_iff)
-  then have "2*n*pi = 2*(j-i)*(1/k)*pi" by simp
-  then have "2*n = 2*(j-i)*(1/k)"
+  then have "2*n*pi = 2*(i-j)*(1/k)*pi" by simp
+  then have "2*n = 2*(i-j)*(1/k)"
     using mult_cancel_right pi_neq_zero by blast
-  then have "n = (j-i)*(1/k)" by linarith
-  then have "n*k = j-i" 
+  then have "n = (i-j)*(1/k)" by linarith
+  then have "n*k = i-j" 
     using w apply(auto simp add: field_simps)
     using of_int_eq_iff by fastforce
   then show ?thesis by algebra
@@ -216,19 +216,52 @@ qed
 
 lemma extended_altdef:
  assumes gr: "k \<ge> degree p"  
- shows "\<exists> a. poly p (z::complex) = (\<Sum>i\<le>k. a(i) * z ^ i)"
+ shows "poly p (z::complex) = (\<Sum>i\<le>k. coeff p i * z ^ i)"
 proof -
+  {fix z
   have 1: "poly p z = (\<Sum>i\<le>degree p. coeff p i * z ^ i)"
     using poly_altdef[of p z] by simp
-  have "k \<ge> degree p \<Longrightarrow> poly p z = (\<Sum>i\<le>k. coeff p i * z ^ i)"
+  have "poly p z = (\<Sum>i\<le>k. coeff p i * z ^ i)" 
+    using gr
   proof(induction k)
-    case 0 then show ?case  by(simp add: poly_altdef) 
+    case 0 then show ?case by(simp add: poly_altdef) 
   next
     case (Suc k) 
     then show ?case
       using "1" le_degree not_less_eq_eq by fastforce
-  qed  
-  then show ?thesis using gr by blast
+  qed}  
+  then show ?thesis using gr by blast 
+qed
+
+lemma distinct_z: 
+  "distinct (map (\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)) (map int [0..<k]))" 
+proof -
+  let ?t = "[0..<k]"  
+  let ?f = "\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)"
+  let ?z = "map (\<lambda> m. ?f m)  ?t"
+  {
+  fix i j
+  assume b: "0 \<le> i \<and> i < k \<and> 0 \<le> j \<and> j < k \<and> i \<noteq> j"
+  have "?z ! i \<noteq> ?z ! j"
+  proof -
+    {assume c: "?z ! i = ?z ! j"
+    from b have 1: "?z ! i = exp ((2*i/(k::int))*pi*\<i>)" by simp
+    from b have 2: "?z ! j = exp ((2*j/(k::int))*pi*\<i>)" by simp
+    from 1 2 c have 3: "exp ((2*i/(k::int))*pi*\<i>) = exp ((2*j/(k::int))*pi*\<i>)"
+      by simp
+    thm roots_of_unit_equal
+    from this roots_of_unit_equal[of k i j] b
+    have "int i mod int k = int j mod int k"
+      by simp
+    from this b have "i mod k = j mod k" 
+      using b by auto
+    from this b have "i = j" by auto
+    from this b have  "False" by auto}
+    then show ?thesis by blast
+  qed
+  }
+  then show ?thesis 
+    by (simp add: distinct_conv_nth)
 qed
 
 lemma roots_of_unit:
@@ -237,36 +270,16 @@ lemma roots_of_unit:
   shows "
   \<exists>! (p :: complex poly).
    (degree p \<le> k - 1) \<and>
-   (\<forall> m. (ws ! m) = poly p (exp (-(2*m/(k::int))*pi*\<i>)))
+   (\<forall> m. (ws ! m) = poly p (exp ((2*m/(k::int))*pi*\<i>)))
     \<and> 
    (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
 proof -
   let ?k = "length ws"
   let ?t = "[0..<?k]"  
-  let ?f = "\<lambda> m. exp (-(2*m/(?k::int))*pi*\<i>)"
-  let ?z = "map (\<lambda> m. ?f m)  ?t"
-  {
-  fix i j
-  assume b: "0 \<le> i \<and> i < ?k \<and> 0 \<le> j \<and> j < ?k \<and> i \<noteq> j"
-  have "?z ! i \<noteq> ?z ! j"
-  proof -
-    {assume c: "?z ! i = ?z ! j"
-    from b have 1: "?z ! i = exp (-(2*i/(?k::int))*pi*\<i>)" by simp
-    from b have 2: "?z ! j = exp (-(2*j/(?k::int))*pi*\<i>)" by simp
-    from 1 2 c have 3: "exp (-(2*i/(?k::int))*pi*\<i>) = exp (-(2*j/(?k::int))*pi*\<i>)"
-      by simp
-    from this roots_of_unit_equal[of ?k i j] assms
-    have "int i mod int (length ws) = int j mod int (length ws)"
-      by (simp)
-    from this assms have "i mod ?k = j mod ?k" 
-      using b by auto
-    from this b have "i = j" by auto
-    from this b have  "False" by auto}
-    then show ?thesis by blast
-  qed
-  }
-  then have d: "distinct ?z" 
-    by (simp add: distinct_conv_nth)
+  let ?f = "\<lambda> (m::int). exp ((2*m/(?k::int))*pi*\<i>)"
+  let ?z = "map (\<lambda> m. ?f m) ?t" 
+  have d: "distinct ?z" using distinct_z by blast
+  
   let ?zs_ws = "zip ?z ws"
   from lagrange[of "?zs_ws"] have 
     "\<exists>!p. degree p \<le> ?k - 1 \<and>
@@ -275,17 +288,78 @@ proof -
   then obtain p where 
     ps: "degree p \<le> ?k - 1 \<and>
      (\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)" by blast
-  fix z w 
+  then have deg_ineq: "degree p \<le> ?k - 1" 
+        and interp: "(\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)"
+    by(blast,blast)
+  obtain a where pexpr: "\<And> z. poly p z = (\<Sum>i\<le>?k-1. a(i) * z ^ i)"
+    using extended_altdef deg_ineq by blast
   fix m :: int and r :: int
-  assume a2: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k"
-  assume a1: "(z, w) \<in> set ?zs_ws"
-  (*then have "\<exists> a. poly p z = (\<Sum>i<?k. a(i) * z ^ i)"
-    using poly_altdef*)
-  from ps a1 have "w = poly p z" by simp
-  then have "w*?f (m*r) = (poly p z)*?f (m*r)" by simp
+  assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k"
+  have exp: "\<And> n. (?f m)^n = ?f (m*n)"
+  proof -
+    fix n :: nat
+    have alg_s: "n*((2*m/(?k::int))*pi*\<i>) = ((2*(n*m)/(?k::int))*pi*\<i>)"
+      by (simp add: bounds)
+    have "(?f  m)^n = exp (n*((2*m)/(?k::int))*pi*\<i>)" 
+      by (metis (no_types, lifting) exp_of_nat_mult of_real_mult of_real_of_nat_eq semiring_normalization_rules(18))
+    moreover have "... = exp (((2*(m*n))/(?k::int))*pi*\<i>)"
+      using bounds 
+      by (simp add: mult.commute mult.left_commute)
+    moreover have "... = ?f(nat (m*n))"
+      by (simp add: bounds)
+    ultimately show "(?f m)^n = ?f (m*n)" by simp 
+  qed
   
+  have "\<And> n. (?f (m*n))*(?f (m*r)) = ?f (m*(n-r))"
+  proof -
+    fix n
+    have "(?f (m*n))*(?f (m*r)) = 
+          exp (((2*(m*n))/(?k::int))*pi*\<i>)*
+          exp (((2*(m*r)/(?k::int))*pi*\<i>))"
+      by blast
+    moreover have "... = 
+       exp (((2*(m*n)/(?k::int))*pi*\<i>)+
+            ((2*(m*r)/(?k::int))*pi*\<i>))"
+      by (metis exp_add)
+    have "((2*(m*n)/(?k::int))*pi*\<i>)+
+            ((2*(m*r)/(?k::int))*pi*\<i>) = 
+          ((2*(nat (m*n+m*r))/(?k::int))*pi*\<i>)"  
+      apply(auto simp add: divide_simps)
+      sledgehammer
+    moreover have "... = 
+       exp ((-(2*(nat (m*n+n*r))/(?k::int))*pi*\<i>))"
+      
+      sorry
+  from bounds have unit: "?z ! nat m = ?f (nat m)" by auto
+  from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
+    using fst_conv in_set_zip by fastforce
+  then have "(ws ! nat m) =  poly p (?z ! nat m)"
+    using interp by simp  
+  then have "(ws ! nat m) = (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)"
+    using unit pexpr by auto
+  then have "((ws ! nat m)*?f ( (-m*r))) =
+             (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)*?f (nat (m*r))" 
+    by simp  
+  then have "((ws ! nat m)*?f (nat (m*r))) =
+        (\<Sum>n\<le>?k-1. a(n) * (?f (nat (m*n))))*?f (nat (m*r))"  
+    using exp by simp
+  then have "((ws ! nat m)*?f (nat (m*r))) =
+        (\<Sum>n\<le>?k-1. (a(n)*?f (nat (m*n)))*?f (nat (m*r)))"  
+    by (simp add: sum_distrib_right)
+  then have "... = (\<Sum>n\<le>?k-1. a(n)*(?f (nat (m*n))*?f (nat (m*r))))"
+    by (simp add: mult.assoc)
+ 
     
-  from ps have "poly p z = w"
+  then have "((ws ! nat m)*?f (nat (m*r))) =
+             (\<Sum>n\<le>?k-1. a(n) * (?f (nat ((n-r)*m))) ^ n)" 
+    sorry
+  {fix n
+  assume n_bound: "0 \<le> n \<and> n < ?k"
+  from n_bound bounds div_minus[of n ?k m r]
+  have "(int (length ws) dvd n - r) = (n = r)" by auto}
+  then have "((ws ! nat m)*?f (nat m)) = (?k * a(nat r))" 
+    using geometric_sum 
+    sorry
 qed
   
 
