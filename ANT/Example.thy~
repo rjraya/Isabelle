@@ -161,30 +161,30 @@ subsection\<open>Roots of unit\<close>
 
 lemma roots_of_unit_equal:
  assumes w: "k > 0"
- defines "f  == (\<lambda> m k. exp (-((2*m/(k::int))*pi)*\<i>))"
+ defines "f  == (\<lambda> m k. exp (((2*m/(k::int))*pi)*\<i>))"
  assumes e: "f (i::int) k = f (j::int) k"
  shows "i mod k = j mod k"
 proof -
-  let ?arg1 = "-((2*i/k)*pi)*\<i>"
-  let ?arg2 = "-((2*j/k)*pi)*\<i>"
+  let ?arg1 = "((2*i/k)*pi)*\<i>"
+  let ?arg2 = "((2*j/k)*pi)*\<i>"
   from e f_def
   have "exp ?arg1 = exp ?arg2" by auto
   from this exp_eq 
   obtain n :: int where "?arg1 = ?arg2 +(2 *n*pi)*\<i>" by blast
   then have e1: "?arg1 - ?arg2 = 2*n*pi*\<i>" by simp
-  have e2: "?arg1 - ?arg2 = 2*(j-i)*(1/k)*pi*\<i>"
+  have e2: "?arg1 - ?arg2 = 2*(i-j)*(1/k)*pi*\<i>"
     by(auto simp add: algebra_simps)
-  from e1 e2 have "2*n*pi*\<i> = 2*(j-i)*(1/k)*pi*\<i>" by simp
-  then have "2*n*pi*\<i>*\<i> = 2*(j-i)*(1/k)*pi*\<i>*\<i>"
+  from e1 e2 have "2*n*pi*\<i> = 2*(i-j)*(1/k)*pi*\<i>" by simp
+  then have "2*n*pi*\<i>*\<i> = 2*(i-j)*(1/k)*pi*\<i>*\<i>"
     by(auto simp add: field_simps)
-  then have "2*n*pi*(-1) = 2*(j-i)*(1/k)*pi*(-1)"
+  then have "2*n*pi*(-1) = 2*(i-j)*(1/k)*pi*(-1)"
     using i_squared complex_i_not_zero 
     by (metis mult_cancel_right of_real_eq_iff)
-  then have "2*n*pi = 2*(j-i)*(1/k)*pi" by simp
-  then have "2*n = 2*(j-i)*(1/k)"
+  then have "2*n*pi = 2*(i-j)*(1/k)*pi" by simp
+  then have "2*n = 2*(i-j)*(1/k)"
     using mult_cancel_right pi_neq_zero by blast
-  then have "n = (j-i)*(1/k)" by linarith
-  then have "n*k = j-i" 
+  then have "n = (i-j)*(1/k)" by linarith
+  then have "n*k = i-j" 
     using w apply(auto simp add: field_simps)
     using of_int_eq_iff by fastforce
   then show ?thesis by algebra
@@ -234,10 +234,10 @@ proof -
 qed
 
 lemma distinct_z: 
-  "distinct (map (\<lambda> m. exp (-(2*m/(k::int))*pi*\<i>)) [0..<k])" 
+  "distinct (map (\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)) (map int [0..<k]))" 
 proof -
   let ?t = "[0..<k]"  
-  let ?f = "\<lambda> m. exp (-(2*m/(k::int))*pi*\<i>)"
+  let ?f = "\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)"
   let ?z = "map (\<lambda> m. ?f m)  ?t"
   {
   fix i j
@@ -245,10 +245,11 @@ proof -
   have "?z ! i \<noteq> ?z ! j"
   proof -
     {assume c: "?z ! i = ?z ! j"
-    from b have 1: "?z ! i = exp (-(2*i/(k::int))*pi*\<i>)" by simp
-    from b have 2: "?z ! j = exp (-(2*j/(k::int))*pi*\<i>)" by simp
-    from 1 2 c have 3: "exp (-(2*i/(k::int))*pi*\<i>) = exp (-(2*j/(k::int))*pi*\<i>)"
+    from b have 1: "?z ! i = exp ((2*i/(k::int))*pi*\<i>)" by simp
+    from b have 2: "?z ! j = exp ((2*j/(k::int))*pi*\<i>)" by simp
+    from 1 2 c have 3: "exp ((2*i/(k::int))*pi*\<i>) = exp ((2*j/(k::int))*pi*\<i>)"
       by simp
+    thm roots_of_unit_equal
     from this roots_of_unit_equal[of k i j] b
     have "int i mod int k = int j mod int k"
       by simp
@@ -263,23 +264,19 @@ proof -
     by (simp add: distinct_conv_nth)
 qed
 
-lemma roots_of_unit_equal:
- defines "f  == (\<lambda> (m::nat) k. exp (-((2*m/(k::int))*pi)*\<i>))"
- shows "(f m k)^n = (f (m*n))"
-
 lemma roots_of_unit:
   assumes "length ws > 0"
   defines "k == length ws"
   shows "
   \<exists>! (p :: complex poly).
    (degree p \<le> k - 1) \<and>
-   (\<forall> m. (ws ! m) = poly p (exp (-(2*m/(k::int))*pi*\<i>)))
+   (\<forall> m. (ws ! m) = poly p (exp ((2*m/(k::int))*pi*\<i>)))
     \<and> 
    (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
 proof -
   let ?k = "length ws"
   let ?t = "[0..<?k]"  
-  let ?f = "\<lambda> (m::nat). exp (-(2*m/(?k::int))*pi*\<i>)"
+  let ?f = "\<lambda> (m::int). exp ((2*m/(?k::int))*pi*\<i>)"
   let ?z = "map (\<lambda> m. ?f m) ?t" 
   have d: "distinct ?z" using distinct_z by blast
   
@@ -298,6 +295,40 @@ proof -
     using extended_altdef deg_ineq by blast
   fix m :: int and r :: int
   assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k"
+  have exp: "\<And> n. (?f m)^n = ?f (m*n)"
+  proof -
+    fix n :: nat
+    have alg_s: "n*((2*m/(?k::int))*pi*\<i>) = ((2*(n*m)/(?k::int))*pi*\<i>)"
+      by (simp add: bounds)
+    have "(?f  m)^n = exp (n*((2*m)/(?k::int))*pi*\<i>)" 
+      by (metis (no_types, lifting) exp_of_nat_mult of_real_mult of_real_of_nat_eq semiring_normalization_rules(18))
+    moreover have "... = exp (((2*(m*n))/(?k::int))*pi*\<i>)"
+      using bounds 
+      by (simp add: mult.commute mult.left_commute)
+    moreover have "... = ?f(nat (m*n))"
+      by (simp add: bounds)
+    ultimately show "(?f m)^n = ?f (m*n)" by simp 
+  qed
+  
+  have "\<And> n. (?f (m*n))*(?f (-m*r)) = ?f (m*(n-r))"
+  proof -
+    fix n
+    have "(?f (m*n))*(?f (-m*r)) = 
+          exp (((2*(m*n))/(?k::int))*pi*\<i>)*
+          exp (((2*(-m*r)/(?k::int))*pi*\<i>))"
+      by blast
+    moreover have "... = 
+       exp (((2*(m*n)/(?k::int))*pi*\<i>)+
+            ((2*(-m*r)/(?k::int))*pi*\<i>))"
+      by (metis exp_add)
+    have "((2*(m*n)/(?k::int))*pi*\<i>)+
+            ((2*(-m*r)/(?k::int))*pi*\<i>) = 
+          ((2*(m*n)/(?k::int))+(2*(-m*r)/(?k::int)))*pi*\<i>"  
+      
+    moreover have "... = 
+       exp ((-(2*(nat (m*n+n*r))/(?k::int))*pi*\<i>))"
+      
+      sorry
   from bounds have unit: "?z ! nat m = ?f (nat m)" by auto
   from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
     using fst_conv in_set_zip by fastforce
@@ -305,9 +336,19 @@ proof -
     using interp by simp  
   then have "(ws ! nat m) = (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)"
     using unit pexpr by auto
-  then have "((ws ! nat m)*?f (nat (m*r))) =
+  then have "((ws ! nat m)*?f ( (-m*r))) =
              (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)*?f (nat (m*r))" 
-    by simp
+    by simp  
+  then have "((ws ! nat m)*?f (nat (m*r))) =
+        (\<Sum>n\<le>?k-1. a(n) * (?f (nat (m*n))))*?f (nat (m*r))"  
+    using exp by simp
+  then have "((ws ! nat m)*?f (nat (m*r))) =
+        (\<Sum>n\<le>?k-1. (a(n)*?f (nat (m*n)))*?f (nat (m*r)))"  
+    by (simp add: sum_distrib_right)
+  then have "... = (\<Sum>n\<le>?k-1. a(n)*(?f (nat (m*n))*?f (nat (m*r))))"
+    by (simp add: mult.assoc)
+ 
+    
   then have "((ws ! nat m)*?f (nat (m*r))) =
              (\<Sum>n\<le>?k-1. a(n) * (?f (nat ((n-r)*m))) ^ n)" 
     sorry
