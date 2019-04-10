@@ -11,20 +11,51 @@ text\<open>
  First example of periodic modulo k arithmetical function
 \<close>
 
-lemma exp_dvd:
-  "k > 0 \<Longrightarrow> exp ((2*pi*(n::nat)/(k::nat)) * \<i>) = 1 \<longleftrightarrow> k dvd n"
+definition "unity_root k n = 
+            cis (2 * pi * of_int n / of_nat k)"
+
+lemma unity_exp: "unity_root k n = exp ((2*pi*n/k)* \<i>)"
+  using unity_root_def cis_conv_exp mult.commute by metis
+
+lemma unity_mod: "unity_root n k = unity_root n (k mod n)"
+proof(cases "n = 0")
+  case True then show ?thesis by simp
+next
+  case False
+  obtain q :: int  where "k = q*n + (k mod n)" 
+    using div_mult_mod_eq by metis
+  then have "k/n = q + (k mod n)/n"
+    using False
+    by(auto simp add: divide_simps,
+       metis of_int_add of_int_mult of_int_of_nat_eq)
+  then have "(2*pi*k/n) = 2*pi*q + (2*pi*(k mod n)/n)"
+    using False by(auto simp add: field_simps)
+  then have "(2*pi*k/n)*\<i> = 2*pi*q*\<i> + (2*pi*(k mod n)/n)*\<i>" (is "?l = ?r1 + ?r2")
+    by(auto simp add: algebra_simps)
+  then have "exp ?l = exp ?r2"
+    using exp_plus_2pin by (simp add: exp_add mult.commute)
+  then show ?thesis 
+    using unity_root_def unity_exp by auto    
+qed
+
+lemma unity_mod_nat: "unity_root n k = unity_root n (nat (k mod n))"
+  using unity_mod 
+  by (metis Euclidean_Division.pos_mod_sign add_0_left add_divide_eq_if_simps(1) int_nat_eq linorder_neqE_linordered_idom linorder_not_le nat_int of_nat_eq_0_iff unity_root_def) 
+
+lemma exp_dvd_nat:
+  fixes n k :: nat
+  assumes "k > 0"
+  shows "exp ((2*pi*(n::nat)/(k::nat)) * \<i>) = 1 \<longleftrightarrow> k dvd n"
 proof(rule iffI)
-  (* e^(ix) = cos x + i sin x *)
-  assume 0:"k > 0"
   assume 1: "exp ((2*pi*n/k)*\<i>) = 1"
   from this cis.sel cis_conv_exp have "cos (2*pi*n/k) = 1" 
     by (metis complex_Re_numeral mult.commute numeral_One)
   then obtain l::int where "2*pi*n/k = 2*pi*l"
     using cos_one_2pi_int by auto
   then have "n = k * l" 
-    apply(auto simp add: field_simps "0") 
+    apply(auto simp add: field_simps assms) 
     using of_int_eq_iff by fastforce
-  then show "k dvd n" 
+  then show "k dvd n"
     using int_dvd_int_iff by fastforce
 next
   assume "k dvd n"
@@ -35,22 +66,48 @@ next
         metis exp_of_nat_mult exp_two_pi_i' exp_zero mult_eq_0_iff semiring_normalization_rules(19))
 qed
 
+(* 
+ An example of a theorem deduced from the version for nats
+ taking advantage of exponential's periodicity.
+*)
+lemma exp_dvd_int:
+  fixes n :: int and  k :: nat
+  assumes "k > 0"
+  shows "unity_root k n = 1 \<longleftrightarrow> k dvd n"
+proof - 
+  have "unity_root k n = unity_root k (nat (n mod k))"
+    using unity_mod_nat by blast
+  also have "unity_root k (nat (n mod k)) = 1 \<longleftrightarrow> k dvd (nat (n mod k))"
+    using assms exp_dvd_nat
+    by (metis of_int_of_nat_eq unity_exp)
+  also have "k dvd (nat (n mod k)) \<longleftrightarrow> k dvd n"
+    using assms
+    by (metis Euclidean_Division.pos_mod_sign dvd_mod_iff dvd_refl int_dvd_int_iff int_nat_eq of_nat_0_less_iff)
+  finally show ?thesis by simp
+qed
+
 lemma case_1:
-  assumes 0: "(k::nat) \<ge> 1"
-  assumes 1: "k dvd n"
-  assumes 2: "g(n::nat) = (\<Sum>m \<in> {0..(k::nat)-1}. exp ((2*pi*m*n*\<i>) / k))"
+  fixes n  k :: nat
+  assumes gr: "k \<ge> 1"
+  assumes dvd: "k dvd n"
+  assumes def:  "g(n) = (\<Sum>m\<le>k-1.exp ((2*m*n/ k)*pi*\<i>))"
   shows "g(n) = k"
 proof -
-  let ?x = "exp ((2*pi*n*\<i>) / k)"
-  have "\<And> m. exp ((2*pi*m*n*\<i>) / k) = (?x)^m"
-    by (auto simp add: field_simps,
-        metis (no_types, hide_lams) exp_of_nat_mult semiring_normalization_rules(19) times_divide_eq_right)
-  from this 2 have 3: "g(n) = (\<Sum>m \<in> {0..k-1}. (?x)^m)" by simp
-  have "?x = 1" using exp_dvd 0 1 by simp
-  from 3 this have "g(n) = (\<Sum>m \<in> {0..k-1}. 1)" by auto
-  then show ?thesis  
-    by (auto simp add: field_simps,
-        metis "0" One_nat_def Suc_diff_le diff_Suc_1 of_nat_Suc)
+  let ?x = "exp ((2*n/k)*pi*\<i>)"
+  have unit: "?x = 1" 
+    using exp_dvd_nat dvd gr sledgehammer
+  have exp: "\<And> m. ?x^m = exp ((2*m*n/ k)*pi*\<i>)"
+    by(simp add: algebra_simps,
+       metis (no_types, lifting) exp_of_nat_mult semiring_normalization_rules(19) times_divide_eq_left)
+  have "g(n) = (\<Sum>m\<le>k-1. ?x^m)" 
+    using def exp by simp  
+  also have "... = (\<Sum>m\<le>k-1. 1)" 
+    using unit by simp
+  also have "(\<Sum>m\<le>k-1. 1) = k" 
+    using gr by(induction k, auto)
+  ultimately show ?thesis  
+    by(auto simp add: algebra_simps,
+       metis of_nat_Suc of_nat_eq_iff)  
 qed                       
 
 lemma case_2:
@@ -85,7 +142,13 @@ theorem geometric_sum:
  shows "\<not> k dvd n \<Longrightarrow> g(n) = 0" and 
        "k dvd n \<Longrightarrow> g(n) = k"
   using case_1 case_2 "0" g_def by auto
- 
+
+find_theorems "exp(-_) = _"
+
+theorem int_geometric_sum:
+ shows "exp ((2*pi*m*n*\<i>) / k) "
+
+
 section\<open>Finite Fourier series\<close>
 
 subsection\<open>Lagrange property\<close>
@@ -293,72 +356,116 @@ proof -
     by(blast,blast)
   obtain a where pexpr: "\<And> z. poly p z = (\<Sum>i\<le>?k-1. a(i) * z ^ i)"
     using extended_altdef deg_ineq by blast
-  fix m :: int and r :: int
-  assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k"
-  have exp: "\<And> n. (?f m)^n = ?f (m*n)"
-  proof -
-    fix n :: nat
-    have alg_s: "n*((2*m/(?k::int))*pi*\<i>) = ((2*(n*m)/(?k::int))*pi*\<i>)"
-      by (simp add: bounds)
-    have "(?f  m)^n = exp (n*((2*m)/(?k::int))*pi*\<i>)" 
-      by (metis (no_types, lifting) exp_of_nat_mult of_real_mult of_real_of_nat_eq semiring_normalization_rules(18))
-    moreover have "... = exp (((2*(m*n))/(?k::int))*pi*\<i>)"
-      using bounds 
-      by (simp add: mult.commute mult.left_commute)
-    moreover have "... = ?f(nat (m*n))"
-      by (simp add: bounds)
-    ultimately show "(?f m)^n = ?f (m*n)" by simp 
-  qed
-  
-  have "\<And> n. (?f (m*n))*(?f (-m*r)) = ?f (m*(n-r))"
-  proof -
-    fix n
-    have "(?f (m*n))*(?f (-m*r)) = 
+
+  have "\<And> m r. m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k \<Longrightarrow> 
+             (\<And> n. (?f m)^n = ?f (m*n))"
+   (* see exp of nat mult as in exp_dvd *)
+  proof - 
+    {fix m :: int and r :: int
+    assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k"
+    have exp: "\<And> n. (?f m)^n = ?f (m*n)"
+    proof -
+      fix n :: nat
+      have alg_s: "n*((2*m/(?k::int))*pi*\<i>) = ((2*(n*m)/(?k::int))*pi*\<i>)"
+        by (simp add: bounds)
+      have "(?f  m)^n = exp (n*((2*m)/(?k::int))*pi*\<i>)" 
+        by (metis (no_types, lifting) exp_of_nat_mult of_real_mult of_real_of_nat_eq semiring_normalization_rules(18))
+      moreover have "... = exp (((2*(m*n))/(?k::int))*pi*\<i>)"
+        using bounds by (simp add: mult.commute mult.left_commute)
+      moreover have "... = ?f (m*n)"
+        by (simp add: bounds)
+      ultimately show "(?f m)^n = ?f (m*n)" by simp 
+    qed
+
+    have exp_distr: "\<And> n. ?f (m*n)*?f (-m*r) = ?f (m*(n-r))"
+    proof -
+      fix n
+      have alg_s2: "((2*(m*n)/(?k::int))*pi*\<i>)+
+            ((2*(-m*r)/(?k::int))*pi*\<i>) = 
+          ((2*m*(n-r))/(?k::int))*pi*\<i>"  
+        using assms by(simp add: field_simps)
+      have "(?f (m*n))*(?f (-m*r)) = 
           exp (((2*(m*n))/(?k::int))*pi*\<i>)*
           exp (((2*(-m*r)/(?k::int))*pi*\<i>))"
-      by blast
-    moreover have "... = 
+        by blast
+      moreover have "... = 
        exp (((2*(m*n)/(?k::int))*pi*\<i>)+
             ((2*(-m*r)/(?k::int))*pi*\<i>))"
-      by (metis exp_add)
-    have "((2*(m*n)/(?k::int))*pi*\<i>)+
-            ((2*(-m*r)/(?k::int))*pi*\<i>) = 
-          ((2*(m*n)/(?k::int))+(2*(-m*r)/(?k::int)))*pi*\<i>"  
-      
-    moreover have "... = 
-       exp ((-(2*(nat (m*n+n*r))/(?k::int))*pi*\<i>))"
-      
-      sorry
-  from bounds have unit: "?z ! nat m = ?f (nat m)" by auto
-  from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
-    using fst_conv in_set_zip by fastforce
-  then have "(ws ! nat m) =  poly p (?z ! nat m)"
-    using interp by simp  
-  then have "(ws ! nat m) = (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)"
-    using unit pexpr by auto
-  then have "((ws ! nat m)*?f ( (-m*r))) =
-             (\<Sum>n\<le>?k-1. a(n) * (?f (nat m)) ^ n)*?f (nat (m*r))" 
-    by simp  
-  then have "((ws ! nat m)*?f (nat (m*r))) =
-        (\<Sum>n\<le>?k-1. a(n) * (?f (nat (m*n))))*?f (nat (m*r))"  
-    using exp by simp
-  then have "((ws ! nat m)*?f (nat (m*r))) =
-        (\<Sum>n\<le>?k-1. (a(n)*?f (nat (m*n)))*?f (nat (m*r)))"  
-    by (simp add: sum_distrib_right)
-  then have "... = (\<Sum>n\<le>?k-1. a(n)*(?f (nat (m*n))*?f (nat (m*r))))"
-    by (simp add: mult.assoc)
- 
-    
-  then have "((ws ! nat m)*?f (nat (m*r))) =
-             (\<Sum>n\<le>?k-1. a(n) * (?f (nat ((n-r)*m))) ^ n)" 
-    sorry
-  {fix n
+        by (metis exp_add)
+      moreover have "... = 
+       exp (((2*m*(n-r))/(?k::int))*pi*\<i>)"
+        using alg_s2 by auto
+      ultimately show "(?f (m*n))*(?f (-m*r)) = (?f (m*(n-r)))"
+        by (simp add: mult.commute mult.left_commute)
+    qed
+
+    have summand: "((ws ! nat m)*?f (-m*r)) = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
+    proof -
+      from bounds have unit: "?z ! nat m = ?f m" by auto
+      from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
+        using fst_conv in_set_zip by fastforce
+      then have "(ws ! nat m) =  poly p (?z ! nat m)"
+        using interp by simp  
+      then have "(ws ! nat m) = (\<Sum>n\<le>?k-1. a(n) * (?f m) ^ n)"
+        using unit pexpr by auto
+      then have "((ws ! nat m)*?f (-m*r)) =
+             (\<Sum>n\<le>?k-1. a(n) * (?f m) ^ n)*?f (-m*r)" 
+        by auto
+      moreover have "... =
+        (\<Sum>n\<le>?k-1. a(n) * (?f (m*n)))*?f (-m*r)"  
+        using exp by simp
+      moreover have "... = (\<Sum>n\<le>?k-1. (a(n)*?f (m*n))*?f (-m*r))"  
+        by (simp add: sum_distrib_right)
+      moreover have "... = (\<Sum>n\<le>?k-1. a(n)*(?f (m*n)*?f (-m*r)))"
+        by (simp add: mult.assoc)   
+      moreover have "... = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))" 
+        using exp_distr by presburger
+      ultimately show "((ws ! nat m)*?f (-m*r)) = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
+        by argo
+    qed}
+  note summand = this
+
+    {fix r :: int
+    assume r_bound: "r \<ge> 0 \<and> r < ?k"
+    from summand have
+      "\<And> m. m \<ge> 0  \<and> m < ?k \<Longrightarrow> 
+         ((ws ! nat m)*?f (-m*r)) = 
+         (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
+      by (meson r_bound of_nat_0_le_iff of_nat_less_iff)
+    then have "(\<Sum>m\<le>?k-1.(ws ! nat m)*?f (-m*r)) = 
+           (\<Sum>m\<le>?k-1. (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r)))))"
+      using r_bound by auto
+    moreover have "... = (\<Sum>n\<le>?k-1.(\<Sum>m\<le>?k-1. a(n)*(?f (m*(n-r)))))"
+      using sum.swap by fast
+    moreover have "... = (\<Sum>n\<le>?k-1.a(n)*(\<Sum>m\<le>?k-1. (?f (m*(n-r)))))"
+      by (simp add: vector_space_over_itself.scale_sum_right)
+    ultimately have macro: 
+      "(\<Sum>m\<le>?k-1.(ws ! nat m)*?f (-m*r)) = 
+      (\<Sum>n\<le>?k-1.a(n)*(\<Sum>m\<le>?k-1. (?f (m*(n-r)))))"
+      by argo}
+  note macro = this
+
+  fix n m r :: int
+  assume m_bound: "0 \<le> m \<and> m < ?k"
   assume n_bound: "0 \<le> n \<and> n < ?k"
-  from n_bound bounds div_minus[of n ?k m r]
-  have "(int (length ws) dvd n - r) = (n = r)" by auto}
-  then have "((ws ! nat m)*?f (nat m)) = (?k * a(nat r))" 
+  assume r_bound: "0 \<le> r \<and> r < ?k"
+  thm geometric_sum(1)[of ?k "nat (n-r)"]
+  from n_bound r_bound m_bound div_minus[of n ?k m r]
+  have div2: "?k dvd (n - r) \<longleftrightarrow> (n = r)" by auto
+  assume "n > r"
+  
+  from this div2 have "(n \<noteq> r) \<Longrightarrow> ?f (m*(n-r)) = 0" 
+    using geometric_sum(1)[of ?k "nat (n-r)"] 
+    
+    
+  then have 1: "n = r \<Longrightarrow> ?f (m*(n-r)) \<noteq> 0" by simp
+  from div2 have 2: "n \<noteq> r \<Longrightarrow> ?f (m*(n-r)) \<noteq> 0"
+    by auto
+  from 1 2 have "n = r \<longleftrightarrow> 
+  then have "((ws ! nat m)*?f m) = (?k * a(nat r))" 
     using geometric_sum 
     sorry
+}
 qed
   
 

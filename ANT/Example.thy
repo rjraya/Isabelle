@@ -5,26 +5,89 @@ theory Example
     "HOL-Analysis.Complex_Transcendental"
 begin
 
+section\<open>Roots of unity\<close>
+
+definition "unity_root k n = 
+            cis (2 * pi * of_int n / of_nat k)"
+
+lemma unity_k_0: "unity_root k 0 = 1"
+  unfolding unity_root_def
+  by simp
+
+lemma unity_0_n: "unity_root 0 n = 1"
+ unfolding unity_root_def
+  by simp
+
+lemma unity_exp: "unity_root k n = exp ((2*pi*n/k)* \<i>)"
+  using unity_root_def cis_conv_exp mult.commute by metis
+
+lemma unity_mod: "unity_root k n = unity_root k (n mod k)"
+proof(cases "k = 0")
+  case True then show ?thesis by simp
+next
+  case False
+  obtain q :: int  where "n = q*k + (n mod k)" 
+    using div_mult_mod_eq by metis
+  then have "n/k = q + (n mod k)/k"
+    using False
+    by(auto simp add: divide_simps,
+       metis of_int_add of_int_mult of_int_of_nat_eq)
+  then have "(2*pi*n/k) = 2*pi*q + (2*pi*(n mod k)/k)"
+    using False by(auto simp add: field_simps)
+  then have "(2*pi*n/k)*\<i> = 2*pi*q*\<i> + (2*pi*(n mod k)/k)*\<i>" (is "?l = ?r1 + ?r2")
+    by(auto simp add: algebra_simps)
+  then have "exp ?l = exp ?r2"
+    using exp_plus_2pin by (simp add: exp_add mult.commute)
+  then show ?thesis 
+    using unity_root_def unity_exp by simp
+qed
+
+lemma unity_mod_nat: "unity_root k n = unity_root k (nat (n mod k))"
+  using unity_mod 
+  by (metis Euclidean_Division.pos_mod_sign add_0_left add_divide_eq_if_simps(1) int_nat_eq linorder_neqE_linordered_idom linorder_not_le nat_int of_nat_eq_0_iff unity_root_def) 
+
+lemma unity_dvd:
+  fixes k n :: nat
+  assumes "k > 0" 
+  shows "(unity_root k n = 1) \<longleftrightarrow> (k dvd n)"
+proof -
+  have "unity_root k n = exp ((2*pi*n/k)* \<i>)"
+    using unity_exp by simp
+  also have "exp ((2*pi*n/k)* \<i>) = 1 \<longleftrightarrow> k dvd n"
+    using complex_root_unity_eq_1[of k n] assms
+    by(auto simp add: algebra_simps)
+  finally show ?thesis by simp
+qed
+
+lemma unity_pow: "(unity_root k n)^m = unity_root k (n*m)"
+  using unity_root_def
+  by (simp add: Complex.DeMoivre linordered_field_class.sign_simps(6) mult.commute)
+
+lemma unity_prod: "unity_root k m* unity_root k n = unity_root k (m+n)"
+  using unity_exp
+  by(auto simp add: algebra_simps add_divide_distrib mult_exp_exp)
+
 section\<open>Geometric sum\<close>
 
 text\<open>
  First example of periodic modulo k arithmetical function
 \<close>
 
-lemma exp_dvd:
-  "k > 0 \<Longrightarrow> exp ((2*pi*(n::nat)/(k::nat)) * \<i>) = 1 \<longleftrightarrow> k dvd n"
+
+lemma exp_dvd_nat:
+  fixes n k :: nat
+  assumes "k > 0"
+  shows "exp ((2*pi*n/k) * \<i>) = 1 \<longleftrightarrow> k dvd n"
 proof(rule iffI)
-  (* e^(ix) = cos x + i sin x *)
-  assume 0:"k > 0"
   assume 1: "exp ((2*pi*n/k)*\<i>) = 1"
   from this cis.sel cis_conv_exp have "cos (2*pi*n/k) = 1" 
     by (metis complex_Re_numeral mult.commute numeral_One)
   then obtain l::int where "2*pi*n/k = 2*pi*l"
     using cos_one_2pi_int by auto
   then have "n = k * l" 
-    apply(auto simp add: field_simps "0") 
+    apply(auto simp add: field_simps assms) 
     using of_int_eq_iff by fastforce
-  then show "k dvd n" 
+  then show "k dvd n"
     using int_dvd_int_iff by fastforce
 next
   assume "k dvd n"
@@ -35,62 +98,110 @@ next
         metis exp_of_nat_mult exp_two_pi_i' exp_zero mult_eq_0_iff semiring_normalization_rules(19))
 qed
 
-lemma case_1:
-  assumes 0: "(k::nat) \<ge> 1"
-  assumes 1: "k dvd n"
-  assumes 2: "g(n::nat) = (\<Sum>m \<in> {0..(k::nat)-1}. exp ((2*pi*m*n*\<i>) / k))"
-  shows "g(n) = k"
+(* 
+ An example of a theorem deduced from the version for nats
+ taking advantage of exponential's periodicity.
+*)
+lemma exp_dvd_int:
+  fixes n :: int and  k :: nat
+  assumes "k > 0"
+  shows "unity_root k n = 1 \<longleftrightarrow> k dvd n"
+proof - 
+  have "unity_root k n = unity_root k (nat (n mod k))"
+    using unity_mod_nat by blast
+  also have "unity_root k (nat (n mod k)) = 1 \<longleftrightarrow> k dvd (nat (n mod k))"
+    using assms exp_dvd_nat
+    by (metis of_int_of_nat_eq unity_exp)
+  also have "k dvd (nat (n mod k)) \<longleftrightarrow> k dvd n"
+    using assms
+    by (metis Euclidean_Division.pos_mod_sign dvd_mod_iff dvd_refl int_dvd_int_iff int_nat_eq of_nat_0_less_iff)
+  finally show ?thesis by simp
+qed
+
+definition "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n* of_nat m))"
+
+lemma geo_0_n: "geometric_sum 0 n = 1"
+  unfolding geometric_sum_def
+  using unity_0_n by simp
+  
+  
+
+lemma gs_case_1:
+  fixes k :: nat and n :: int
+  assumes gr: "k \<ge> 1"
+  assumes dvd: "k dvd n"
+  shows "geometric_sum k n = k"
 proof -
-  let ?x = "exp ((2*pi*n*\<i>) / k)"
-  have "\<And> m. exp ((2*pi*m*n*\<i>) / k) = (?x)^m"
-    by (auto simp add: field_simps,
-        metis (no_types, hide_lams) exp_of_nat_mult semiring_normalization_rules(19) times_divide_eq_right)
-  from this 2 have 3: "g(n) = (\<Sum>m \<in> {0..k-1}. (?x)^m)" by simp
-  have "?x = 1" using exp_dvd 0 1 by simp
-  from 3 this have "g(n) = (\<Sum>m \<in> {0..k-1}. 1)" by auto
-  then show ?thesis  
-    by (auto simp add: field_simps,
-        metis "0" One_nat_def Suc_diff_le diff_Suc_1 of_nat_Suc)
+  let ?x = "unity_root k n"
+  have unit: "?x = 1" using dvd gr exp_dvd_int by auto
+  have exp: "\<And> m. ?x^m = unity_root k (n*m)"
+    using unity_pow by simp
+  have "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n*m))" 
+    using geometric_sum_def by simp 
+  also have "... = (\<Sum>m\<le>k-1. ?x^m)"
+    using exp  by auto
+  also have "... = (\<Sum>m\<le>k-1. 1)" 
+    using unit by simp
+  also have "... = k" 
+    using gr by(induction k, auto)
+  finally show "geometric_sum k n = k" by simp
 qed                       
 
-lemma case_2:
-  assumes 0: "(k::nat) \<ge> 1"
-  assumes 1: "\<not> k dvd n"
-  assumes 2: "g(n::nat) = (\<Sum>m \<in> {0..(k::nat)-1}. exp ((2*pi*m*n*\<i>) / k))"
-  shows "g(n) = 0"
+lemma gs_case_2:
+  fixes k :: nat and n :: int
+  assumes gr: "k \<ge> 1"
+  assumes dvd: "\<not> k dvd n"
+  shows "geometric_sum k n = 0"
 proof -
-  let ?x = "exp ((2*pi*n*\<i>) / k)"
-  from exp_dvd 0 1 have "?x \<noteq> 1" by simp
-  then have 3: "(?x^k - 1)/(?x - 1) = (\<Sum> m \<in> {0..k-1}. ?x^m)"
-      using geometric_sum[of ?x k]
-      by (metis One_nat_def Suc_pred atLeast0AtMost divide_eq_0_iff 
-                exp_zero lessThan_Suc_atMost neq0_conv of_nat_eq_0_iff)
-  then have "\<And> m. exp ((2*pi*m*n*\<i>) / k) = (?x)^m"
-    by (auto simp add: divide_simps,
-        metis (mono_tags, lifting) exp_of_nat_mult mult.left_commute 
-              semiring_normalization_rules(17) times_divide_eq_right)
-  from this 2 3 have 4: "g(n) = (?x^k - 1)/(?x - 1)"
-    by simp
-  from 0 have "?x^k = exp (2*pi*n*\<i>)"
-    using exp_divide_power_eq linorder_not_le by blast
-  then have "?x^k = 1" 
-    by (metis exp_of_nat2_mult exp_two_pi_i' mult.commute of_nat_numeral
-              of_real_mult of_real_of_nat_eq power_one semiring_normalization_rules(19))
-  from this 4 show ?thesis by auto
+  let ?x = "unity_root k n"
+  have "?x \<noteq> 1" using dvd gr exp_dvd_int by auto
+  then have "(?x^k - 1)/(?x - 1) = (\<Sum> m\<le>k-1. ?x^m)"
+      using geometric_sum[of ?x k] gr
+      by(auto simp add: divide_simps,
+         metis Suc_le_lessD Suc_pred lessThan_Suc_atMost)
+  then have sum: "geometric_sum k n = (?x^k - 1)/(?x - 1)"
+    using geometric_sum_def unity_pow by simp
+  have "?x^k = 1" 
+    using gr exp_dvd_int unity_pow by simp
+  then show ?thesis using sum by auto
 qed
 
 theorem geometric_sum:
- assumes 0: "(k::nat) \<ge> 1"
- defines "g(n::nat) == (\<Sum>m \<in> {0..(k::nat)-1}. exp ((2*pi*m*n*\<i>) / k))"
- shows "\<not> k dvd n \<Longrightarrow> g(n) = 0" and 
-       "k dvd n \<Longrightarrow> g(n) = k"
-  using case_1 case_2 "0" g_def by auto
+ fixes k :: nat and n :: int
+ assumes gr: "k \<ge> 1"
+ shows "\<not> k dvd n \<Longrightarrow> geometric_sum k n = 0" and 
+       "  k dvd n \<Longrightarrow> geometric_sum k n = k"
+  using gs_case_1 gs_case_2 gr by blast+
 
-find_theorems "exp(-_) = _"
+corollary geometric_sum_periodic:
+  fixes k :: nat and n :: int
+ assumes gr: "k \<ge> 1"
+ shows "geometric_sum k n = geometric_sum k (n+k)"
+proof(cases "k dvd n")
+  case True then show ?thesis 
+    using gr gs_case_1 by auto
+next
+  case False then show ?thesis 
+    using gr gs_case_2 by auto
+qed
 
-theorem int_geometric_sum:
- shows "exp ((2*pi*m*n*\<i>) / k) "
-
+lemma geometric_sum_div:
+  fixes r :: int
+  assumes "k \<ge> 1"
+  assumes "-k < r \<and> r < k"
+  shows "geometric_sum k r \<noteq> 0 \<longleftrightarrow> r = 0"
+proof
+  assume "geometric_sum k r \<noteq> 0"
+  then have "k dvd r" using geometric_sum assms by blast
+  then show "r = 0" using assms(2) 
+    using dvd_imp_le_int by force
+next
+  assume "r = 0"
+  then have "k dvd r" by auto
+  then have "geometric_sum k r = k" 
+    using assms(1) geometric_sum by blast
+  then show "geometric_sum k r \<noteq> 0" using assms(1) by simp
+qed
 
 section\<open>Finite Fourier series\<close>
 
@@ -165,18 +276,17 @@ lemma lagrange:
 
 subsection\<open>Roots of unit\<close>
 
+(* see complex_root_unity_eq *)
 lemma roots_of_unit_equal:
- assumes w: "k > 0"
- defines "f  == (\<lambda> m k. exp (((2*m/(k::int))*pi)*\<i>))"
- assumes e: "f (i::int) k = f (j::int) k"
+ assumes gr: "k > 0"
+ assumes eq: "unity_root k i = unity_root k j"
  shows "i mod k = j mod k"
-proof -
-  let ?arg1 = "((2*i/k)*pi)*\<i>"
-  let ?arg2 = "((2*j/k)*pi)*\<i>"
-  from e f_def
-  have "exp ?arg1 = exp ?arg2" by auto
+proof - 
+  let ?arg1 = "(2*pi*i/k)* \<i>"
+  let ?arg2 = "(2*pi*j/k)* \<i>"
+  from eq unity_exp have "exp ?arg1 = exp ?arg2" by simp
   from this exp_eq 
-  obtain n :: int where "?arg1 = ?arg2 +(2 *n*pi)*\<i>" by blast
+  obtain n :: int where "?arg1 = ?arg2 +(2*n*pi)*\<i>" by blast
   then have e1: "?arg1 - ?arg2 = 2*n*pi*\<i>" by simp
   have e2: "?arg1 - ?arg2 = 2*(i-j)*(1/k)*pi*\<i>"
     by(auto simp add: algebra_simps)
@@ -191,7 +301,7 @@ proof -
     using mult_cancel_right pi_neq_zero by blast
   then have "n = (i-j)*(1/k)" by linarith
   then have "n*k = i-j" 
-    using w apply(auto simp add: field_simps)
+    using gr apply(auto simp add: divide_simps)
     using of_int_eq_iff by fastforce
   then show ?thesis by algebra
 qed
@@ -220,6 +330,33 @@ next
   assume "n = r" then show "k dvd n - r" by simp
 qed
 
+lemma geometric_sum_div:
+  fixes r :: int
+  assumes "0 \<le> r \<and> r < k"
+  assumes "0 \<le> n \<and> n < k"
+  shows "geometric_sum k (n-r) \<noteq> 0 \<longleftrightarrow> n = r"
+proof - 
+  have ineq: "0 \<le> n-r \<and> n-r< k"
+    using assms 
+  have "k dvd (n-r) \<longleftrightarrow> n = r"
+  proof 
+    assume "k dvd n - r"
+    then show "n = r"
+     proof(cases "n > r")
+       case True then show ?thesis 
+         using \<open>k dvd n - r\<close> ineq by auto
+     next
+       case False
+       have rev: "k dvd (n-r) \<longleftrightarrow> k dvd (r-n)"
+         using dvd_diff_commute sorry
+       thm dvd_diff_commute
+   from this False have "r = n"
+    using dvd n_bounds r_bounds zdvd_imp_le by fastforce
+   then show ?thesis by simp        
+ qed
+  qed
+qed
+
 lemma extended_altdef:
  assumes gr: "k \<ge> degree p"  
  shows "poly p (z::complex) = (\<Sum>i\<le>k. coeff p i * z ^ i)"
@@ -240,34 +377,26 @@ proof -
 qed
 
 lemma distinct_z: 
-  "distinct (map (\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)) (map int [0..<k]))" 
+  "distinct (map (\<lambda> m. unity_root k m) [0..<k])" 
 proof -
-  let ?t = "[0..<k]"  
-  let ?f = "\<lambda> (m::int). exp ((2*m/(k::int))*pi*\<i>)"
-  let ?z = "map (\<lambda> m. ?f m)  ?t"
+  let ?z = "map (\<lambda> m. unity_root k m) [0..<k]"
   {
   fix i j
   assume b: "0 \<le> i \<and> i < k \<and> 0 \<le> j \<and> j < k \<and> i \<noteq> j"
   have "?z ! i \<noteq> ?z ! j"
   proof -
     {assume c: "?z ! i = ?z ! j"
-    from b have 1: "?z ! i = exp ((2*i/(k::int))*pi*\<i>)" by simp
-    from b have 2: "?z ! j = exp ((2*j/(k::int))*pi*\<i>)" by simp
-    from 1 2 c have 3: "exp ((2*i/(k::int))*pi*\<i>) = exp ((2*j/(k::int))*pi*\<i>)"
-      by simp
-    thm roots_of_unit_equal
+    from b have 1: "?z ! i = unity_root k i" by simp
+    from b have 2: "?z ! j = unity_root k j" by simp
+    from 1 2 c have "unity_root k i = unity_root k j" by simp
     from this roots_of_unit_equal[of k i j] b
-    have "int i mod int k = int j mod int k"
-      by simp
-    from this b have "i mod k = j mod k" 
-      using b by auto
+    have "i mod k = j mod k" by simp
     from this b have "i = j" by auto
     from this b have  "False" by auto}
     then show ?thesis by blast
   qed
   }
-  then show ?thesis 
-    by (simp add: distinct_conv_nth)
+  then show ?thesis by (simp add: distinct_conv_nth)
 qed
 
 lemma roots_of_unit:
@@ -276,138 +405,110 @@ lemma roots_of_unit:
   shows "
   \<exists>! (p :: complex poly).
    (degree p \<le> k - 1) \<and>
-   (\<forall> m. (ws ! m) = poly p (exp ((2*m/(k::int))*pi*\<i>)))
+   (\<forall> m. (ws ! m) = poly p (unity_root k m))
     \<and> 
-   (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* exp (-(2*pi*m*n/k)*\<i>)))"
-proof -
-  let ?k = "length ws"
-  let ?t = "[0..<?k]"  
-  let ?f = "\<lambda> (m::int). exp ((2*m/(?k::int))*pi*\<i>)"
-  let ?z = "map (\<lambda> m. ?f m) ?t" 
-  have d: "distinct ?z" using distinct_z by blast
+   (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* (unity_root k (-n*m))))"
+proof -  
+  let ?z = "map (\<lambda> m. unity_root k m) [0..<k]" 
+  have d: "distinct ?z" using distinct_z k_def by blast
   
   let ?zs_ws = "zip ?z ws"
   from lagrange[of "?zs_ws"] have 
-    "\<exists>!p. degree p \<le> ?k - 1 \<and>
+    "\<exists>!p. degree p \<le> k - 1 \<and>
        (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly p x = y) "
     using d assms by auto 
   then obtain p where 
-    ps: "degree p \<le> ?k - 1 \<and>
+    ps: "degree p \<le> k - 1 \<and>
      (\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)" by blast
-  then have deg_ineq: "degree p \<le> ?k - 1" 
+  then have deg_ineq: "degree p \<le> k - 1" 
         and interp: "(\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)"
     by(blast,blast)
-  obtain a where pexpr: "\<And> z. poly p z = (\<Sum>i\<le>?k-1. a(i) * z ^ i)"
+  obtain a where pexpr: "\<And> z. poly p z = (\<Sum>i\<le>k-1. a(i) * z ^ i)"
     using extended_altdef deg_ineq by blast
 
-  have "\<And> m r. m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k \<Longrightarrow> 
-             (\<And> n. (?f m)^n = ?f (m*n))"
-  proof - 
-    {fix m :: int and r :: int
-    assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < ?k \<and> r < ?k"
-    have exp: "\<And> n. (?f m)^n = ?f (m*n)"
-    proof -
-      fix n :: nat
-      have alg_s: "n*((2*m/(?k::int))*pi*\<i>) = ((2*(n*m)/(?k::int))*pi*\<i>)"
-        by (simp add: bounds)
-      have "(?f  m)^n = exp (n*((2*m)/(?k::int))*pi*\<i>)" 
-        by (metis (no_types, lifting) exp_of_nat_mult of_real_mult of_real_of_nat_eq semiring_normalization_rules(18))
-      moreover have "... = exp (((2*(m*n))/(?k::int))*pi*\<i>)"
-        using bounds by (simp add: mult.commute mult.left_commute)
-      moreover have "... = ?f (m*n)"
-        by (simp add: bounds)
-      ultimately show "(?f m)^n = ?f (m*n)" by simp 
-    qed
+  have "\<And> m r. m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k \<Longrightarrow> 
+        (\<And> n. (unity_root k m)^n = unity_root k (m*n))"
+    by (simp add: unity_pow)   
 
-    have exp_distr: "\<And> n. ?f (m*n)*?f (-m*r) = ?f (m*(n-r))"
-    proof -
-      fix n
-      have alg_s2: "((2*(m*n)/(?k::int))*pi*\<i>)+
-            ((2*(-m*r)/(?k::int))*pi*\<i>) = 
-          ((2*m*(n-r))/(?k::int))*pi*\<i>"  
-        using assms by(simp add: field_simps)
-      have "(?f (m*n))*(?f (-m*r)) = 
-          exp (((2*(m*n))/(?k::int))*pi*\<i>)*
-          exp (((2*(-m*r)/(?k::int))*pi*\<i>))"
-        by blast
-      moreover have "... = 
-       exp (((2*(m*n)/(?k::int))*pi*\<i>)+
-            ((2*(-m*r)/(?k::int))*pi*\<i>))"
-        by (metis exp_add)
-      moreover have "... = 
-       exp (((2*m*(n-r))/(?k::int))*pi*\<i>)"
-        using alg_s2 by auto
-      ultimately show "(?f (m*n))*(?f (-m*r)) = (?f (m*(n-r)))"
-        by (simp add: mult.commute mult.left_commute)
-    qed
+  have exp_distr: "\<And> m n r. unity_root k (m*n)* unity_root k (-m*r) = 
+                             unity_root k (m*(n-r))"
+    using unity_prod by(simp add: algebra_simps)
 
-    have summand: "((ws ! nat m)*?f (-m*r)) = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
-    proof -
-      from bounds have unit: "?z ! nat m = ?f m" by auto
-      from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
-        using fst_conv in_set_zip by fastforce
-      then have "(ws ! nat m) =  poly p (?z ! nat m)"
-        using interp by simp  
-      then have "(ws ! nat m) = (\<Sum>n\<le>?k-1. a(n) * (?f m) ^ n)"
-        using unit pexpr by auto
-      then have "((ws ! nat m)*?f (-m*r)) =
-             (\<Sum>n\<le>?k-1. a(n) * (?f m) ^ n)*?f (-m*r)" 
-        by auto
-      moreover have "... =
-        (\<Sum>n\<le>?k-1. a(n) * (?f (m*n)))*?f (-m*r)"  
-        using exp by simp
-      moreover have "... = (\<Sum>n\<le>?k-1. (a(n)*?f (m*n))*?f (-m*r))"  
-        by (simp add: sum_distrib_right)
-      moreover have "... = (\<Sum>n\<le>?k-1. a(n)*(?f (m*n)*?f (-m*r)))"
-        by (simp add: mult.assoc)   
-      moreover have "... = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))" 
-        using exp_distr by presburger
-      ultimately show "((ws ! nat m)*?f (-m*r)) = (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
-        by argo
-    qed}
+  {
+    fix m r :: int
+    assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k"
+    then have unit: "?z ! nat m = unity_root k m" by auto
+    from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
+      using fst_conv in_set_zip bounds
+      by (metis diff_zero k_def length_map length_upt nat_less_iff snd_conv)
+    then have "(ws ! nat m) =  poly p (?z ! nat m)"
+      using interp by simp  
+    then have "(ws ! nat m) = (\<Sum>n\<le>k-1. a(n) * (unity_root k m) ^ n)"
+      using unit pexpr by auto
+    then have "((ws ! nat m)*unity_root k (-m*r)) =
+           (\<Sum>n\<le>k-1. a(n) * (unity_root k m) ^ n)*unity_root k (-m*r)" 
+      by auto
+    also have "... = (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*n)))*unity_root k (-m*r)"  
+      using unity_pow by simp
+    also have "... = (\<Sum>n\<le>k-1. (a(n)*unity_root k (m*n))*unity_root k (-m*r))"  
+      by (simp add: sum_distrib_right)
+    also have "... = (\<Sum>n\<le>k-1. a(n)*(unity_root k (m*n)*unity_root k (-m*r)))"
+      by (simp add: mult.assoc)   
+    also have "... = (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))" 
+      using exp_distr by simp
+    finally have 
+       "((ws ! nat m)*unity_root k (-m*r)) = 
+         (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))"
+      by argo
+  }
   note summand = this
 
-    {fix r :: int
-    assume r_bound: "r \<ge> 0 \<and> r < ?k"
+  fix r :: int
+  assume r_bound: "r \<ge> 0 \<and> r < k"
+  {   
     from summand have
-      "\<And> m. m \<ge> 0  \<and> m < ?k \<Longrightarrow> 
-         ((ws ! nat m)*?f (-m*r)) = 
-         (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r))))"
+      "\<And> m. m \<ge> 0  \<and> m < k \<Longrightarrow> 
+         ((ws ! nat m)*unity_root k (-m*r)) = 
+         (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))"
       by (meson r_bound of_nat_0_le_iff of_nat_less_iff)
-    then have "(\<Sum>m\<le>?k-1.(ws ! nat m)*?f (-m*r)) = 
-           (\<Sum>m\<le>?k-1. (\<Sum>n\<le>?k-1. a(n) * (?f (m*(n-r)))))"
+    then have "(\<Sum>m\<le>k-1.(ws ! nat m)*unity_root k (-m*r)) = 
+           (\<Sum>m\<le>k-1. (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r)))))"
       using r_bound by auto
-    moreover have "... = (\<Sum>n\<le>?k-1.(\<Sum>m\<le>?k-1. a(n)*(?f (m*(n-r)))))"
+    also have "... = (\<Sum>n\<le>k-1.(\<Sum>m\<le>k-1. a(n)*(unity_root k (m*(n-r)))))"
       using sum.swap by fast
-    moreover have "... = (\<Sum>n\<le>?k-1.a(n)*(\<Sum>m\<le>?k-1. (?f (m*(n-r)))))"
+    also have "... = (\<Sum>n\<le>k-1.a(n)*(\<Sum>m\<le>k-1. (unity_root k (m*(n-r)))))"
       by (simp add: vector_space_over_itself.scale_sum_right)
-    ultimately have macro: 
-      "(\<Sum>m\<le>?k-1.(ws ! nat m)*?f (-m*r)) = 
-      (\<Sum>n\<le>?k-1.a(n)*(\<Sum>m\<le>?k-1. (?f (m*(n-r)))))"
-      by argo}
+    also have  
+      "... = 
+      (\<Sum>n\<le>k-1.a(n)*(\<Sum>m\<le>k-1. (unity_root k (m*(n-r)))))"
+      by argo
+    also have 
+      "... = (\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r))"
+      using geometric_sum_def 
+      by(simp add: algebra_simps)
+  }
   note macro = this
 
-  fix n m r :: int
-  assume m_bound: "0 \<le> m \<and> m < ?k"
-  assume n_bound: "0 \<le> n \<and> n < ?k"
-  assume r_bound: "0 \<le> r \<and> r < ?k"
-  thm geometric_sum(1)[of ?k "nat (n-r)"]
-  from n_bound r_bound m_bound div_minus[of n ?k m r]
-  have div2: "?k dvd (n - r) \<longleftrightarrow> (n = r)" by auto
-  assume "n > r"
-  
-  from this div2 have "(n \<noteq> r) \<Longrightarrow> ?f (m*(n-r)) = 0" 
-    using geometric_sum(1)[of ?k "nat (n-r)"] 
-    
-    
-  then have 1: "n = r \<Longrightarrow> ?f (m*(n-r)) \<noteq> 0" by simp
-  from div2 have 2: "n \<noteq> r \<Longrightarrow> ?f (m*(n-r)) \<noteq> 0"
-    by auto
-  from 1 2 have "n = r \<longleftrightarrow> 
-  then have "((ws ! nat m)*?f m) = (?k * a(nat r))" 
-    using geometric_sum 
-    sorry
-}
+  have "(\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r)) = a(k)*k"
+  proof -
+    {fix n
+    assume n_bound: "n \<ge> 0 \<and> n < k"
+    have "geometric_sum k (n-r) \<noteq> 0 \<longleftrightarrow> n = r"
+      using  k_def assms geometric_sum_div[of k "n-r"]
+      using n_bound r_bound by auto}
+  note zeros = this
+  term "sum.F"
+  have k_pos: "k > 0" using assms by simp
+  have
+    "(\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r))= 
+      a(nat r)*geometric_sum k 0"
+    using k_pos
+    apply(induction "k" arbitrary: r a )
+     apply simp
+    apply simp
+  qed
+
+
 qed
   
 
