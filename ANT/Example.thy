@@ -270,7 +270,7 @@ next
   then show ?thesis by simp 
 qed
 
-lemma lagrange:
+corollary lagrange:
  "length zs_ws > 0 \<Longrightarrow>
   distinct (map fst zs_ws) \<Longrightarrow>
   (\<exists>! (p :: complex poly).
@@ -405,10 +405,10 @@ lemma coeff_fourier:
   using degree_fourier assms(1) k_def by auto
 
 lemma interpolate_fourier:
-  fixes m :: int
-  assumes "0 \<le> m \<and> m < k"
-  assumes "m < length ws"
+  fixes m :: int and ws
   defines "k == length ws"
+  assumes "m \<in> {0..<k}"
+  assumes "m < length ws"
   shows "poly (fourier_poly ws) (unity_root k m) = ws ! (nat m)"
 proof -
   have distr: "
@@ -439,8 +439,8 @@ proof -
   then have sum_eq:
     "(\<Sum>j\<le>k-1. ws ! j * geometric_sum k (m-j)) = 
           (\<Sum>j\<in>{nat m}.  ws ! j * geometric_sum k (m-j))"
-    using assms(1) by(intro sum.mono_neutral_right,auto)
-  
+    using assms(2) by(intro sum.mono_neutral_right,auto)
+
   have "poly (fourier_poly ws) (unity_root k m) = 
         (\<Sum>i\<le>k-1. coeff (fourier_poly ws) i * (unity_root k m) ^ i)"
     using degree_fourier[of ws] k_def
@@ -448,7 +448,7 @@ proof -
                              "unity_root k m"]
     by blast
   also have "... = (\<Sum>i<k. coeff (fourier_poly ws) i * (unity_root k m) ^ i)"
-    using sum_eq_ineq assms(1) by auto
+    using sum_eq_ineq assms(2) by auto
   also have "... = (\<Sum>i<k. 1 / k *
     (\<Sum>j<k. ws ! j * unity_root k (-i*j)) * (unity_root k m) ^ i)"
     using coeff_fourier[of _ ws] k_def by auto
@@ -473,7 +473,7 @@ proof -
   also have "... = 1 / k * (\<Sum>j<k. ws ! j * 
     (\<Sum>i\<le>k-1. unity_root k (i*(m-j))))"
     using sum_eq_ineq assms 
-    by (smt of_nat_0_less_iff sum.cong) (* fix *)
+    by (metis (no_types, lifting) divide_eq_0_iff gr0I mult_cancel_left of_nat_0 of_real_eq_0_iff)
   also have "... = 1 / k * (\<Sum>j<k. ws ! j * geometric_sum k (m-j))"
     using geometric_sum_def 
     by(simp add: algebra_simps)
@@ -483,35 +483,83 @@ proof -
           (\<Sum>j\<in>{nat m}.  ws ! j * geometric_sum k (m-j))"
     using sum_eq by argo
   also have "... = 1 / k * ws ! (nat m) * k"
-    by(simp add: geo_k_0 assms(1) algebra_simps)
+    using geo_k_0 assms(2) by(auto simp add: algebra_simps)
   finally have "poly (fourier_poly ws) (unity_root k m) = ws ! (nat m)"
-    using assms(1) by auto
+    using assms(2) by auto
   then show ?thesis by simp
 qed
 
-lemma roots_of_unit:
+(* theorem 8.3 *)
+lemma fourier_expansion_unique:
   assumes "length ws > 0"
   defines "k == length ws"
-  assumes "(degree p \<le> k - 1) \<and> (\<forall> m \<le> k-1. (ws ! m) = poly p (unity_root k m))"
+  assumes "(degree p \<le> k - 1)"
+  assumes "(\<forall> m \<le> k-1. (ws ! m) = poly p (unity_root k m))"
   shows "p = fourier_poly ws"
 proof -  
   let ?z = "map (\<lambda> m. unity_root k m) [0..<k]" 
-  have d: "distinct ?z" using distinct_z k_def by blast
+  have d1: "distinct ?z" using distinct_z k_def by blast
   
   let ?zs_ws = "zip ?z ws"
-  from lagrange[of "?zs_ws"] have 
-    "\<exists>!p. degree p \<le> k - 1 \<and>
-       (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly p x = y) "
-    using d assms by auto 
-  from degree_fourier 
-  have "degree (fourier_poly ws) \<le> k - 1"
+  from d1 k_def have d2: "distinct (map fst ?zs_ws)" by simp
+  have l2: "length ?zs_ws > 0" using assms(1) k_def by auto
+  have l3: "length ?zs_ws = k" by (simp add: k_def)
+
+  from degree_fourier
+  have degree: "degree (fourier_poly ws) \<le> k - 1"
     using k_def by simp
 
-  from interpolate_fourier[of _ k ws]
-  have "poly (fourier_poly ws) x = y"
+  have interp: "poly (fourier_poly ws) x = y"
     if "(x, y) \<in> set ?zs_ws" for x y
-    
+  proof -
+    from that obtain n where "
+         x = map (unity_root k \<circ> int) [0..<k] ! n \<and>
+         y = ws ! n \<and> 
+         n < length ws"
+      using in_set_zip[of "(x,y)" "(map (unity_root k) (map int [0..<k]))" ws]
+      by auto
+    then have "
+         x = unity_root k (int n) \<and>
+         y = ws ! n \<and> 
+         n < length ws"
+      using nth_map[of n "[0..<k]" "unity_root k \<circ> int" ] k_def by simp
+    from this interpolate_fourier[of n ws] k_def
+    show "poly (fourier_poly ws) x = y" by simp          
+  qed
+
+  have interp_p: 
+   "poly p x = y"
+   if "(x,y) \<in> set ?zs_ws" for x y
+  proof -
+    from that obtain n where "
+         x = map (unity_root k \<circ> int) [0..<k] ! n \<and>
+         y = ws ! n \<and> 
+         n < length ws"
+      using in_set_zip[of "(x,y)" "(map (unity_root k) (map int [0..<k]))" ws]
+      by auto
+    then have "
+         x = unity_root k (int n) \<and>
+         y = ws ! n \<and> 
+         n < length ws"
+      using nth_map[of n "[0..<k]" "unity_root k \<circ> int" ] k_def by simp
+    from this assms(4) k_def
+    show "poly p x = y" 
+      by (metis One_nat_def Suc_pred assms(1) not_le not_less_eq_eq)       
+  qed
+
+  from lagrange_unique[of _ p "fourier_poly ws"] d2 l2
+  have l: "
+    degree p \<le> k - 1 \<and>
+    (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly p x = y) \<Longrightarrow>
+    degree (fourier_poly ws) \<le> k - 1 \<and>
+    (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly (fourier_poly ws) x = y) \<Longrightarrow>
+    p = (fourier_poly ws)"
+    using l3 by fastforce
+  from assms degree interp interp_p l3
+  show "p = (fourier_poly ws)" using l by blast  
 qed
   
+
+
 
 end

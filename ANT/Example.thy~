@@ -123,7 +123,10 @@ definition "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n* of_nat m))"
 lemma geo_0_n: "geometric_sum 0 n = 1"
   unfolding geometric_sum_def
   using unity_0_n by simp
-  
+
+lemma geo_k_0: "k > 0 \<Longrightarrow> geometric_sum k 0 = k"  
+  unfolding geometric_sum_def
+  by(simp add: unity_k_0)
   
 
 lemma gs_case_1:
@@ -134,7 +137,7 @@ lemma gs_case_1:
 proof -
   let ?x = "unity_root k n"
   have unit: "?x = 1" using dvd gr exp_dvd_int by auto
-  have exp: "\<And> m. ?x^m = unity_root k (n*m)"
+  have exp: "?x^m = unity_root k (n*m)" for m
     using unity_pow by simp
   have "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n*m))" 
     using geometric_sum_def by simp 
@@ -215,8 +218,9 @@ lemma lagrange_exists:
 proof -
   from e have 0: "degree p \<le> (length zs_ws - 1)"
     using degree_lagrange_interpolation_poly by auto
-  from e d have 1: "\<And> x y. (x,y) \<in> set zs_ws \<Longrightarrow> poly p x = y"
-    using lagrange_interpolation_poly by auto
+  from e d have 1: 
+    "poly p x = y" if "(x,y) \<in> set zs_ws" for x y 
+    using that lagrange_interpolation_poly by auto
   from 0 1 show ?thesis by auto
 qed
 
@@ -232,8 +236,8 @@ proof(cases "p1 - p2 = 0")
   case True then show ?thesis by simp
 next
   case False
-   have "\<And> x. x \<in> set (map fst zs_ws) \<Longrightarrow> poly (p1-p2) x = 0"
-   using 1 2 by(auto simp add: field_simps)
+  have "poly (p1-p2) x = 0" if "x \<in> set (map fst zs_ws)" for x
+   using 1 2 that by(auto simp add: field_simps)
    from this d have 3: "card {x. poly (p1-p2) x = 0} \<ge> length zs_ws"
    proof(induction zs_ws)
      case Nil then show ?case by simp
@@ -330,32 +334,9 @@ next
   assume "n = r" then show "k dvd n - r" by simp
 qed
 
-lemma geometric_sum_div:
-  fixes r :: int
-  assumes "0 \<le> r \<and> r < k"
-  assumes "0 \<le> n \<and> n < k"
-  shows "geometric_sum k (n-r) \<noteq> 0 \<longleftrightarrow> n = r"
-proof - 
-  have ineq: "0 \<le> n-r \<and> n-r< k"
-    using assms 
-  have "k dvd (n-r) \<longleftrightarrow> n = r"
-  proof 
-    assume "k dvd n - r"
-    then show "n = r"
-     proof(cases "n > r")
-       case True then show ?thesis 
-         using \<open>k dvd n - r\<close> ineq by auto
-     next
-       case False
-       have rev: "k dvd (n-r) \<longleftrightarrow> k dvd (r-n)"
-         using dvd_diff_commute sorry
-       thm dvd_diff_commute
-   from this False have "r = n"
-    using dvd n_bounds r_bounds zdvd_imp_le by fastforce
-   then show ?thesis by simp        
- qed
-  qed
-qed
+lemma sum_eq_ineq: "n > 0 \<Longrightarrow> (\<Sum>i\<le>n-1. f i) = (\<Sum>i<n. f i)" 
+  for n :: nat and f :: "nat \<Rightarrow> complex"
+  by (metis Suc_diff_1 lessThan_Suc_atMost)
 
 lemma extended_altdef:
  assumes gr: "k \<ge> degree p"  
@@ -399,15 +380,120 @@ proof -
   then show ?thesis by (simp add: distinct_conv_nth)
 qed
 
+definition fourier_poly :: "complex list \<Rightarrow> complex poly" where
+"fourier_poly ws =
+  (let k = length ws
+    in  poly_of_list [1 / k * (\<Sum>m<k. ws ! m * unity_root k (-n*m)).
+      n \<leftarrow> [0..<k]])"
+
+lemma degree_poly: "degree (poly_of_list ws) \<le> length ws - 1"
+  by(induction ws, auto,
+     metis Poly.simps(1) Suc_pred length_greater_0_conv not_less_eq_eq)
+
+lemma degree_fourier: "degree (fourier_poly ws) \<le> length ws - 1"
+  using fourier_poly_def degree_poly
+  by (metis (no_types, lifting) diff_zero length_map length_upt)
+  
+lemma coeff_fourier: 
+  assumes "n < length ws"
+  defines "k == length ws"
+  shows "coeff (fourier_poly ws) n = 
+         (1/k) * (\<Sum>m < k. ws ! m * unity_root k (-n*m))"
+  unfolding fourier_poly_def 
+  apply(simp add: Let_def)
+  unfolding nth_default_def
+  using degree_fourier assms(1) k_def by auto
+
+lemma interpolate_fourier:
+  fixes m :: int
+  assumes "0 \<le> m \<and> m < k"
+  assumes "m < length ws"
+  defines "k == length ws"
+  shows "poly (fourier_poly ws) (unity_root k m) = ws ! (nat m)"
+proof -
+  have distr: "
+   (\<Sum>j<length ws. ws ! j * unity_root k (-i*j))*(unity_root k (m*i)) = 
+   (\<Sum>j<length ws. ws ! j * unity_root k (-i*j)*(unity_root k (m*i)))"
+   for i
+  using sum_distrib_right[of "\<lambda> j. ws ! j * unity_root k (-i*j)" 
+                            "{..<k}" "(unity_root k (m*i))"] 
+  using k_def by blast
+
+  {fix j i :: nat
+   have "unity_root k (-i*j)*(unity_root k (m*i)) = unity_root k (-i*j+m*i)"
+     using unity_prod[of k "-i*j" "m*i"]
+     by simp
+   also have "... = unity_root k (i*(m-j))"
+     by(simp add: algebra_simps)
+   finally have "unity_root k (-i*j)*(unity_root k (m*i)) = unity_root k (i*(m-j))"
+     by simp
+   then have "ws ! j * unity_root k (-i*j)*(unity_root k (m*i)) = 
+              ws ! j * unity_root k (i*(m-j))"
+     by auto
+ } note prod = this
+
+ have zeros: 
+   "(geometric_sum k (m-j) \<noteq> 0 \<longleftrightarrow> m = j)
+     " if "j \<ge> 0 \<and> j < k"  for j
+   using  k_def that assms geometric_sum_div[of _ "m-j"] by simp
+  then have sum_eq:
+    "(\<Sum>j\<le>k-1. ws ! j * geometric_sum k (m-j)) = 
+          (\<Sum>j\<in>{nat m}.  ws ! j * geometric_sum k (m-j))"
+    using assms(1) by(intro sum.mono_neutral_right,auto)
+  
+  have "poly (fourier_poly ws) (unity_root k m) = 
+        (\<Sum>i\<le>k-1. coeff (fourier_poly ws) i * (unity_root k m) ^ i)"
+    using degree_fourier[of ws] k_def
+          extended_altdef[of "fourier_poly ws" "k-1" 
+                             "unity_root k m"]
+    by blast
+  also have "... = (\<Sum>i<k. coeff (fourier_poly ws) i * (unity_root k m) ^ i)"
+    using sum_eq_ineq assms(1) by auto
+  also have "... = (\<Sum>i<k. 1 / k *
+    (\<Sum>j<k. ws ! j * unity_root k (-i*j)) * (unity_root k m) ^ i)"
+    using coeff_fourier[of _ ws] k_def by auto
+  also have "... = (\<Sum>i<k. 1 / k *
+    (\<Sum>j<k. ws ! j * unity_root k (-i*j))*(unity_root k (m*i)))"
+    using unity_pow  by auto   
+  also have "... = (\<Sum>i<k. 1 / k *
+    (\<Sum>j<k. ws ! j * unity_root k (-i*j)*(unity_root k (m*i))))"
+    using distr k_def by simp
+  also have "... = (\<Sum>i<k. 1 / k * 
+    (\<Sum>j<k. ws ! j * unity_root k (i*(m-j))))"
+    using prod by presburger
+  also have "... = 1 / k * (\<Sum>i<k.  
+    (\<Sum>j<k. ws ! j * unity_root k (i*(m-j))))"
+    by (simp add: sum_distrib_left)
+  also have "... = 1 / k * (\<Sum>j<k.  
+    (\<Sum>i<k. ws ! j * unity_root k (i*(m-j))))"
+    using sum.swap by fastforce
+  also have "... = 1 / k * (\<Sum>j<k. ws ! j * 
+    (\<Sum>i<k. unity_root k (i*(m-j))))"
+    by (simp add: vector_space_over_itself.scale_sum_right)
+  also have "... = 1 / k * (\<Sum>j<k. ws ! j * 
+    (\<Sum>i\<le>k-1. unity_root k (i*(m-j))))"
+    using sum_eq_ineq assms 
+    by (smt of_nat_0_less_iff sum.cong) (* fix *)
+  also have "... = 1 / k * (\<Sum>j<k. ws ! j * geometric_sum k (m-j))"
+    using geometric_sum_def 
+    by(simp add: algebra_simps)
+  also have "... = 1 / k * (\<Sum>j\<le>k-1. ws ! j * geometric_sum k (m-j))"
+    using sum_eq_ineq by fastforce
+  also have "... =  1 / k *
+          (\<Sum>j\<in>{nat m}.  ws ! j * geometric_sum k (m-j))"
+    using sum_eq by argo
+  also have "... = 1 / k * ws ! (nat m) * k"
+    by(simp add: geo_k_0 assms(1) algebra_simps)
+  finally have "poly (fourier_poly ws) (unity_root k m) = ws ! (nat m)"
+    using assms(1) by auto
+  then show ?thesis by simp
+qed
+
 lemma roots_of_unit:
   assumes "length ws > 0"
   defines "k == length ws"
-  shows "
-  \<exists>! (p :: complex poly).
-   (degree p \<le> k - 1) \<and>
-   (\<forall> m. (ws ! m) = poly p (unity_root k m))
-    \<and> 
-   (\<forall> n. coeff p n = (1/k)*(\<Sum>m < k. (w ! m)* (unity_root k (-n*m))))"
+  assumes "(degree p \<le> k - 1) \<and> (\<forall> m \<le> k-1. (ws ! m) = poly p (unity_root k m))"
+  shows "p = fourier_poly ws"
 proof -  
   let ?z = "map (\<lambda> m. unity_root k m) [0..<k]" 
   have d: "distinct ?z" using distinct_z k_def by blast
@@ -417,98 +503,14 @@ proof -
     "\<exists>!p. degree p \<le> k - 1 \<and>
        (\<forall>x y. (x, y) \<in> set ?zs_ws \<longrightarrow> poly p x = y) "
     using d assms by auto 
-  then obtain p where 
-    ps: "degree p \<le> k - 1 \<and>
-     (\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)" by blast
-  then have deg_ineq: "degree p \<le> k - 1" 
-        and interp: "(\<forall>z w. (z, w) \<in> set ?zs_ws \<longrightarrow> poly p z = w)"
-    by(blast,blast)
-  obtain a where pexpr: "\<And> z. poly p z = (\<Sum>i\<le>k-1. a(i) * z ^ i)"
-    using extended_altdef deg_ineq by blast
+  from degree_fourier 
+  have "degree (fourier_poly ws) \<le> k - 1"
+    using k_def by simp
 
-  have "\<And> m r. m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k \<Longrightarrow> 
-        (\<And> n. (unity_root k m)^n = unity_root k (m*n))"
-    by (simp add: unity_pow)   
-
-  have exp_distr: "\<And> m n r. unity_root k (m*n)* unity_root k (-m*r) = 
-                             unity_root k (m*(n-r))"
-    using unity_prod by(simp add: algebra_simps)
-
-  {
-    fix m r :: int
-    assume bounds: "m \<ge> 0 \<and> r \<ge> 0 \<and> m < k \<and> r < k"
-    then have unit: "?z ! nat m = unity_root k m" by auto
-    from bounds have "(?z ! nat m, ws ! nat m) \<in> set ?zs_ws"
-      using fst_conv in_set_zip bounds
-      by (metis diff_zero k_def length_map length_upt nat_less_iff snd_conv)
-    then have "(ws ! nat m) =  poly p (?z ! nat m)"
-      using interp by simp  
-    then have "(ws ! nat m) = (\<Sum>n\<le>k-1. a(n) * (unity_root k m) ^ n)"
-      using unit pexpr by auto
-    then have "((ws ! nat m)*unity_root k (-m*r)) =
-           (\<Sum>n\<le>k-1. a(n) * (unity_root k m) ^ n)*unity_root k (-m*r)" 
-      by auto
-    also have "... = (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*n)))*unity_root k (-m*r)"  
-      using unity_pow by simp
-    also have "... = (\<Sum>n\<le>k-1. (a(n)*unity_root k (m*n))*unity_root k (-m*r))"  
-      by (simp add: sum_distrib_right)
-    also have "... = (\<Sum>n\<le>k-1. a(n)*(unity_root k (m*n)*unity_root k (-m*r)))"
-      by (simp add: mult.assoc)   
-    also have "... = (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))" 
-      using exp_distr by simp
-    finally have 
-       "((ws ! nat m)*unity_root k (-m*r)) = 
-         (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))"
-      by argo
-  }
-  note summand = this
-
-  fix r :: int
-  assume r_bound: "r \<ge> 0 \<and> r < k"
-  {   
-    from summand have
-      "\<And> m. m \<ge> 0  \<and> m < k \<Longrightarrow> 
-         ((ws ! nat m)*unity_root k (-m*r)) = 
-         (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r))))"
-      by (meson r_bound of_nat_0_le_iff of_nat_less_iff)
-    then have "(\<Sum>m\<le>k-1.(ws ! nat m)*unity_root k (-m*r)) = 
-           (\<Sum>m\<le>k-1. (\<Sum>n\<le>k-1. a(n) * (unity_root k (m*(n-r)))))"
-      using r_bound by auto
-    also have "... = (\<Sum>n\<le>k-1.(\<Sum>m\<le>k-1. a(n)*(unity_root k (m*(n-r)))))"
-      using sum.swap by fast
-    also have "... = (\<Sum>n\<le>k-1.a(n)*(\<Sum>m\<le>k-1. (unity_root k (m*(n-r)))))"
-      by (simp add: vector_space_over_itself.scale_sum_right)
-    also have  
-      "... = 
-      (\<Sum>n\<le>k-1.a(n)*(\<Sum>m\<le>k-1. (unity_root k (m*(n-r)))))"
-      by argo
-    also have 
-      "... = (\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r))"
-      using geometric_sum_def 
-      by(simp add: algebra_simps)
-  }
-  note macro = this
-
-  have "(\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r)) = a(k)*k"
-  proof -
-    {fix n
-    assume n_bound: "n \<ge> 0 \<and> n < k"
-    have "geometric_sum k (n-r) \<noteq> 0 \<longleftrightarrow> n = r"
-      using  k_def assms geometric_sum_div[of k "n-r"]
-      using n_bound r_bound by auto}
-  note zeros = this
-  term "sum.F"
-  have k_pos: "k > 0" using assms by simp
-  have
-    "(\<Sum>n\<le>k-1.a(n)*geometric_sum k (n-r))= 
-      a(nat r)*geometric_sum k 0"
-    using k_pos
-    apply(induction "k" arbitrary: r a )
-     apply simp
-    apply simp
-  qed
-
-
+  from interpolate_fourier[of _ k ws]
+  have "poly (fourier_poly ws) x = y"
+    if "(x, y) \<in> set ?zs_ws" for x y
+    
 qed
   
 
