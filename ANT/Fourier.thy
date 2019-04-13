@@ -1,9 +1,92 @@
-theory Example
+theory Fourier
   imports 
     Polynomial_Interpolation.Lagrange_Interpolation
     Polynomial_Factorization.Fundamental_Theorem_Algebra_Factorized
     "HOL-Analysis.Complex_Transcendental"
 begin
+
+section\<open>Periodic functions\<close>
+
+definition 
+  "periodic f k = (\<forall> n. f(n+k) = f(n))" 
+  for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
+
+lemma add_periodic:
+  fixes f g :: "nat \<Rightarrow> complex"
+  assumes "periodic f k"
+  assumes "periodic g k"
+  shows "periodic (\<lambda> n. f n + g n) k"
+  using assms unfolding periodic_def by simp
+
+lemma mult_periodic:
+  fixes f g :: "nat \<Rightarrow> complex"
+  assumes "periodic f k"
+  assumes "periodic g k"
+  shows "periodic (\<lambda> n. f n * g n) k"
+  using assms unfolding periodic_def  by simp
+
+lemma fin_sum_periodic:
+  fixes f g :: "nat \<Rightarrow> complex" and l :: nat
+  assumes "\<forall> i<l. periodic (h i) k"
+  shows "periodic (\<lambda> n. (\<Sum>i<l. h i n)) k"
+  using assms
+proof(induction l)
+  case 0 then show ?case by(simp add: periodic_def)
+next
+  case (Suc l)
+  show ?case 
+  proof -    
+    have "(\<Sum>i<Suc l. h i n) = (\<Sum>i<l. h i n) +  h l n"
+      for n by simp
+    then have "periodic (\<lambda>n. \<Sum>i<Suc l. h i n) k = 
+               periodic (\<lambda>n. (\<Sum>i<l. h i n) +  h l n) k"
+      by simp
+    from this Suc assms add_periodic 
+    show ?thesis by (simp add: periodic_def)
+  qed
+qed
+
+lemma mult_period:
+  assumes "periodic g k"
+  shows "periodic g (k*q)"
+  using assms
+proof(induction q arbitrary: k)
+  case 0
+then show ?case unfolding periodic_def by simp
+next
+  case (Suc m)
+  then show ?case 
+    unfolding periodic_def
+    by (simp,metis add.assoc add.commute)
+qed
+  
+lemma unique_periodic_extension:
+  assumes "k > 0"
+  assumes "\<forall> j<k. g j = h j"
+  assumes "periodic g k" and "periodic h k"
+  shows "g i = h i"
+proof(cases "i < k")
+  case True then show ?thesis using assms by simp
+next
+  case False then show ?thesis 
+  proof -
+    have "(i div k)*k + (i mod k) = i \<and> (i mod k) < k" 
+      by(simp add: assms(1) algebra_simps)
+    then obtain q r where euclid_div: "k*q + r = i \<and> r < k"
+      using mult.commute by metis
+    from assms(3) assms(4) 
+    have period: "periodic g (k*q) \<and> periodic h (k*q)" 
+      using mult_period by simp
+    then have "g(k*q+r) = g(r)" 
+      unfolding periodic_def using add.commute by metis
+    also have "... = h(r)" 
+      using euclid_div assms(2) by simp
+    also have "... = h(k*q+r)"
+      using period add.commute unfolding periodic_def by metis
+    also have "... = h(i)" using euclid_div by simp
+    finally show "g(i) = h(i)" using euclid_div by simp
+  qed
+qed
 
 section\<open>Roots of unity\<close>
 
@@ -67,6 +150,56 @@ lemma unity_prod: "unity_root k m* unity_root k n = unity_root k (m+n)"
   using unity_exp
   by(auto simp add: algebra_simps add_divide_distrib mult_exp_exp)
 
+lemma unity_minus: "unity_root k (-n) = inverse (unity_root k n)"
+  unfolding unity_root_def by simp
+
+lemma unity_periodic:
+  "periodic (unity_root k) k" 
+  unfolding periodic_def 
+proof
+  fix n
+  have "unity_root k (n + k) = unity_root k ((n+k) mod k)"
+    using unity_mod[of k] zmod_int by presburger
+  also have "unity_root k ((n+k) mod k) = unity_root k n" 
+    using unity_mod zmod_int by auto
+  finally show "unity_root k (n + k) = unity_root k n" by simp
+qed
+
+lemma unity_periodic_mult:
+  "periodic (\<lambda> n. unity_root k (m * int n)) k"
+  unfolding periodic_def
+proof 
+  fix n
+  have "unity_root k (m * int (n + k)) = 
+        unity_root k (m*n + m*k)"
+    by(simp add: algebra_simps)
+  also have "... = unity_root k (m*n)"
+    using mult_period unfolding periodic_def
+    by (metis add.commute calculation mod_mult_self3 unity_mod unity_pow)
+  finally show "unity_root k (m * int (n + k)) =
+             unity_root k (m * int n)" by simp
+qed
+
+lemma unity_periodic_mult_minus:
+  shows "periodic (\<lambda> i. unity_root k (-int i*int m)) k" 
+  unfolding periodic_def
+proof 
+  fix n 
+   have "unity_root k (-(n + k) * m) = 
+        inverse(unity_root k ((n + k) * m))" 
+     using unity_minus[of k "(n + k) * m"] 
+     by (metis mult_minus_left of_nat_mult)
+  also have "... = inverse(unity_root k (n*m+k*m))"
+    by(simp add: algebra_simps)
+  also have "... = inverse(unity_root k (n*m))"
+    using mult_period[of "unity_root k" k m] unity_periodic[of k]
+    unfolding periodic_def by presburger
+  also have "... = unity_root k (-n*m)"
+    using unity_minus[of k "n*m"] by simp
+  finally show "unity_root k (-(n + k) * m) = unity_root k (-n*m)"
+    by simp
+qed
+  
 section\<open>Geometric sum\<close>
 
 text\<open>
@@ -176,16 +309,15 @@ theorem geometric_sum:
        "  k dvd n \<Longrightarrow> geometric_sum k n = k"
   using gs_case_1 gs_case_2 gr by blast+
 
-corollary geometric_sum_periodic:
-  fixes k :: nat and n :: int
- assumes gr: "k \<ge> 1"
- shows "geometric_sum k n = geometric_sum k (n+k)"
-proof(cases "k dvd n")
-  case True then show ?thesis 
-    using gr gs_case_1 by auto
-next
-  case False then show ?thesis 
-    using gr gs_case_2 by auto
+corollary geometric_sum_periodic: 
+ "periodic (geometric_sum k) k"
+  unfolding periodic_def
+proof 
+  fix n 
+  show "geometric_sum k (n + k) = geometric_sum k n"
+    by(cases "k = 0", simp,
+       cases "k dvd n",
+       auto simp add:  gs_case_1 gs_case_2)
 qed
 
 lemma geometric_sum_div:
@@ -278,7 +410,7 @@ corollary lagrange:
     (\<forall> x y. (x,y) \<in> set zs_ws \<longrightarrow> poly p x = y))"
   using lagrange_exists lagrange_unique by blast
 
-subsection\<open>Roots of unit\<close>
+subsection\<open>List version\<close>
 
 (* see complex_root_unity_eq *)
 lemma roots_of_unit_equal:
@@ -558,7 +690,241 @@ proof -
   from assms degree interp interp_p l3
   show "p = (fourier_poly ws)" using l by blast  
 qed
+
+lemma 
+ "periodic (poly (fourier_poly ws)) (length ws)"
+  oops
+
+subsection\<open>Functional version\<close>
+
+(* use lift_definition *)
+
+definition fourier_fun :: "(nat \<Rightarrow> complex) \<Rightarrow> nat \<Rightarrow> complex poly" where
+"fourier_fun ws k =
+  (poly_of_list [1 / k * (\<Sum>m<k. (ws m) 
+    * unity_root k (-n*m)). n \<leftarrow> [0..<k]])"
+
+lemma fourier_fun_list:
+  shows "fourier_poly [ws n. n \<leftarrow> [0..<k]] = 
+         fourier_fun ws k"
+  unfolding fourier_fun_def fourier_poly_def by simp
+
+lemma coeff_fun: 
+  assumes "n < k"
+  shows "coeff (fourier_fun ws k) n = 
+         (1/k) * (\<Sum>m < k. (ws m) * unity_root k (-n*m))"
+proof -
+  let ?ws = "[ws n. n \<leftarrow> [0..<k]]"
+  have "coeff (fourier_fun ws k) n =
+        coeff (fourier_poly ?ws) n" 
+    using fourier_fun_list by simp
+  also have "coeff (fourier_poly ?ws) n = 
+    1 / k * (\<Sum>m<k. (?ws ! m) * unity_root k (- n*m))" 
+    using coeff_fourier assms by auto
+  also have "... = (1/k) * (\<Sum>m < k. (ws m) * unity_root k (-n*m))"
+    using assms by simp
+  finally show ?thesis by simp    
+qed
+
+lemma degree_fun: "degree (fourier_fun ws k) \<le> k - 1"
+  using degree_fourier fourier_fun_list
+  by (metis diff_zero length_map length_upt)
+
+lemma interpolate_fun:
+  fixes m :: int and k
+  assumes "m \<in> {0..<k}"
+  shows "poly (fourier_fun ws k) (unity_root k m) = (ws (nat m))"
+proof -
+  let ?ws = "[ws n. n \<leftarrow> [0..<k]]"
+  have "poly (fourier_fun ws k) (unity_root k m) = 
+        poly (fourier_poly ?ws) (unity_root k m)" 
+    using fourier_fun_list by simp
+  also have "... = (?ws ! (nat m))"
+    using interpolate_fourier assms
+    by (metis atLeastLessThan_iff diff_zero length_map length_upt)
+  also have "... = (ws (nat m))"
+    using assms by auto
+  finally show "poly (fourier_fun ws k) (unity_root k m) = (ws (nat m))"
+    by simp
+qed
+
+lemma fun_expansion_unique:
+  assumes "k > 0"
+  assumes "(degree p \<le> k - 1)"
+  assumes "(\<forall> m \<le> k-1. (ws  m) = poly p (unity_root k m))"
+  shows "p = fourier_fun ws k"
+proof -
+  let ?ws = "[ws n. n \<leftarrow> [0..<k]]"
+  from fourier_expansion_unique 
+  have "p = fourier_poly ?ws" using assms by simp
+  also have "... = fourier_fun ws k"
+    using fourier_fun_list by blast
+  finally show "p = fourier_fun ws k" by blast
+qed
+
+lemma on_units:
+  fixes k :: nat
+  assumes "k > 0" 
+  shows "poly (fourier_fun f k) (unity_root k m) = 
+    (\<Sum>n<k.1/k*(\<Sum>m<k.(f m)*unity_root k (-n*m))*unity_root k (m*n))"
+proof -
+  have "poly (fourier_fun f k) (unity_root k m) = 
+        (\<Sum>n\<le>k-1. coeff (fourier_fun f k) n *(unity_root k m)^n)"
+    using extended_altdef[of "fourier_fun f k" "k-1" "unity_root k m"]
+          degree_fun[of f k] by simp
+  also have "... = (\<Sum>n\<le>k-1. coeff (fourier_fun f k) n *(unity_root k (m*n)))" 
+    using unity_pow by simp
+  also have "... = (\<Sum>n<k. coeff (fourier_fun f k) n *(unity_root k (m*n)))" 
+    using sum_eq_ineq assms by simp
+  also have "... = (\<Sum>n<k.(1/k)*(\<Sum>m<k.(f m)*unity_root k (-n*m))*(unity_root k (m*n)))" 
+    using coeff_fun[of _ k f] by simp
+  finally show
+   "poly (fourier_fun f k) (unity_root k m) = 
+    (\<Sum>n<k.1/k*(\<Sum>m<k.(f m)*unity_root k (-n*m))*unity_root k (m*n))"
+    by blast
+qed
   
+subsection\<open>Finite Fourier expansion of an arithmetical function\<close>
+
+lemma fourier_expansion:
+  assumes "k > 0"
+  assumes "periodic f k"
+  assumes "g = (\<lambda> n. (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m)))"
+  shows "periodic g k" and
+        "f(m) = (\<Sum>n<k. g(n)* unity_root k (m*n))"  
+proof -
+  show 1: "periodic g k"
+    unfolding periodic_def
+  proof 
+    fix n
+    from unity_periodic mult_period
+    have period: "periodic (\<lambda>x. unity_root k x) (k*m)" by simp
+
+    have "unity_root k (-(n+k)*m) = unity_root k (-n*m-k*m)"
+      by(simp add: field_simps,
+         metis ab_group_add_class.ab_diff_conv_add_uminus add.commute)
+    also have "unity_root k (-n*m-k*m) = unity_root k (-n*m)"
+      using period unity_minus unfolding periodic_def 
+      by (metis calculation distrib_right mult_minus_left of_nat_mult)
+    finally have u_period: "unity_root k (-(n+k)*m) = unity_root k (-n*m)" by simp
+
+    have "g(n+k) = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-(n+k)*m))"
+      using assms(3) by fastforce
+    also have "... = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
+      using u_period 
+      by (metis (no_types, hide_lams) mod_add_self2 unity_minus unity_mod unity_pow zmod_int)
+    also have "... = g(n)"
+      using assms(3) by fastforce
+    finally show "g(n+k) = g(n)" by simp 
+  qed
+
+  show "f(m) = (\<Sum>n<k. g(n)* unity_root k (m * int n))"
+  proof -
+    { 
+      fix m
+      assume range: "m \<in> {0..<k}"
+      have "f(m) = (\<Sum>n<k. g(n)* unity_root k (m * int n))"
+      proof -
+        from interpolate_fun[of _ k f] 
+        have "f m = poly (fourier_fun f k) (unity_root k m)"
+          using range by simp
+        also have "... = (\<Sum>n<k. (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))* unity_root k (m*n))"
+          using on_units assms(1) by blast
+        also have "... = (\<Sum>n<k. g(n)* unity_root k (m*n))"
+          using assms by simp
+        finally show ?thesis by auto
+    qed}
+  note concentrated = this
+
+  have "periodic (\<lambda> m. (\<Sum>n<k. g(n)* unity_root k (m * int n))) k"
+  proof - 
+    have "periodic (\<lambda> n. g(n)* unity_root k (i * int n)) k"  for i :: int
+     using 1 unity_periodic mult_periodic unity_periodic_mult by auto
+     then have "\<forall>i<k. periodic (\<lambda> n. g(n)* unity_root k (i * int n)) k"
+      by simp
+    then have "periodic (\<lambda>i. \<Sum>n<k. g(n)* unity_root k (i * int n)) k"
+      using fin_sum_periodic[of k _ k] (* fix this *)
+      by (smt mod_add_self2 periodic_def sum.cong unity_mod unity_pow zmod_int)        
+   then show ?thesis by simp
+ qed  
+  
+ from  this assms(1-2) concentrated 
+       unique_periodic_extension[of k f "(\<lambda>i. \<Sum>n<k. g(n)* unity_root k (i * int n))"  m]
+  show "f m = (\<Sum>n<k. g n * unity_root k (int m * int n))" by simp        
+  qed
+qed
+
+lemma fourier_uniqueness:
+  fixes f g :: "nat \<Rightarrow> complex" 
+  assumes "k > 0"
+  assumes "periodic f k" and "periodic g k" (*periodicity of g required by theorem? *)
+  assumes "\<And> m. f(m) = (\<Sum>n<k. g(n)* unity_root k (int (m*n)))" 
+  shows "g(n) = ((1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m)))"
+proof -
+  let ?p = "poly_of_list [g(n). n \<leftarrow> [0..<k]]"
+  have d: "degree ?p \<le> k-1" 
+    by (metis degree_poly diff_zero length_map length_upt)
+  have c: "coeff ?p i = (if i < k then g(i) else 0)" for i
+    by (simp add: nth_default_def)
+  {fix z
+  have "poly ?p z = (\<Sum>n\<le>k-1. coeff ?p n* z^n)" 
+    using extended_altdef[of ?p "k-1"] d by blast
+  then have "poly ?p z = (\<Sum>n<k. coeff ?p n* z^n)" 
+    using sum_eq_ineq by (simp add: assms(1))
+  then have "poly ?p z = (\<Sum>n<k. (if n < k then g(n) else 0)* z^n)"
+    using c by simp
+  then have "poly ?p z = (\<Sum>n<k. g(n)* z^n)" 
+    by(simp split: if_splits)}
+  note eval = this
+  {fix i
+  have "poly ?p (unity_root k i) = (\<Sum>n<k. g(n)* (unity_root k i)^n)"
+    using eval by blast
+  then have "poly ?p (unity_root k i) = (\<Sum>n<k. g(n)* (unity_root k (i*n)))"
+    using unity_pow by auto}
+  note interpolation = this
+
+  {fix m 
+  assume b: "m \<le> k-1"
+  from d assms(1)
+  have "f m =  (\<Sum>n<k. g(n) * unity_root k (m*n))" 
+    using assms(4) by blast 
+  also have "... = poly ?p (unity_root k m)"
+    using interpolation by simp
+  finally have "f m = poly ?p (unity_root k m)" by auto}
+
+  from this fun_expansion_unique[of k _ f]
+  have p_is_fourier: "?p = fourier_fun f k"
+    using assms(1) d by blast
+
+  {fix n 
+  assume b: "n \<le> k-1"
+  have "coeff ?p n = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"  
+    using p_is_fourier coeff_fun using assms(1) b by auto
+  then have "g(n) = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
+    using c b assms(1) 
+    by (metis One_nat_def Suc_pred diff_le_self le_neq_implies_less le_trans less_Suc_eq_le nat_less_le poly_of_list_def)
+  }
+ (* now show right hand side is periodic and use unique_periodic_extension *)
+  have "periodic (\<lambda> n. (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))) k"
+  proof - 
+    have "periodic (\<lambda> i. unity_root k (-int i*int m)) k" for m
+      using unity_periodic_mult_minus by simp
+    then have "periodic (\<lambda> i. f(m) * unity_root k (-i*m)) k" for m
+      by (simp add: periodic_def)
+    then show "periodic (\<lambda>i. (1 / k) *(\<Sum>m<k. f m * unity_root k (-i*m))) k"
+      using fin_sum_periodic[of k 
+               "(\<lambda> m i. f m * unity_root k (-i*m))" k] periodic_def by auto
+  qed
+  note periodich = this
+  let ?h = "(\<lambda>i. (1 / k) *(\<Sum>m<k. f m * unity_root k (-i*m)))"
+  from unique_periodic_extension[of k g ?h n] 
+        assms(3) assms(1) periodich
+  have "g n = (1/k) * (\<Sum>m<k. f m * unity_root k (-n*m))" 
+    by (simp add: \<open>\<And>na. na \<le> k - 1 \<Longrightarrow> g na = complex_of_real (1 / real k) * (\<Sum>m<k. f m * unity_root k (- int na * int m))\<close>)
+  then show ?thesis by simp
+qed  
+        
+section\<open>Ramanujan's sums\<close>
 
 
 
