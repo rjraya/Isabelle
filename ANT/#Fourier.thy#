@@ -997,15 +997,19 @@ next
     by (simp add: sum_distrib_left mult.commute)
 
   thm real_of_nat_div
-  have "(\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
-        (\<Sum>k | k \<in> {1..n/d}. f (k/(n/d)))" for d 
+  have "
+   (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
+        (\<Sum>k | k \<in> {1..n/d}. f (k/(n/d)))" for d :: nat
     apply(rule 
        sum.reindex_bij_witness[
        of "{k \<in> {1..n}. d dvd k}" 
-           _ _  
-           "{q \<in> {1.. n / d}. d dvd q}"]
+           
+           "{q. q \<in> {1..n / d}}"]
      )
-    
+  thm sum.reindex_bij_witness[
+       of "{k \<in> {1..n}. d dvd k}" 
+           "\<lambda> k. k/d" "\<lambda> q. q*d"  
+           "{q. q \<in> {1..n / d}}"]
   thm sum_moebius_mu_divisors'
   
   have "(\<Sum> q | q \<in> {1..(n/d)}. f(k/(n/d))) =  

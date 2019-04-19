@@ -1,8 +1,9 @@
 theory Fourier
   imports 
+    "HOL-Analysis.Analysis"
+    Dirichlet_Series.Moebius_Mu
     Polynomial_Interpolation.Lagrange_Interpolation
     Polynomial_Factorization.Fundamental_Theorem_Algebra_Factorized
-    "HOL-Analysis.Complex_Transcendental"
 begin
 
 section\<open>Periodic functions\<close>
@@ -439,7 +440,7 @@ proof -
   then have "n*k = i-j" 
     using gr apply(auto simp add: divide_simps)
     using of_int_eq_iff by fastforce
-  then show ?thesis by algebra
+  then show ?thesis by Groebner_Basis.algebra
 qed
 
 lemma div_minus:
@@ -857,7 +858,7 @@ qed
 lemma fourier_uniqueness:
   fixes f g :: "nat \<Rightarrow> complex" 
   assumes "k > 0"
-  assumes "periodic f k"
+  assumes "periodic f k" and "periodic g k" (*periodicity of g required by theorem? *)
   assumes "\<And> m. f(m) = (\<Sum>n<k. g(n)* unity_root k (int (m*n)))" 
   shows "g(n) = ((1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m)))"
 proof -
@@ -887,7 +888,7 @@ proof -
   assume b: "m \<le> k-1"
   from d assms(1)
   have "f m =  (\<Sum>n<k. g(n) * unity_root k (m*n))" 
-    using assms(3) by blast 
+    using assms(4) by blast 
   also have "... = poly ?p (unity_root k m)"
     using interpolation by simp
   finally have "f m = poly ?p (unity_root k m)" by auto}
@@ -903,7 +904,7 @@ proof -
   then have "g(n) = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
     using c b assms(1) 
     by (metis One_nat_def Suc_pred diff_le_self le_neq_implies_less le_trans less_Suc_eq_le nat_less_le poly_of_list_def)
-}
+  }
  (* now show right hand side is periodic and use unique_periodic_extension *)
   have "periodic (\<lambda> n. (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))) k"
   proof - 
@@ -911,16 +912,155 @@ proof -
       using unity_periodic_mult_minus by simp
     then have "periodic (\<lambda> i. f(m) * unity_root k (-i*m)) k" for m
       by (simp add: periodic_def)
-    then have "periodic (\<lambda>i. \<Sum>m<k. f m * unity_root k (-i*m)) k"
-      using fin_sum_periodic 
-   then show ?thesis
- qed  
- 
-
- 
-  oops
+    then show "periodic (\<lambda>i. (1 / k) *(\<Sum>m<k. f m * unity_root k (-i*m))) k"
+      using fin_sum_periodic[of k 
+               "(\<lambda> m i. f m * unity_root k (-i*m))" k] periodic_def by auto
+  qed
+  note periodich = this
+  let ?h = "(\<lambda>i. (1 / k) *(\<Sum>m<k. f m * unity_root k (-i*m)))"
+  from unique_periodic_extension[of k g ?h n] 
+        assms(3) assms(1) periodich
+  have "g n = (1/k) * (\<Sum>m<k. f m * unity_root k (-n*m))" 
+    by (simp add: \<open>\<And>na. na \<le> k - 1 \<Longrightarrow> g na = complex_of_real (1 / real k) * (\<Sum>m<k. f m * unity_root k (- int na * int m))\<close>)
+  then show ?thesis by simp
+qed  
         
 section\<open>Ramanujan's sums\<close>
+
+definition 
+ "ramanujan k n = (\<Sum>m | m \<in> {0..k} \<and> gcd n k = 1. unity_root k n)"
+
+abbreviation "c k n \<equiv> ramanujan k n"
+
+definition "I n = (if n = 1 then 1 else 0)" for n :: nat
+thm moebius_inversion sum_moebius_mu_divisors'
+thm geometric_sum_def
+thm sum.mono_neutral_right
+
+lemma I_intro: 
+  fixes S :: "nat \<Rightarrow> complex"   
+  assumes "\<And> n. S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))" 
+  shows "S(n) = (\<Sum> k \<in> {1..n}. f(k/n)* (I (gcd k n)))"
+proof -
+  let ?g = "\<lambda> k. f(k/n)* (I (gcd k n))"
+  have 1: "S(n) = sum ?g {k. k \<in> {1..n} \<and> gcd k n = 1}"
+    using assms[of n] 
+    by (smt I_def mem_Collect_eq mult.right_neutral sum.cong)
+  (* fix this *)
+  have "\<forall> k \<in> {1..n} - {k. k \<in> {1..n} \<and> gcd k n = 1}. ?g k = 0"
+  proof
+    fix k 
+    assume "k \<in> {1..n} - {k \<in> {1..n}. gcd k n = 1}"
+    then show "f (k/n) * I (gcd k n) = 0" 
+      using I_def[of "gcd k n"] by auto
+  qed
+  then have "sum ?g {1..n} = sum ?g {k \<in> {1..n}. gcd k n = 1}"
+    by(intro sum.mono_neutral_right,blast+)
+  then show ?thesis using 1 by argo
+qed
+
+lemma
+  fixes F S :: "nat \<Rightarrow> complex" 
+  assumes "\<And> n . F(n) = (\<Sum> k \<in> {1..n}. f(k/n))"
+  assumes "\<And> n. S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))"
+  shows "S n = (dirichlet_prod moebius_mu F) n"
+proof(cases "n = 0")
+  case True
+  then show ?thesis 
+    using assms(2) unfolding dirichlet_prod_def by simp
+next
+  case False
+  then show ?thesis 
+  {
+    fix k :: nat
+    have "(\<Sum>d | d dvd (gcd k n). moebius_mu d) = I (gcd k n)"
+      unfolding I_def using sum_moebius_mu_divisors' by blast
+  }
+  note sum1 = this
+    have "(\<Sum>d | d dvd n \<and> d dvd k. f (real k / real n) * moebius_mu d) = 
+        (\<Sum>d | d dvd k \<and> d dvd n. f (real k / real n) * moebius_mu d)" for k
+      by meson
+    note sum2 = this
+
+  have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))"
+    using assms by blast
+  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* I (gcd k n))"
+    using I_intro by simp
+  thm sum_moebius_mu_divisors'
+
+  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* (\<Sum>d | d dvd (gcd k n). moebius_mu d))"
+  proof -
+    {fix k
+    have "I (gcd k n) = (if gcd k n = 1 then 1 else 0)"
+      using 
+            I_def[of "gcd k n"] by blast
+    also have "... = (\<Sum>d | d dvd gcd k n. moebius_mu d)"
+      using sum_moebius_mu_divisors'[of "gcd k n"] by auto
+    finally have "I (gcd k n) = (\<Sum>d | d dvd gcd k n. moebius_mu d)" 
+      by auto}
+  note summand = this
+  then show ?thesis by (simp add: summand)
+qed
+
+  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* (\<Sum>d | d dvd k \<and> d dvd n. moebius_mu d))"
+    by simp
+  also have "... = (\<Sum> k \<in> {1..n}. (\<Sum>d | d dvd k \<and> d dvd n. f(k/n)* moebius_mu d))"
+    by (simp add: sum_distrib_left)
+  
+  also have "... = (\<Sum> d | d dvd n. (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n)* moebius_mu d))"
+  proof -
+    from sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
+             "\<lambda> k d. f(k/n)*moebius_mu d" "\<lambda> k d. d dvd k"]
+    have "(\<Sum>k = 1..n.
+      \<Sum>d\<in>{y \<in> {d. d dvd n}. y dvd k}.
+        f (k /n) * moebius_mu d) =
+  (\<Sum>y\<in>{d. d dvd n}.
+     \<Sum>k | k \<in> {1..n} \<and> y dvd k.
+       f (k/n) * moebius_mu y)"
+      using False by auto
+    then have "(\<Sum>k \<in> {1..n}. \<Sum> d | d dvd n \<and> d dvd k . f (k/n) * moebius_mu d) =
+               (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
+      by simp
+    then have "(\<Sum>k \<in> {1..n}. \<Sum> d | d dvd k \<and> d dvd n . f (k/n) * moebius_mu d) =
+               (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
+      by(simp add: sum2)
+    then show ?thesis by blast
+  qed
+  also have "... = (\<Sum> d | d dvd n. moebius_mu d * (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n)))"
+    by (simp add: sum_distrib_left mult.commute)
+  have "(\<Sum> q | q \<in> {1..(n/d)}. f(k/(n/d))) =  
+        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n))" 
+    for d k :: nat
+  proof - 
+    assume 1: "d dvd n"
+    have "(\<Sum> q | q \<in> {1..d div n}. f((d div n) div k)) =  
+        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(n div k))" 
+      apply(rule sum.reindex_bij_witness[
+       of "{q. q \<in> {1..d div n}}" 
+          "\<lambda> k. d div k" "\<lambda> q. q*d"
+          "{k \<in> {1..n}. d dvd k}"
+      ])
+          using 1 apply simp
+          apply (metis Euclidean_Division.div_eq_0_iff False diff_is_0_eq' div_geq dvd_imp_le gr0I leD le_div_geq le_eq_less_or_eq less_Suc_eq_0_disj)
+          using 1 apply simp
+          apply (metis False Suc_le_eq div_less dvd_div_mult_self dvd_imp_le le_neq_implies_less le_trans mult_le_mono1 neq0_conv)
+          using 1 apply simp          
+          
+          
+          "{q. q \<in> {1..d div n}}"
+          "\<lambda> n. f((d div n) div k)" 
+          "\<lambda> n. f(k/n)" 
+      
+          
+      
+   
+    
+qed
+
+
+lemma "moebius_mu k = c k 1" for k :: nat
+  unfolding ramanujan_def  
+term "moebius"
 
 
 
