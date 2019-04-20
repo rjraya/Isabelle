@@ -927,28 +927,25 @@ qed
         
 section\<open>Ramanujan's sums\<close>
 
-definition 
- "ramanujan k n = (\<Sum>m | m \<in> {0..k-1} \<and> coprime m k. unity_root k (m*n))"
-
-abbreviation "c k n \<equiv> ramanujan k n"
+subsection\<open>Dirichlet product neutral element\<close>
 
 definition "I n = (if n = 1 then 1 else 0)" for n :: nat
 
 lemma I_intro: 
-  fixes S :: "nat \<Rightarrow> complex" and f :: "real \<Rightarrow> complex"
-  defines "S \<equiv> (\<lambda> (n::nat). (\<Sum> k | k \<in> {1..n} \<and> coprime k n. f(k/n)))" 
-  shows "S(n) = (\<Sum> k \<in> {1..n}. f(k/n)* (I (gcd k n)))"
+  fixes S :: "nat \<Rightarrow> complex" and f :: "nat \<Rightarrow> nat \<Rightarrow> complex"
+  defines "S \<equiv> (\<lambda> (n::nat). (\<Sum> k | k \<in> {1..n} \<and> coprime k n. (f k n)))" 
+  shows "S(n) = (\<Sum> k \<in> {1..n}. (f k n)* (I (gcd k n)))"
 proof -
-  let ?g = "\<lambda> k. f(k/n)* (I (gcd k n))"
+  let ?g = "\<lambda> k. (f k n)* (I (gcd k n))"
   have zeros: "\<forall> k \<in> {1..n} - {k. k \<in> {1..n} \<and> coprime k n}. ?g k = 0"
   proof
     fix k 
     assume "k \<in> {1..n} - {k \<in> {1..n}. coprime k n}"
-    then show "f (k/n) * I (gcd k n) = 0" 
+    then show "(f k n) * I (gcd k n) = 0" 
       by(simp add: I_def[of "gcd k n"] split: if_splits,presburger) 
   qed
   
-  have "S n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n. f(k/n))"
+  have "S n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n. (f k n))"
     by(simp add: S_def)
   also have "... = sum ?g {k. k \<in> {1..n} \<and> coprime k n}"
     by(simp add: I_def split: if_splits)    
@@ -957,22 +954,93 @@ proof -
   finally show ?thesis by blast 
 qed
 
+lemma I_right_neutral:
+ "dirichlet_prod f I n = f n " if "n > 0" for f :: "nat \<Rightarrow> complex" and n 
+proof -
+  {fix d :: nat
+    assume "d dvd n"
+    then have eq: "n = d \<longleftrightarrow> n div d = 1"
+      using div_self that dvd_mult_div_cancel by force
+    have "f(d)*I(n div d) = (if n = d then f(d) else 0)" 
+      by(simp add: I_def eq)}
+  note summand = this
+
+  have "dirichlet_prod f I n = (\<Sum> d | d dvd n. f(d)*I(n div d))"
+    unfolding dirichlet_prod_def by blast
+  also have "... = (\<Sum> d | d dvd n. (if n = d then f(d) else 0))"
+    using summand by simp
+  also have "... = (\<Sum> d | d = n. (if n = d then f(d) else 0))"
+    using that by(intro sum.mono_neutral_right, auto)
+  also have "... = f(n)"  by simp
+  finally show ?thesis by simp 
+qed
+
+lemma I_left_neutral:
+ "dirichlet_prod I f n = f n " if "n > 0" for f :: "nat \<Rightarrow> complex" and n
+  using I_right_neutral dirichlet_prod_commutes that by metis
+
+corollary I_right_neutral_0:
+  fixes f :: "nat \<Rightarrow> complex" 
+  assumes "f 0 = 0"
+  shows "dirichlet_prod f I n = f n"
+  using assms I_right_neutral by(cases n, simp, blast)
+
+lemma I_sum: "I n = (\<Sum>k = 1..n. unity_root n k)" for n :: nat
+proof(cases "n = 0")
+  case True then show ?thesis unfolding I_def by simp
+next
+  case False
+  have 1: "unity_root n 0 = 1" by (simp add: unity_k_0)
+  then have 2: "unity_root n n = 1" 
+    using unity_periodic[of n]
+    unfolding periodic_def 
+    by (metis add.left_neutral of_nat_0)
+  have "(\<Sum>k = 1..n. unity_root n k) = 
+        (\<Sum>k = 0..n. unity_root n k) - 1"
+    by (simp add: sum_head_Suc sum.atLeast0_atMost_Suc_shift 1)
+  also have "... = ((\<Sum>k = 0..n-1. unity_root n k)+1) - 1"
+    using sum.atLeast0_atMost_Suc False 
+    by (metis (no_types, lifting) One_nat_def Suc_pred neq0_conv 2)
+  also have "... = (\<Sum>k = 0..n-1. unity_root n k)" by auto
+  also have "... = geometric_sum n 1" 
+    using geometric_sum_def[of n 1]
+    by (simp add: atMost_atLeast0)
+  also have "... = I n"
+    using geometric_sum[of n 1] False
+    by(cases "n = 1",auto simp add: False I_def)
+  finally have 3: "I n = (\<Sum>k = 1..n. unity_root n k)" by auto
+  then show ?thesis by blast 
+qed
+
+subsection\<open>Basic Ramanujan's sums\<close>
+
+definition 
+ "ramanujan k n = (\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m*n))"
+ for k n :: nat
+
+abbreviation "c k n \<equiv> ramanujan k n"
+
+lemma c_0_n: "c 0 n = 0"
+  unfolding ramanujan_def 
+  using unity_0_n by simp
+
 lemma dirichlet_coprime_sum:
-  fixes F S :: "nat \<Rightarrow> complex" and f :: "real \<Rightarrow> complex"
-  defines "F \<equiv> (\<lambda> (n::nat). (\<Sum> k \<in> {1..n}. f(k/n)))"
-  defines "S \<equiv> (\<lambda> (n::nat). (\<Sum> k | k \<in> {1..n} \<and> coprime k n . f(k/n)))"
+  fixes F S :: "nat \<Rightarrow> complex" and f :: "nat \<Rightarrow> nat \<Rightarrow> complex"
+  defines "F \<equiv> (\<lambda> n. (\<Sum> k \<in> {1..n}. (f k n)))"
+  defines "S \<equiv> (\<lambda> n. (\<Sum> k | k \<in> {1..n} \<and> coprime k n . (f k n)))"
+  assumes "\<And> a b d. d dvd a \<Longrightarrow> d dvd b \<Longrightarrow> f (a div d) (b div d) = f a b" 
   shows "S n = dirichlet_prod moebius_mu F n"
 proof(cases "n = 0")
   case True
   then show ?thesis 
-    using assms(2) unfolding dirichlet_prod_def by simp
+    using assms(2) unfolding dirichlet_prod_def  by fastforce
 next
   case False
-  have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . f(k/n))"
+  have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . (f k n))"
     using assms by blast
-  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* I (gcd k n))"
-    using I_intro by simp
-  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* (\<Sum>d | d dvd (gcd k n). moebius_mu d))"
+  also have "... = (\<Sum> k \<in> {1..n}. (f k n)* I (gcd k n))"
+    using I_intro by blast
+  also have "... = (\<Sum> k \<in> {1..n}. (f k n)* (\<Sum>d | d dvd (gcd k n). moebius_mu d))"
   proof -
     {fix k
     have "I (gcd k n) = (if gcd k n = 1 then 1 else 0)"
@@ -984,30 +1052,30 @@ next
     } note summand = this
     then show ?thesis by (simp add: summand)
   qed
-  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd k n. f (k/n) *  moebius_mu d))"
+  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd k n. (f k n) *  moebius_mu d))"
     by(simp add: sum_distrib_left)
-  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd n k. f (k/n) *  moebius_mu d))"
+  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd n k. (f k n) *  moebius_mu d))"
     using gcd.commute[of _ n] by simp
-  also have "... = (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
+  also have "... = (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. (f k n) * moebius_mu d)"
     using sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
-             "\<lambda> k d. f(k/n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
-  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)))" 
+             "\<lambda> k d. (f k n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
+  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>k | k \<in> {1..n} \<and> d dvd k. (f k n)))" 
     by (simp add: sum_distrib_left mult.commute)
-  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>q \<in> {1..n div d}. f (q/(n/d))))"
+  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>q \<in> {1..n div d}. (f q (n div d))))"
   proof - 
     have "
-      (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
-        (\<Sum>q \<in> {1..n div d}. f (q/(n/d)))" 
+      (\<Sum>k | k \<in> {1..n} \<and> d dvd k. (f k n)) =
+        (\<Sum>q \<in> {1..n div d}. (f q (n div d)))" 
       if "d dvd n" "d > 0" for d :: nat
-      by (rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
-       (use assms that in \<open>force simp: div_le_mono\<close>)+
+      by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
+         (use assms that in \<open>fastforce simp: div_le_mono\<close>)+
     then show ?thesis 
       by (smt False dvd_div_mult_self mem_Collect_eq mult_cancel_left mult_eq_0_iff mult_is_0 not_gr0 sum.cong)
       (* fix this: proving summation with summands should be easy with substitutions *)
   qed
   also have "... = (\<Sum>d | d dvd n. moebius_mu d * F(n div d))"
   proof - 
-    have "F(n div d) = (\<Sum>q \<in> {1..n div d}. f (q/(n/d)))" 
+    have "F(n div d) = (\<Sum>q \<in> {1..n div d}. (f q (n div d)))" 
       if "d dvd n" for d
         by (simp add: F_def real_of_nat_div that)
      then show ?thesis by auto
@@ -1017,21 +1085,55 @@ next
   finally show ?thesis by simp
 qed
 
-lemma 
-  shows "moebius_mu n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . unity_root n k)"
+lemma moebius_coprime_sum:
+  "moebius_mu n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . unity_root n k)"
+  for n :: nat
 proof -
-  thm unity_exp
-  let ?f = "(\<lambda> r. exp(2*pi*r*\<i>))"
-  thm dirichlet_coprime_sum[of ?f n]
-  have "(\<lambda>n. \<Sum>k = 1..n. exp (complex_of_real (2 * pi * (real k / real n)) * \<i>))
-        = I"
-    
+  let ?f = "(\<lambda> k n. unity_root n k)"
+  from div_dvd_div have " 
+      d dvd a \<Longrightarrow> d dvd b \<Longrightarrow>
+      unity_root (a div d) (b div d) = 
+      unity_root a b" for a b d :: nat
+    using unity_root_def 
+    using real_of_nat_div by fastforce
+  then have "(\<Sum>k | k \<in> {1..n} \<and> coprime k n. ?f k n) =
+        dirichlet_prod moebius_mu (\<lambda>n. \<Sum>k = 1..n. ?f k n) n"
+    using dirichlet_coprime_sum[of ?f n  ] by blast
+  also have "... = dirichlet_prod moebius_mu I n"
+    by(simp add: I_sum)
+  also have "... = moebius_mu n" 
+    by(simp add: I_right_neutral_0)
+  finally have "moebius_mu n = (\<Sum>k | k \<in> {1..n} \<and> coprime k n. ?f k n)"
+    by argo
+  then show ?thesis by blast
 qed
 
-corollary "c k 1 = moebius_mu k" for k :: nat
-  unfolding ramanujan_def  
+corollary c_k_1: "c k 1 = moebius_mu k" for k :: nat
+  unfolding ramanujan_def 
+  using moebius_coprime_sum[of k] by simp
 
-
-
+lemma c_k_dvd_n:
+  assumes "k dvd n"
+  shows "c k n = totient k"
+  unfolding ramanujan_def
+proof - 
+  {fix m 
+  have "k dvd (m*n)" using assms by auto
+  then have "unity_root k (m*n) = 1"
+    using unity_0_n unity_dvd
+    by(cases "k = 0", blast+)}
+  then have "(\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m * n)) = 
+       (\<Sum>m | m \<in> {1..k} \<and> coprime m k. 1)" by simp
+  also have "... = card {m. m \<in> {1..k} \<and> coprime m k}" by simp
+  also have "... = totient k"
+   unfolding totient_def totatives_def 
+  proof -
+    have "{1..k} = {0<..k}" by auto
+    then show " of_nat (card {m \<in> {1..k}. coprime m k}) =
+              of_nat (card {ka \<in> {0<..k}. coprime ka k})" by auto
+  qed
+  finally show "(\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m * n)) = totient k" 
+    by auto
+qed
 
 end
