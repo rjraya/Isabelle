@@ -970,86 +970,63 @@ proof(cases "n = 0")
     using assms(2) unfolding dirichlet_prod_def by simp
 next
   case False
-  then show ?thesis 
-  {
-    fix k :: nat
-    have "(\<Sum>d | d dvd (gcd k n). moebius_mu d) = I (gcd k n)"
-      unfolding I_def using sum_moebius_mu_divisors' by blast
-  }
-  note sum1 = this
-    have "(\<Sum>d | d dvd n \<and> d dvd k. f (real k / real n) * moebius_mu d) = 
-        (\<Sum>d | d dvd k \<and> d dvd n. f (real k / real n) * moebius_mu d)" for k
-      by meson
-    note sum2 = this
-
   have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))"
     using assms by blast
   also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* I (gcd k n))"
     using I_intro by simp
-  thm sum_moebius_mu_divisors'
-
   also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* (\<Sum>d | d dvd (gcd k n). moebius_mu d))"
   proof -
     {fix k
     have "I (gcd k n) = (if gcd k n = 1 then 1 else 0)"
-      using 
-            I_def[of "gcd k n"] by blast
+      using I_def[of "gcd k n"] by blast
     also have "... = (\<Sum>d | d dvd gcd k n. moebius_mu d)"
       using sum_moebius_mu_divisors'[of "gcd k n"] by auto
     finally have "I (gcd k n) = (\<Sum>d | d dvd gcd k n. moebius_mu d)" 
-      by auto}
-  note summand = this
-  then show ?thesis by (simp add: summand)
-qed
-
-  also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* (\<Sum>d | d dvd k \<and> d dvd n. moebius_mu d))"
-    by simp
-  also have "... = (\<Sum> k \<in> {1..n}. (\<Sum>d | d dvd k \<and> d dvd n. f(k/n)* moebius_mu d))"
-    by (simp add: sum_distrib_left)
-  
-  also have "... = (\<Sum> d | d dvd n. (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n)* moebius_mu d))"
-  proof -
-    from sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
-             "\<lambda> k d. f(k/n)*moebius_mu d" "\<lambda> k d. d dvd k"]
-    have "(\<Sum>k = 1..n.
-      \<Sum>d\<in>{y \<in> {d. d dvd n}. y dvd k}.
-        f (k /n) * moebius_mu d) =
-  (\<Sum>y\<in>{d. d dvd n}.
-     \<Sum>k | k \<in> {1..n} \<and> y dvd k.
-       f (k/n) * moebius_mu y)"
-      using False by auto
-    then have "(\<Sum>k \<in> {1..n}. \<Sum> d | d dvd n \<and> d dvd k . f (k/n) * moebius_mu d) =
-               (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
-      by simp
-    then have "(\<Sum>k \<in> {1..n}. \<Sum> d | d dvd k \<and> d dvd n . f (k/n) * moebius_mu d) =
-               (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
-      by(simp add: sum2)
-    then show ?thesis by blast
+      by auto
+    } note summand = this
+    then show ?thesis by (simp add: summand)
   qed
-  also have "... = (\<Sum> d | d dvd n. moebius_mu d * (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n)))"
+  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd k n. f (k/n) *  moebius_mu d))"
+    by(simp add: sum_distrib_left)
+  also have "... = (\<Sum>k = 1..n. (\<Sum>d | d dvd gcd n k. f (k/n) *  moebius_mu d))"
+    using gcd.commute[of _ n] by simp
+  also have "... = (\<Sum>d | d dvd n. \<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n) * moebius_mu d)"
+    using sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
+             "\<lambda> k d. f(k/n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
+  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)))" 
     by (simp add: sum_distrib_left mult.commute)
+
+  thm real_of_nat_div
+  have "
+   (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
+        (\<Sum>q | q \<in> {1..n/d}. f (q/(n/d)))" for d :: nat
+    apply(rule 
+       sum.reindex_bij_witness[
+       of "{k \<in> {1..n}. d dvd k}" 
+           _ "\<lambda> k. k = k/d"
+           "{q. q \<in> {1..n / d}}"]
+     )
+  thm sum.reindex_bij_witness
+
+  thm sum_moebius_mu_divisors'
+  
   have "(\<Sum> q | q \<in> {1..(n/d)}. f(k/(n/d))) =  
         (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n))" 
     for d k :: nat
   proof - 
     assume 1: "d dvd n"
-    have "(\<Sum> q | q \<in> {1..d div n}. f((d div n) div k)) =  
-        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(n div k))" 
+    have "(\<Sum> q | q \<in> {1..of_real (real n/ real d)}. 
+              f(real k/ (real n/real d))) =  
+        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(real k/real n))"
       apply(rule sum.reindex_bij_witness[
-       of "{q. q \<in> {1..d div n}}" 
-          "\<lambda> k. d div k" "\<lambda> q. q*d"
-          "{k \<in> {1..n}. d dvd k}"
+       of _ "\<lambda> q. of_nat (q*d)" 
+            _ _
       ])
-          using 1 apply simp
-          apply (metis Euclidean_Division.div_eq_0_iff False diff_is_0_eq' div_geq dvd_imp_le gr0I leD le_div_geq le_eq_less_or_eq less_Suc_eq_0_disj)
-          using 1 apply simp
-          apply (metis False Suc_le_eq div_less dvd_div_mult_self dvd_imp_le le_neq_implies_less le_trans mult_le_mono1 neq0_conv)
-          using 1 apply simp          
+      
           
-          
-          "{q. q \<in> {1..d div n}}"
+          (*"{q. q \<in> {1..d div n}}"
           "\<lambda> n. f((d div n) div k)" 
-          "\<lambda> n. f(k/n)" 
+          "\<lambda> n. f(k/n)" *)
       
           
       

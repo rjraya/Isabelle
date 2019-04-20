@@ -928,49 +928,47 @@ qed
 section\<open>Ramanujan's sums\<close>
 
 definition 
- "ramanujan k n = (\<Sum>m | m \<in> {0..k} \<and> gcd n k = 1. unity_root k n)"
+ "ramanujan k n = (\<Sum>m | m \<in> {0..k-1} \<and> coprime m k. unity_root k (m*n))"
 
 abbreviation "c k n \<equiv> ramanujan k n"
 
 definition "I n = (if n = 1 then 1 else 0)" for n :: nat
-thm moebius_inversion sum_moebius_mu_divisors'
-thm geometric_sum_def
-thm sum.mono_neutral_right
 
 lemma I_intro: 
-  fixes S :: "nat \<Rightarrow> complex"   
-  assumes "\<And> n. S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))" 
+  fixes S :: "nat \<Rightarrow> complex" and f :: "real \<Rightarrow> complex"
+  defines "S \<equiv> (\<lambda> (n::nat). (\<Sum> k | k \<in> {1..n} \<and> coprime k n. f(k/n)))" 
   shows "S(n) = (\<Sum> k \<in> {1..n}. f(k/n)* (I (gcd k n)))"
 proof -
   let ?g = "\<lambda> k. f(k/n)* (I (gcd k n))"
-  have 1: "S(n) = sum ?g {k. k \<in> {1..n} \<and> gcd k n = 1}"
-    using assms[of n] 
-    by (smt I_def mem_Collect_eq mult.right_neutral sum.cong)
-  (* fix this *)
-  have "\<forall> k \<in> {1..n} - {k. k \<in> {1..n} \<and> gcd k n = 1}. ?g k = 0"
+  have zeros: "\<forall> k \<in> {1..n} - {k. k \<in> {1..n} \<and> coprime k n}. ?g k = 0"
   proof
     fix k 
-    assume "k \<in> {1..n} - {k \<in> {1..n}. gcd k n = 1}"
+    assume "k \<in> {1..n} - {k \<in> {1..n}. coprime k n}"
     then show "f (k/n) * I (gcd k n) = 0" 
-      using I_def[of "gcd k n"] by auto
+      by(simp add: I_def[of "gcd k n"] split: if_splits,presburger) 
   qed
-  then have "sum ?g {1..n} = sum ?g {k \<in> {1..n}. gcd k n = 1}"
-    by(intro sum.mono_neutral_right,blast+)
-  then show ?thesis using 1 by argo
+  
+  have "S n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n. f(k/n))"
+    by(simp add: S_def)
+  also have "... = sum ?g {k. k \<in> {1..n} \<and> coprime k n}"
+    by(simp add: I_def split: if_splits)    
+  also have "... = sum ?g {1..n}"
+    by(intro sum.mono_neutral_left, auto simp add: zeros)
+  finally show ?thesis by blast 
 qed
 
-lemma
-  fixes F S :: "nat \<Rightarrow> complex" 
-  assumes "\<And> n . F(n) = (\<Sum> k \<in> {1..n}. f(k/n))"
-  assumes "\<And> n. S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))"
-  shows "S n = (dirichlet_prod moebius_mu F) n"
+lemma dirichlet_coprime_sum:
+  fixes F S :: "nat \<Rightarrow> complex" and f :: "real \<Rightarrow> complex"
+  defines "F \<equiv> (\<lambda> (n::nat). (\<Sum> k \<in> {1..n}. f(k/n)))"
+  defines "S \<equiv> (\<lambda> (n::nat). (\<Sum> k | k \<in> {1..n} \<and> coprime k n . f(k/n)))"
+  shows "S n = dirichlet_prod moebius_mu F n"
 proof(cases "n = 0")
   case True
   then show ?thesis 
     using assms(2) unfolding dirichlet_prod_def by simp
 next
   case False
-  have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> gcd k n = 1 . f(k/n))"
+  have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . f(k/n))"
     using assms by blast
   also have "... = (\<Sum> k \<in> {1..n}. f(k/n)* I (gcd k n))"
     using I_intro by simp
@@ -995,47 +993,44 @@ next
              "\<lambda> k d. f(k/n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
   also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)))" 
     by (simp add: sum_distrib_left mult.commute)
-
-  thm real_of_nat_div
-  have "(\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
-        (\<Sum>k | k \<in> {1..n/d}. f (k/(n/d)))" for d 
-    apply(rule 
-       sum.reindex_bij_witness[
-       of "{k \<in> {1..n}. d dvd k}" 
-           _ _  
-           "{q \<in> {1.. n / d}. d dvd q}"]
-     )
-    
-  thm sum_moebius_mu_divisors'
-  
-  have "(\<Sum> q | q \<in> {1..(n/d)}. f(k/(n/d))) =  
-        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(k/n))" 
-    for d k :: nat
+  also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>q \<in> {1..n div d}. f (q/(n/d))))"
   proof - 
-    assume 1: "d dvd n"
-    have "(\<Sum> q | q \<in> {1..of_real (real n/ real d)}. 
-              f(real k/ (real n/real d))) =  
-        (\<Sum> k | k \<in> {1..n} \<and> d dvd k. f(real k/real n))"
-      apply(rule sum.reindex_bij_witness[
-       of _ "\<lambda> q. of_nat (q*d)" 
-            _ _
-      ])
-      
-          
-          (*"{q. q \<in> {1..d div n}}"
-          "\<lambda> n. f((d div n) div k)" 
-          "\<lambda> n. f(k/n)" *)
-      
-          
-      
-   
+    have "
+      (\<Sum>k | k \<in> {1..n} \<and> d dvd k. f (k/n)) =
+        (\<Sum>q \<in> {1..n div d}. f (q/(n/d)))" 
+      if "d dvd n" "d > 0" for d :: nat
+      by (rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
+       (use assms that in \<open>force simp: div_le_mono\<close>)+
+    then show ?thesis 
+      by (smt False dvd_div_mult_self mem_Collect_eq mult_cancel_left mult_eq_0_iff mult_is_0 not_gr0 sum.cong)
+      (* fix this: proving summation with summands should be easy with substitutions *)
+  qed
+  also have "... = (\<Sum>d | d dvd n. moebius_mu d * F(n div d))"
+  proof - 
+    have "F(n div d) = (\<Sum>q \<in> {1..n div d}. f (q/(n/d)))" 
+      if "d dvd n" for d
+        by (simp add: F_def real_of_nat_div that)
+     then show ?thesis by auto
+  qed
+  also have "... = dirichlet_prod moebius_mu F n"
+    by(simp add: dirichlet_prod_def)
+  finally show ?thesis by simp
+qed
+
+lemma 
+  shows "moebius_mu n = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . unity_root n k)"
+proof -
+  thm unity_exp
+  let ?f = "(\<lambda> r. exp(2*pi*r*\<i>))"
+  thm dirichlet_coprime_sum[of ?f n]
+  have "(\<lambda>n. \<Sum>k = 1..n. exp (complex_of_real (2 * pi * (real k / real n)) * \<i>))
+        = I"
     
 qed
 
-
-lemma "moebius_mu k = c k 1" for k :: nat
+corollary "c k 1 = moebius_mu k" for k :: nat
   unfolding ramanujan_def  
-term "moebius"
+
 
 
 
