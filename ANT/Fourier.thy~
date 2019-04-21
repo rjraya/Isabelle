@@ -88,6 +88,23 @@ next
     finally show "g(i) = h(i)" using euclid_div by simp
   qed
 qed
+                  
+lemma periodic_sum_periodic:
+  assumes "periodic f k"
+  shows "(\<Sum>l \<in> {m..n}. f l) = (\<Sum>l \<in> {m+k..n+k}. f l)"
+  using periodic_def assms 
+  by(intro sum.reindex_bij_witness
+         [of "{m..n}" "\<lambda> l. l-k" "\<lambda> l. l+k" "{m+k..n+k}" f f])
+      auto
+thm sum.mono_neutral_right
+lemma periodic_sum_periodic_shift:
+  assumes "periodic f k"
+  shows "(\<Sum>l \<in> {m..m+k-1}. f l) = (\<Sum>l \<in> {m+d..m+k+d-1}. f l)"
+  thm sum.reindex_bij_witness
+  apply(intro sum.reindex_bij_witness
+         [of ])
+      
+
 
 section\<open>Roots of unity\<close>
 
@@ -1012,7 +1029,7 @@ next
   then show ?thesis by blast 
 qed
 
-subsection\<open>Ramanujan's sums\<close>
+subsection\<open>Basic Ramanujan's sums\<close>
 
 definition 
  "ramanujan k n = (\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m*n))"
@@ -1112,7 +1129,7 @@ corollary c_k_1: "c k 1 = moebius_mu k" for k :: nat
   unfolding ramanujan_def 
   using moebius_coprime_sum[of k] by simp
 
-lemma 
+lemma c_k_dvd_n:
   assumes "k dvd n"
   shows "c k n = totient k"
   unfolding ramanujan_def
@@ -1124,11 +1141,67 @@ proof -
     by(cases "k = 0", blast+)}
   then have "(\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m * n)) = 
        (\<Sum>m | m \<in> {1..k} \<and> coprime m k. 1)" by simp
-  then have "... = card {m. m \<in> {1..k} \<and> coprime m k}" by simp
-  then have "... = totient k"
-    
-    
-    
+  also have "... = card {m. m \<in> {1..k} \<and> coprime m k}" by simp
+  also have "... = totient k"
+   unfolding totient_def totatives_def 
+  proof -
+    have "{1..k} = {0<..k}" by auto
+    then show " of_nat (card {m \<in> {1..k}. coprime m k}) =
+              of_nat (card {ka \<in> {0<..k}. coprime ka k})" by auto
+  qed
+  finally show "(\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m * n)) = totient k" 
+    by auto
+qed
+
+definition "s f g = 
+  (\<lambda> (k::nat) (n::nat). \<Sum> d | d dvd (gcd n k). f(d) * g(k div d))"
+
+lemma s_k_periodic: "periodic (s f g k) k"
+  unfolding s_def periodic_def by simp
+
+theorem
+  fixes f g :: "nat \<Rightarrow> complex" 
+  assumes "k > 0" 
+  defines "a \<equiv> (\<lambda> k m. (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * (d div k)))"
+  shows "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"
+proof -
+  thm fourier_expansion[of k "s f g k" ]
+  let ?g = "
+   (\<lambda>x. 1 / of_nat k *
+        (\<Sum>m<k. s f g k m * unity_root k (-x*m)))"
+
+  fix m 
+  have "?g m = 1 / k * (\<Sum>l<k. s f g k l * unity_root k (-m*l))"
+    by auto
+  also have "... = 1 / k * (\<Sum>l \<in> {0..k-1}. s f g k l * unity_root k (-m*l))"
+    using sum_eq_ineq by (simp add: assms(1) atLeast0AtMost)
+  also have "... = 1 / k * (\<Sum>l \<in> {1..k}. s f g k l * unity_root k (-m*l))"
+  proof -
+    have "periodic (\<lambda> l. unity_root k (-m*l)) k"
+      using unity_periodic_mult by blast
+    then have "periodic (\<lambda> l. s f g k l * unity_root k (-m*l)) k"
+      using s_k_periodic mult_periodic by blast
+    then show ?thesis using periodic_sum_periodic[of _ k]
+  qed
+    using periodic_sum_periodic s_k_periodic mult_periodic 
+  also have "... = 1 / k * (\<Sum>l<k. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    by (simp add: s_def)
+  also have "... = 1 / k * (\<Sum>l \<in> {0..k-1}. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    using sum_eq_ineq by (simp add: assms(1) atLeast0AtMost)
+  also have "... = 1 / k * (\<Sum>l \<in> {1..k}. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    using periodic_sum_periodic 
+
+(*
+    using sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
+             "\<lambda> k d. (f k n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
+*)
+
+  (*from fourier_expansion[of k "s f g k" ]
+  have "s f g k n = (\<Sum>l<k. ?g l * unity_root k (n * int l))"
+    using a_def assms s_k_periodic[of f g k] by blast
+  also have "... = (\<Sum>m\<le>k-1. (?g m) * unity_root k (m*n))"
+    using sum_eq_ineq by (simp add: mult.commute that(2))
+  have "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"*)
 qed
 
 end

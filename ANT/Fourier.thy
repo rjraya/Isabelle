@@ -88,6 +88,104 @@ next
     finally show "g(i) = h(i)" using euclid_div by simp
   qed
 qed
+                  
+lemma periodic_sum_periodic:
+  assumes "periodic f k"
+  shows "(\<Sum>l \<in> {m..n}. f l) = (\<Sum>l \<in> {m+k..n+k}. f l)"
+  using periodic_def assms 
+  by(intro sum.reindex_bij_witness
+         [of "{m..n}" "\<lambda> l. l-k" "\<lambda> l. l+k" "{m+k..n+k}" f f])
+      auto
+
+lemma mod_periodic:
+  fixes n m :: nat
+  assumes "periodic f k"
+  assumes "n mod k = m mod k"
+  shows "f n = f m"
+proof -
+  obtain q  where 1: "n = q*k+(n mod k)" 
+     using div_mult_mod_eq[of n k] by metis
+  obtain q' where 2: "m = q'*k+(m mod k)"
+     using div_mult_mod_eq[of m k] by metis
+  from 1 have "f n = f (q*k+(n mod k))" by auto
+  also have "... = f (n mod k)"
+    using mult_period[of f k q] assms(1) periodic_def[of f "k*q"]
+    by(simp add: algebra_simps, metis add.commute) 
+  also have "... = f (m mod k)" using assms(2) by auto
+  also have "... = f (q'*k+(m mod k))"
+    using mult_period[of f k q'] assms(1) periodic_def[of f "k*q'"]
+    by(simp add: algebra_simps, metis add.commute) 
+  also have "... = f m" using 2 by auto
+  finally show "f n = f m" by simp
+qed
+
+term "inj_on"
+term "surj"
+lemma periodic_sum_periodic_shift:
+  fixes k d :: nat
+  assumes "periodic f k" 
+  assumes "k > 0" (*fix this*)
+  assumes "d > 0"
+  shows "(\<Sum>l \<in> {0..k-1}. f l) = 
+         (\<Sum>l \<in> {d..k+d-1}. f l)"
+  thm sum.reindex_bij_witness
+proof(intro sum.reindex_bij_witness
+         [of _ "\<lambda> j. j mod k" "\<lambda> i. (i+(k-(d mod k))) mod k + d"])
+  fix a
+  assume 0: "a \<in> {0..k - 1}"
+  show "((a + (k - d mod k)) mod k + d) mod k = a"
+  proof -  
+    have "((a + (k - (d mod k))) mod k + d) mod k = 
+           (a + (k - (d mod k)) + d mod k) mod k mod k"
+      by (simp add: mod_add_left_eq mod_add_right_eq)
+    also have "... = (a + (k - (d mod k)) + d mod k) mod k"
+      by simp
+    also have "... = ((a + k) - (d mod k) + d mod k) mod k"
+      using assms(2) by auto
+    also have "... = (a+k) mod k" 
+      by (metis Groups.add_ac(3) \<open>(a + (k - d mod k) + d mod k) mod k = (a + k - d mod k + d mod k) mod k\<close> add.commute assms(2) calculation le_add_diff_inverse mod_le_divisor)
+    also have "... = a mod k" by simp
+    also have "... = a" using 0 
+      by (metis One_nat_def Suc_pred assms(2) atLeastAtMost_iff le_imp_less_Suc mod_less)
+    finally show ?thesis by blast
+  qed
+
+  show "(a + (k - d mod k)) mod k + d \<in> {d..k + d - 1}"    
+    apply(simp add: algebra_simps) 
+    using add_pos_pos assms(2) less_Suc_eq_le by fastforce
+next
+  fix b
+  assume "b \<in> {d..k+d-1}"
+  show "(b mod k + (k - d mod k)) mod k + d = b"
+  proof -
+    have "(b mod k + (k - d mod k)) mod k + d = 
+          ((b+(k - d mod k)) mod k) mod k + d"
+      apply(simp add: algebra_simps)
+      using mod_add_left_eq by blast 
+    also have "... = ((b+(k - d mod k)) mod k) + d"
+      by(simp add: algebra_simps)
+    also have "... = (((b+k) - d mod k) mod k) + d"
+      apply(simp add: algebra_simps)
+      by (simp add: assms(2))
+    also have "... = ((b - d mod k) mod k) + d"
+        apply(simp add: algebra_simps)
+      by (metis Nat.add_diff_assoc2 \<open>b \<in> {d..k + d - 1}\<close> add_leD2 atLeastAtMost_iff div_mult_mod_eq mod_add_self2)
+    also have "... = (((b - d) mod k) mod k) + d"
+      apply(simp add: algebra_simps)
+      
+  qed
+(* apply(simp add: assms(2) field_simps  mod_add_right_eq)
+     apply(simp add: assms(2)  field_simps)
+     apply (metis add.commute assms(2) discrete pos_mod_conj)
+       apply(simp add: assms(2) algebra_simps)
+    defer 1
+    apply simp
+  using mod_periodic[of f "nat k" ] assms
+  
+  using mod_periodic *)
+  
+  
+
 
 section\<open>Roots of unity\<close>
 
@@ -1134,6 +1232,57 @@ proof -
   qed
   finally show "(\<Sum>m | m \<in> {1..k} \<and> coprime m k. unity_root k (m * n)) = totient k" 
     by auto
+qed
+
+definition "s f g = 
+  (\<lambda> (k::nat) (n::nat). \<Sum> d | d dvd (gcd n k). f(d) * g(k div d))"
+
+lemma s_k_periodic: "periodic (s f g k) k"
+  unfolding s_def periodic_def by simp
+
+theorem
+  fixes f g :: "nat \<Rightarrow> complex" 
+  assumes "k > 0" 
+  defines "a \<equiv> (\<lambda> k m. (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * (d div k)))"
+  shows "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"
+proof -
+  thm fourier_expansion[of k "s f g k" ]
+  let ?g = "
+   (\<lambda>x. 1 / of_nat k *
+        (\<Sum>m<k. s f g k m * unity_root k (-x*m)))"
+
+  fix m 
+  have "?g m = 1 / k * (\<Sum>l<k. s f g k l * unity_root k (-m*l))"
+    by auto
+  also have "... = 1 / k * (\<Sum>l \<in> {0..k-1}. s f g k l * unity_root k (-m*l))"
+    using sum_eq_ineq by (simp add: assms(1) atLeast0AtMost)
+  also have "... = 1 / k * (\<Sum>l \<in> {1..k}. s f g k l * unity_root k (-m*l))"
+  proof -
+    have "periodic (\<lambda> l. unity_root k (-m*l)) k"
+      using unity_periodic_mult by blast
+    then have "periodic (\<lambda> l. s f g k l * unity_root k (-m*l)) k"
+      using s_k_periodic mult_periodic by blast
+    then show ?thesis using periodic_sum_periodic[of _ k]
+  qed
+    using periodic_sum_periodic s_k_periodic mult_periodic 
+  also have "... = 1 / k * (\<Sum>l<k. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    by (simp add: s_def)
+  also have "... = 1 / k * (\<Sum>l \<in> {0..k-1}. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    using sum_eq_ineq by (simp add: assms(1) atLeast0AtMost)
+  also have "... = 1 / k * (\<Sum>l \<in> {1..k}. (\<Sum> d | d dvd (gcd l k). f(d) * g(k div d)) * unity_root k (-m*l))"
+    using periodic_sum_periodic 
+
+(*
+    using sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
+             "\<lambda> k d. (f k n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
+*)
+
+  (*from fourier_expansion[of k "s f g k" ]
+  have "s f g k n = (\<Sum>l<k. ?g l * unity_root k (n * int l))"
+    using a_def assms s_k_periodic[of f g k] by blast
+  also have "... = (\<Sum>m\<le>k-1. (?g m) * unity_root k (m*n))"
+    using sum_eq_ineq by (simp add: mult.commute that(2))
+  have "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"*)
 qed
 
 end
