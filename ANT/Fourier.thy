@@ -34,6 +34,10 @@ definition
   "periodic f k = (\<forall> n. f(n+k) = f(n))" 
   for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
 
+lemma const_periodic:
+  "periodic (\<lambda> x. y) 0" 
+  unfolding periodic_def by blast
+
 lemma add_periodic:
   fixes f g :: "nat \<Rightarrow> complex"
   assumes "periodic f k"
@@ -68,6 +72,13 @@ next
     show ?thesis by (simp add: periodic_def)
   qed
 qed
+
+(* this should replace the above, it is the right generalization *)
+lemma fin_sum_periodic_set:
+  fixes f g :: "nat \<Rightarrow> complex" 
+  assumes "\<forall> i \<in> A. periodic (h i) k"
+  shows "periodic (\<lambda> n. (\<Sum>i \<in> A. h i n)) k"
+  using assms by(simp add: periodic_def)
 
 lemma mult_period:
   assumes "periodic g k"
@@ -1298,7 +1309,7 @@ lemma s_k_periodic: "periodic (s f g k) k"
 theorem s_k_fourier_expansion:
   fixes f g :: "nat \<Rightarrow> complex" and a :: "nat \<Rightarrow> nat \<Rightarrow> complex"
   assumes "k > 0" 
-  defines "a \<equiv> (\<lambda> k m. (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * (d / k)))"
+  defines "a \<equiv> (\<lambda> k m. (1/k) * (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * d ))"
   shows "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"
 proof -
   let ?g = "
@@ -1427,10 +1438,10 @@ proof -
   also have "... = (1/k) * (\<Sum>d | d dvd gcd m k.
         of_nat d * (f (k div d) * g d))" 
     by(simp add: gcd.commute)
-  also have "... = (\<Sum>d | d dvd gcd m k.
-        g d * f (k div d) * (d/k))" 
+  also have "... = (1/k) * (\<Sum>d | d dvd gcd m k.
+        g d * f (k div d) * d)" 
     by(simp add: algebra_simps sum_distrib_left)
-  also have "... = a k m" using a_def by simp
+  also have "... = a k m" using a_def by auto
   finally have "?g m = a k m" by blast}
   note a_eq_g = this
   {fix m
@@ -1446,9 +1457,90 @@ proof -
     by(simp add: algebra_simps)}
   then show ?thesis by blast
 qed
-  
 
+theorem c_k_dirichlet_form:
+  fixes k n :: nat
+  assumes "k > 0"
+  shows "c k n = (\<Sum> d | d dvd gcd n k. d * moebius_mu (k div d))"
+proof -
+  define a :: "nat \<Rightarrow> nat \<Rightarrow> complex" 
+    where "a  =  (\<lambda> k m.
+   1 / of_nat k * (\<Sum>d | d dvd gcd m k. moebius_mu d * of_nat (k div d) * of_nat d))"
 
+  {fix m
+  have "a k m = (if gcd m k = 1 then 1 else 0)"
+  proof -
+   have "a k m = 1 / of_nat k * (\<Sum>d | d dvd gcd m k. moebius_mu d * of_nat (k div d) * of_nat d)"
+      unfolding a_def by blast
+   also have 2: "... = 1 / of_nat k * (\<Sum>d | d dvd gcd m k. moebius_mu d * of_nat k)"
+   proof -
+     {fix d :: nat
+     assume dvd: "d dvd gcd m k"
+     have "moebius_mu d * of_nat (k div d) * of_nat d = moebius_mu d * of_nat k"
+     proof -
+       have "(k div d) * d = k" 
+         using dvd by auto
+       then show "moebius_mu d * of_nat (k div d) * of_nat d = moebius_mu d * of_nat k"  
+         by(simp add: algebra_simps,metis of_nat_mult)
+     qed} note eq = this
+     show ?thesis using sum.cong by (simp add: eq)
+   qed
+
+   also have 3: "... = (\<Sum>d | d dvd gcd m k. moebius_mu d)"
+     by(simp add: sum_distrib_left assms) 
+   also have 4: "... =  (if gcd m k = 1 then 1 else 0)"
+     using sum_moebius_mu_divisors' by blast
+   finally show "a k m  = (if gcd m k = 1 then 1 else 0)" 
+     using coprime_def by blast
+ qed} note a_expr = this
+
+  let ?f = "(\<lambda> m. (if gcd m k = 1 then 1 else 0) *
+                 unity_root k (int m * n))"
+  from s_k_fourier_expansion[of k id moebius_mu n] assms
+  have "s (\<lambda>x. of_nat (id x)) moebius_mu k n =
+  (\<Sum>m\<le>k - 1.
+      1 / of_nat k *
+      (\<Sum>d | d dvd gcd m k.
+         moebius_mu d * of_nat (k div d) * of_nat d) *
+      unity_root k (int m * n))" by simp
+  also have "... = (\<Sum>m\<le>k - 1.
+      a k m *
+      unity_root k (int m * n))" using a_def by blast
+  also have "... = (\<Sum>m\<le>k - 1.
+      (if gcd m k = 1 then 1 else 0) *
+      unity_root k (int m * n))" using a_expr by auto
+  also have "... = (\<Sum>m \<in> {1..k}.
+      (if gcd m k = 1 then 1 else 0) *
+      unity_root k (int m * n))"
+  proof -    
+    have "periodic (\<lambda> m. (if gcd m k = 1 then 1 else 0) *
+                 unity_root k (int m * n)) k"
+    proof -
+      have "periodic (\<lambda> m. if gcd m k = 1 then 1 else 0) k"
+        by(simp add: periodic_def)
+      moreover have "periodic (\<lambda> m. unity_root k (int m * n)) k" 
+        using unity_periodic_mult 
+        by (metis (no_types, lifting) mod_add_self2 periodic_def unity_mod unity_pow zmod_int)      
+      ultimately show "periodic ?f k"
+        using mult_periodic by simp
+    qed
+    then have "sum ?f {0..k - 1} = sum ?f {1..k}"
+      using periodic_sum_periodic_shift[of ?f k 1] by force
+    then show ?thesis by (simp add: atMost_atLeast0)    
+  qed  
+  also have "... = (\<Sum>m | m \<in> {1..k} \<and> gcd m k = 1.
+                  (if gcd m k = 1 then 1 else 0) *     
+                  unity_root k (int m * int n))"
+    by(intro sum.mono_neutral_right,auto)
+  also have "... = (\<Sum>m | m \<in> {1..k} \<and> gcd m k = 1.
+                  unity_root k (int m * int n))" by simp    
+  also have "... = (\<Sum>m | m \<in> {1..k} \<and> coprime m k.
+                  unity_root k (int m * int n))"
+    using coprime_iff_gcd_eq_1 by presburger
+  also have "... = c k n" unfolding ramanujan_def by simp
+  finally show ?thesis unfolding s_def by auto
+qed
+    
 
 
 end

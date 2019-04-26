@@ -18,6 +18,16 @@ lemma g_sum_eq_ineq:
   for n :: nat and f :: "nat \<Rightarrow> complex"
   by (metis One_nat_def Suc_pred atLeastLessThanSuc_atLeastAtMost)
 
+lemma sum_div_reduce: (* generalize *)
+  fixes d :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "d dvd k" 
+  assumes "d > 0" 
+  shows "
+   (\<Sum>n | n \<in> {1..k} \<and> d dvd n. f n) =
+   (\<Sum>c \<in> {1..k div d}. f (c*d))" 
+   by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
+     (use assms  in \<open>fastforce simp: div_le_mono\<close>)+
+
 section\<open>Periodic functions\<close>
 
 definition 
@@ -1211,7 +1221,7 @@ next
         (\<Sum>q \<in> {1..n div d}. (f q (n div d)))" 
       if "d dvd n" "d > 0" for d :: nat
       by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
-         (use assms that in \<open>fastforce simp: div_le_mono\<close>)+
+         (use assms(3) that in \<open>fastforce simp: div_le_mono\<close>)+
     then show ?thesis 
       by (smt False dvd_div_mult_self mem_Collect_eq mult_cancel_left mult_eq_0_iff mult_is_0 not_gr0 sum.cong)
       (* fix this: proving summation with summands should be easy with substitutions *)
@@ -1285,17 +1295,15 @@ definition "s f g =
 lemma s_k_periodic: "periodic (s f g k) k"
   unfolding s_def periodic_def by simp
 
-theorem
-  fixes f g :: "nat \<Rightarrow> complex" 
+theorem s_k_fourier_expansion:
+  fixes f g :: "nat \<Rightarrow> complex" and a :: "nat \<Rightarrow> nat \<Rightarrow> complex"
   assumes "k > 0" 
-  defines "a \<equiv> (\<lambda> k m. (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * (d div k)))"
+  defines "a \<equiv> (\<lambda> k m. (1/k) * (\<Sum>d| d dvd (gcd m k). g(d) * f(k div d) * d ))"
   shows "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"
 proof -
-  thm fourier_expansion[of k "s f g k" ]
   let ?g = "
-   (\<lambda>x. 1 / k * (\<Sum>m<k. s f g k m * unity_root k (-x*m)))"
-  
-  fix m 
+   (\<lambda>x. 1 / of_nat k * (\<Sum>m<k. s f g k m * unity_root k (-x*m)))"
+  {fix m :: nat
   let ?h = "\<lambda> n d. f d * g (k div d) * unity_root k (- m * int n)"
   have "?g m = 1 / k * (\<Sum>l<k. s f g k l * unity_root k (-m*l))"
     by auto
@@ -1335,51 +1343,172 @@ proof -
     by(simp add: sum_distrib_left)
   also have "... = 1 / k * (\<Sum>d | d dvd k. f(d)*g(k div d)*
              (\<Sum>c \<in> {1..k div d}. unity_root k (- m * (c*d))))"
-  proof -        
-    {fix d
-    have "
-      (\<Sum>n | n \<in> {1..k} \<and> d dvd n. unity_root k (- m * n)) =
-        (\<Sum>c \<in> {1..k div d}. unity_root k (- m * (c*d)))" 
-      if "d dvd k" "d > 0" for d :: nat
-      by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
-        (use assms that in \<open>fastforce simp: div_le_mono\<close>)+}
-    then show ?thesis 
-      using assms(1) div_greater_zero_iff dvd_div_gt0 by auto
+    using assms(1) sum_div_reduce div_greater_zero_iff dvd_div_gt0 by auto
+  also have "... = 1 / k * (\<Sum>d | d dvd k. f(d)*g(k div d)*
+             (\<Sum>c \<in> {1..k div d}. unity_root (k div d) (- m * c)))"
+  proof -
+    {fix d c
+    assume "d dvd k"
+    have "unity_root k (- m * (c * d)) = 
+          unity_root (k div d) (- m * c)"
+      using unity_div[of d k] 
+      apply(simp add: algebra_simps)
+      by (metis (no_types, lifting) \<open>d dvd k\<close> mult.assoc mult.commute unity_minus)}
+   then show ?thesis by simp
   qed
-  also have "... = 1 / k * 
+  also have "... = 1 / k *
                    dirichlet_prod (\<lambda> d. f(d)*g(k div d))
                    (\<lambda> d. (\<Sum>c \<in> {1..d}. unity_root d (- m *c)))
                    k"
+    unfolding dirichlet_prod_def by blast
+  also have "... = 1 / k *
+              dirichlet_prod 
+              (\<lambda> d. (\<Sum>c \<in> {1..d}. unity_root d (- m *c)))      
+              (\<lambda> d. f(d)*g(k div d))       
+              k"
+    using dirichlet_prod_commutes[of 
+            "(\<lambda> d. f(d)*g(k div d))"
+            "(\<lambda> d. (\<Sum>c \<in> {1..d}. unity_root d (- m *c)))"] by argo
+  also have "... = 1 / k * (\<Sum>d | d dvd k.
+             (\<Sum>c \<in> {1..(d::nat)}. unity_root d (- m * c))*(f(k div d)*g(k div (k div d))))"  
+    unfolding dirichlet_prod_def by blast 
+  also have "... = 1 / k * (\<Sum>d | d dvd k.
+             (\<Sum>c \<in> {1..(d::nat)}. unity_root d (- m * c))*(f(k div d)*g(d)))"  
   proof -
-    fix d
+    {fix d :: nat
     assume "d dvd k"
-    have "(\<Sum>d | d dvd k. f(d)*g(k div d)*
-             (\<Sum>c \<in> {1..k div d}. unity_root k (- m * (c*d)))) = 
-          (\<Sum>d | d dvd k. f(d)*g(k div d)*
-             (\<Sum>c \<in> {1..k div d}. exp ((2*pi*(- m * (c*d))/k)* \<i>)))
-           "
-      using unity_exp by algebra
-    also have "... = 
-               dirichlet_prod (\<lambda> d. f(d)*g(k div d)) 
-          (\<lambda> d. (\<Sum>c \<in> {1..d}. exp ((2*pi*(- m*c))/d)* \<i>)) k"
-      unfolding dirichlet_prod_def 
-
+    then have "k div (k div d) = d"
+      by (simp add: assms(1) div_div_eq_right)}
+    then show ?thesis by simp
   qed
-    using dirichlet_prod_def 
-
-
-
-(*
-    using sum.swap_restrict[of "{1..n}" "{d. d dvd n}"
-             "\<lambda> k d. (f k n)*moebius_mu d" "\<lambda> k d. d dvd k"] False by auto
-*)
-
-  (*from fourier_expansion[of k "s f g k" ]
-  have "s f g k n = (\<Sum>l<k. ?g l * unity_root k (n * int l))"
-    using a_def assms s_k_periodic[of f g k] by blast
-  also have "... = (\<Sum>m\<le>k-1. (?g m) * unity_root k (m*n))"
-    using sum_eq_ineq by (simp add: mult.commute that(2))
-  have "s f g k n = (\<Sum>m\<le>k-1. (a k m) * unity_root k (m*n))"*)
+  also have "... = 1 / k * (\<Sum>(d::nat) | d dvd k \<and> d dvd m.
+             d*(f(k div d)*g(d)))"  
+  proof -
+    {fix d
+    assume "d dvd k"
+    have "periodic (\<lambda>x. unity_root d (- m * int x)) d"
+      using unity_periodic_mult by blast
+    then have "(\<Sum>c \<in> {1..d}. unity_root d (- m * c)) = 
+          (\<Sum>c \<in> {0..d-1}. unity_root d (- m * c)) "
+      using periodic_sum_periodic_shift[of 
+          "\<lambda> c. unity_root d (- m * c)"  d 1] assms \<open>d dvd k\<close>
+      by fastforce
+    also have "... = geometric_sum d (-m)" 
+      using geometric_sum_def 
+      by (simp add: atMost_atLeast0) 
+    finally have 
+      "(\<Sum>c \<in> {1..d}. unity_root d (- m * c)) = geometric_sum d (-m)"
+      by argo}
+    then have "
+      (\<Sum>d | d dvd k. (\<Sum>c = 1..d. unity_root d (- m * int c)) * 
+       (f (k div d) * g d)) = 
+      (\<Sum>d | d dvd k. geometric_sum d (-m) * (f (k div d) * g d))" by simp
+    also have "... = (\<Sum>d | d dvd k \<and> d dvd m. geometric_sum d (-m) * (f (k div d) * g d))"
+      apply(intro 
+          sum.mono_neutral_right[of "{d. d dvd k}"
+            "{d. d dvd k \<and> d dvd m}"
+            "\<lambda> d. geometric_sum d (-m) * (f (k div d) * g d)"])
+        (* fix this *)
+      using geometric_sum[of _ "(-m)"] assms
+      by (simp, blast, simp, 
+        metis (mono_tags, lifting) DiffE assms(1) div_greater_zero_iff dvd_div_gt0 less_eq_Suc_le mem_Collect_eq)
+    also have "... = (\<Sum>d | d dvd k \<and> d dvd m. d * (f (k div d) * g d))"
+    proof - 
+      {fix d :: nat
+        assume 1: "d dvd m" 
+        assume 2: "d dvd k"
+        then have "geometric_sum d (-m) = d"
+          using geometric_sum[of d "(-m)"] assms(1) 1 2
+          by auto}
+      then show ?thesis by auto
+    qed
+    finally show ?thesis by argo
+  qed
+  also have "... = (1/k) * (\<Sum>d | d dvd gcd m k.
+        of_nat d * (f (k div d) * g d))" 
+    by(simp add: gcd.commute)
+  also have "... = (1/k) * (\<Sum>d | d dvd gcd m k.
+        g d * f (k div d) * d)" 
+    by(simp add: algebra_simps sum_distrib_left)
+  also have "... = a k m" using a_def by auto
+  finally have "?g m = a k m" by blast}
+  note a_eq_g = this
+  {fix m
+  from fourier_expansion(2)[of k "s f g k" ] s_k_periodic assms(1) 
+  have "s f g k m = (\<Sum>n<k. ?g n * unity_root k (int m * n))"
+    by blast
+  also have "... = (\<Sum>n<k. a k n * unity_root k (int m * n))"
+    using a_eq_g by simp
+  also have "... = (\<Sum>n\<le>k-1. a k n * unity_root k (int m * n))"
+    using sum_eq_ineq assms(1) by simp
+  finally have "s f g k m =
+    (\<Sum>n\<le>k - 1. a k n * unity_root k (int n * int m))"
+    by(simp add: algebra_simps)}
+  then show ?thesis by blast
 qed
+
+theorem 
+  fixes k n :: nat
+  assumes "k > 0"
+  shows "c k n = (\<Sum> d | d dvd gcd n k. d * moebius_mu (k div d))"
+proof -
+  let ?a = "(\<lambda> k m. 
+   1 / of_nat k * (\<Sum>d | d dvd gcd m k. moebius_mu d * (k div d) * of_nat d))"
+
+  {fix m d :: nat
+      assume "d dvd gcd m k"
+      then have "(k div d) * d = k" by simp
+      then have "moebius_mu d * ((k div d) * d) = moebius_mu d * k"  
+        by(fastforce simp add: algebra_simps)
+      then have "moebius_mu d * (k div d) * d = moebius_mu d * k"  
+        using add.assoc by auto
+    }
+    note types = this
+   
+  {
+   fix m
+   have 1: "?a k m = (1/k) * (\<Sum>d | d dvd gcd m k.
+     moebius_mu d * (k div d) * d)" by simp
+   also have 2: "... = (1/k) * (\<Sum>d | d dvd gcd m k. moebius_mu d * k)"
+     by (metis (no_types, lifting) types mem_Collect_eq sum.cong)
+   also have 3: "... = (\<Sum>d | d dvd gcd m k. moebius_mu d)"
+     by(simp add: sum_distrib_left assms) 
+   also have 4: "... =  (if gcd m k = 1 then 1 else 0)"
+     using sum_moebius_mu_divisors' by blast
+   finally have "?a k m = (if gcd m k = 1 then 1 else 0)"
+     using 1 2 3 4 by argo (*calculation not working?*)
+  }
+  note coeff = this
+
+  from s_k_fourier_expansion[of ]
+         assms 
+  have "s id moebius_mu k n =
+   (\<Sum>m\<le>k-1. (?a k m) * unity_root k (m*n))"
+    
+    
+  also have "... = (\<Sum>m\<le>k - 1.
+        1 / of_nat k *
+        (\<Sum>d | d dvd gcd m k.
+           moebius_mu d * k) *
+        unity_root k (int m *  n))"
+    using types sum.cong 
+      
+  also have "... = (\<Sum>m\<le>k - 1.
+        (if gcd m k = 1 then 1 else 0) *
+        unity_root k (int m * int n))"
+  proof -
+    fix m
+    have " 1 / k *
+        (\<Sum>d | d dvd gcd m k.
+           moebius_mu d * of_nat (k div d) * of_nat d) = 
+        (if gcd m k = 1 then 1 else 0)"
+    using coeff[of m] 
+   
+
+    thm s_k_fourier_expansion[of k id moebius_mu n]
+  thm s_def
+  thm s_k_fourier_expansion[of k id moebius_mu]
+
+
 
 end
