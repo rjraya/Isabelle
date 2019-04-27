@@ -241,6 +241,84 @@ lemma periodic_sum_periodic_shift:
   shows "(\<Sum>l \<in> {d..d+k-1}. f l) = 
          (\<Sum>l \<in> {d'..d'+k-1}. f l)"
 *)
+
+section\<open>Gcd\<close>
+
+lemma sub:
+  fixes a b c d :: nat
+  assumes "coprime a c" "coprime a d" "coprime b c" "coprime b d"
+  shows "coprime (a*b) (c*d)"
+  by (simp add: assms)
+
+lemma linear_gcd:
+  fixes a b c d :: nat
+  assumes "a > 0" "b > 0" "c > 0" "d > 0"
+  assumes "coprime a c" "coprime b d" 
+  shows "gcd (a*b) (c*d) = (gcd a d) * (gcd b c)"
+proof -
+  define q1 :: nat where "q1 = a div gcd a d" 
+  define q2 :: nat where "q2 = c div gcd b c" 
+  define q3 :: nat where "q3 = b div gcd b c"
+  define q4 :: nat where "q4 = d div gcd a d"
+  
+  from this assms
+  have "coprime q1 q2" "coprime q3 q4" 
+    unfolding q1_def q2_def q3_def q4_def
+    by (metis coprime_commute coprime_mult_left_iff 
+              dvd_div_mult_self gcd_dvd1 gcd_dvd2)+
+  moreover have "coprime q1 q4" "coprime q3 q2"
+    unfolding q1_def q2_def q3_def q4_def 
+    using assms div_gcd_coprime by blast+
+  ultimately have 1: "coprime (q1*q3) (q2*q4)"
+    using  sub[of q1 q2 q4 q3] by simp    
+  have "gcd (a*b) (c*d) = (gcd a d) * (gcd b c) * gcd (q1*q3) (q2*q4)"
+    unfolding q1_def q2_def q3_def q4_def
+    using gcd_mult_distrib_nat dvd_div_mult_self gcd_dvd1 gcd_dvd2
+    by (smt mult.assoc mult.commute) (* fix this *)
+  from this 1 show "gcd (a*b) (c*d) = (gcd a d) * (gcd b c)" by auto
+qed  
+
+lemma reindex_product_bij:
+  fixes a b m k :: nat
+  defines "S \<equiv> {(d1,d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}"
+  defines "T \<equiv> {d. d dvd (gcd a m) * (gcd k b)}"
+  defines "f \<equiv> (\<lambda> (d1,d2). d1 * d2)"
+  assumes "coprime a k"
+  shows "bij_betw f S T"
+  unfolding bij_betw_def
+proof
+  show inj: "inj_on f S"
+    unfolding f_def 
+  proof -
+    {fix d1 d2 d1' d2'
+    assume "(d1,d2) \<in> S" "(d1',d2') \<in> S"
+    then have dvd: "d1 dvd gcd a m" "d2 dvd gcd k b" 
+              "d1' dvd gcd a m" "d2' dvd gcd k b"
+      unfolding S_def by simp+
+    assume "f (d1,d2) = f (d1',d2')" 
+    then have eq: "d1 * d2 = d1' * d2'" 
+      unfolding f_def by simp
+    from eq dvd have eq1: "d1 = d1'" 
+      by (simp,meson assms coprime_crossproduct_nat coprime_divisors)
+    from eq dvd have eq2: "d2 = d2'"
+      by (metis assms(4) coprime_commute coprime_divisors coprime_dvd_mult_right_iff  
+           dvd_triv_right gcd_nat.antisym gcd_nat.boundedE)
+    from eq1 eq2 have "d1 = d1' \<and> d2 = d2'" by simp} 
+   then show "inj_on (\<lambda>(d1, d2). d1 * d2) S" 
+    using S_def f_def by(intro inj_onI,blast)
+  qed
+  show surj: "f ` S = T" 
+  proof -
+    {fix d
+      have "d dvd (gcd a m) * (gcd k b)
+       \<longleftrightarrow> (\<exists> d1 d2. d = d1*d2 \<and> d1 dvd gcd a m \<and> d2 dvd gcd k b)"
+        using division_decomp mult_dvd_mono by blast}
+      then show ?thesis
+        unfolding f_def S_def T_def image_def
+        by auto
+  qed
+qed
+
 section\<open>Roots of unity\<close>
 
 definition "unity_root k n = 
@@ -1541,6 +1619,73 @@ proof -
   finally show ?thesis unfolding s_def by auto
 qed
     
+definition "multiplicative f = (\<forall> a b. f(a*b) = f(a)*f(b))" 
+  for f :: "nat \<Rightarrow> complex"
 
+theorem 
+  fixes f g :: "nat \<Rightarrow> complex"
+  assumes "a > 0" "b > 0" "m > 0" "k > 0" (* remove cond. on m,n *)
+  assumes "coprime a k" and  "coprime b m"
+  assumes "multiplicative f" and "multiplicative g"
+  shows "s f g (m*k) (a*b) = (s f g m a)*(s f g k b)"
+proof -  
+  from assms(1-6) have eq: "gcd (m*k) (a*b) = gcd a m * gcd k b"
+   by (simp add: linear_gcd  gcd.commute mult.commute)
+  have "s f g (m*k) (a*b) = 
+        (\<Sum> d | d dvd gcd (m*k) (a*b). f(d) * g((m*k) div d))"
+    unfolding s_def using gcd.commute by metis
+  also have "... = 
+     (\<Sum> d | d dvd gcd a m * gcd k b. f(d) * g((m*k) div d))"
+    using eq by simp
+  also have "... = 
+     (\<Sum> (d1,d2) | d1 dvd gcd a m \<and>  d2 dvd gcd k b. 
+          f(d1*d2) * g((m*k) div (d1*d2)))" 
+  proof -
+    have b: "bij_betw (\<lambda>(d1, d2). d1 * d2)
+   {(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}
+   {d. d dvd gcd a m * gcd k b}" 
+      using assms(5) reindex_product_bij by blast
+    
+    have "(\<Sum> (d1, d2) | d1 dvd gcd a m \<and> d2 dvd gcd k b.
+     f (d1 * d2) * g (m * k div (d1 * d2))) = 
+   (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
+     f (case x of (d1, d2) \<Rightarrow> d1 * d2)*
+       g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2))) 
+"        
+      thm prod.case_distrib 
+      thm prod.splits 
+      thm prod.split
+      thm 
+      simps
+      apply (simp add: prod.case_distrib split: prod.splits)+
+    also have "... = (\<Sum>d | d dvd gcd a m * gcd k b. f d * g (m * k div d))"
+      using sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" 
+        "{(d1,d2). d1 dvd gcd a m \<and>  d2 dvd gcd k b}"
+        "{d. d dvd gcd a m * gcd k b}"
+        "\<lambda> d. f(d) * g((m*k) div d)"
+           ]  b 
+      
+  qed
+    thm sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" 
+        "{(d1,d2). d1 dvd gcd a m \<and>  d2 dvd gcd k b}"
+        "{d. d dvd gcd a m * gcd k b}"
+        "\<lambda> d. f(d) * g((m*k) div d)"
+           ]
+          reindex_product_bij assms 
+    
+
+   have "(\<Sum> (d1, d2) | d1 dvd gcd a m \<and> d2 dvd gcd k b.
+     f (case (d1, d2) of (d1, d2) \<Rightarrow> d1 * d2) *
+     g (m * k div (case (d1, d2) of (d1, d2) \<Rightarrow> d1 * d2))) = 
+   (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
+     f (case x of (d1, d2) \<Rightarrow> d1 * d2) *
+     g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2)))"
+     
+     apply(auto simp add: prod.splits)
+    
+  qed 
+
+   
+qed
 
 end

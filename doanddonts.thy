@@ -23,4 +23,8 @@ text\<open>
  message that indicates where exactly the unification failed. 
 \<close>
 
+text\<open>
+ Take a look at the GCD theory, keyword consider and atomize
+\<close>
+
 end
