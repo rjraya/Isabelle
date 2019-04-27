@@ -1380,6 +1380,13 @@ qed
 
 definition "s f g = 
   (\<lambda> (k::nat) (n::nat). \<Sum> d | d dvd (gcd n k). f(d) * g(k div d))"
+  for s :: "(nat \<Rightarrow> complex) \<Rightarrow> (nat \<Rightarrow> complex) \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> complex"
+
+lemma s_k_1: "s f g k 1 = f(1) * g(k)"
+  unfolding s_def by auto
+
+lemma s_1_n: "s f g 1 n = f(1) * g(1)"
+  unfolding s_def by simp
 
 lemma s_k_periodic: "periodic (s f g k) k"
   unfolding s_def periodic_def by simp
@@ -1618,17 +1625,60 @@ proof -
   also have "... = c k n" unfolding ramanujan_def by simp
   finally show ?thesis unfolding s_def by auto
 qed
-    
-definition "multiplicative f = (\<forall> a b. f(a*b) = f(a)*f(b))" 
+
+corollary c_k_s_form:
+ "k > 0 \<Longrightarrow> c k n = s id moebius_mu k n"
+  using c_k_dirichlet_form unfolding s_def by simp
+
+subsection \<open>Multiplicative properties\<close>
+
+print_locale multiplicative_function
+(* see existing multiplicative_function *)
+definition "multiplicative f = 
+  ((\<forall> a b. coprime a b \<longrightarrow> f(a*b) = f(a)*f(b)) \<and> f(1) \<noteq> 0)" 
   for f :: "nat \<Rightarrow> complex"
 
-theorem 
+lemma mult_unit:
+  assumes "multiplicative f"
+  shows "f(1) = 1" 
+proof -
+  have eq: "coprime 1 1" by simp
+  have "f(1) = f(1*1)" by simp
+  then have "f(1) = f(1) * f(1)"
+    using assms eq unfolding multiplicative_def by fastforce
+  then show "f(1) = 1" 
+    using assms unfolding multiplicative_def by simp
+qed
+
+lemma mult_id: "multiplicative id" unfolding multiplicative_def by simp
+
+lemma mult_moebius: "multiplicative moebius_mu"
+  unfolding multiplicative_def
+  using moebius_mu.mult_coprime by auto
+
+lemma multipl_prod: 
+  fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "multiplicative f" "d1 dvd m" "d2 dvd k" "coprime m k"
+  shows "f (d1*d2) = f(d1) * f(d2)"
+  using assms
+  unfolding multiplicative_def 
+  using coprime_divisors by blast
+
+lemma multipl_div: 
+  fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "multiplicative f" "d1 dvd m" "d2 dvd k" "coprime m k"
+  shows "f ((m*k) div (d1*d2)) = f(m div d1) * f(k div d2)"
+  using assms
+  unfolding multiplicative_def 
+  by (metis coprime_divisors div_mult_div_if_dvd dvd_mult_div_cancel dvd_triv_right)
+
+theorem s_mult_preservation:
   fixes f g :: "nat \<Rightarrow> complex"
   assumes "a > 0" "b > 0" "m > 0" "k > 0" (* remove cond. on m,n *)
-  assumes "coprime a k" and  "coprime b m"
+  assumes "coprime a k" "coprime b m" "coprime k m"
   assumes "multiplicative f" and "multiplicative g"
   shows "s f g (m*k) (a*b) = (s f g m a)*(s f g k b)"
-proof -  
+proof -
   from assms(1-6) have eq: "gcd (m*k) (a*b) = gcd a m * gcd k b"
    by (simp add: linear_gcd  gcd.commute mult.commute)
   have "s f g (m*k) (a*b) = 
@@ -1645,47 +1695,142 @@ proof -
    {(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}
    {d. d dvd gcd a m * gcd k b}" 
       using assms(5) reindex_product_bij by blast
-    
     have "(\<Sum> (d1, d2) | d1 dvd gcd a m \<and> d2 dvd gcd k b.
      f (d1 * d2) * g (m * k div (d1 * d2))) = 
-   (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
+      (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
      f (case x of (d1, d2) \<Rightarrow> d1 * d2)*
-       g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2))) 
-"        
-      thm prod.case_distrib 
-      thm prod.splits 
-      thm prod.split
-      thm 
-      simps
-      apply (simp add: prod.case_distrib split: prod.splits)+
-    also have "... = (\<Sum>d | d dvd gcd a m * gcd k b. f d * g (m * k div d))"
-      using sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" 
-        "{(d1,d2). d1 dvd gcd a m \<and>  d2 dvd gcd k b}"
-        "{d. d dvd gcd a m * gcd k b}"
-        "\<lambda> d. f(d) * g((m*k) div d)"
-           ]  b 
-      
-  qed
-    thm sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" 
-        "{(d1,d2). d1 dvd gcd a m \<and>  d2 dvd gcd k b}"
-        "{d. d dvd gcd a m * gcd k b}"
-        "\<lambda> d. f(d) * g((m*k) div d)"
-           ]
-          reindex_product_bij assms 
-    
+       g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2)))"
+        by(rule sum.cong,auto)
+      also have "... = (\<Sum>d | d dvd gcd a m * gcd k b. f d * g (m * k div d))"
+        using b by(rule sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" ])
+      finally show ?thesis by argo     
+    qed 
+  also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1*d2) * g((m*k) div (d1*d2))))"
+      by (simp add: sum.cartesian_product)(rule sum.cong,auto) 
+    also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1) * f(d2) * g((m*k) div (d1*d2))))"
+      apply(rule sum.cong,blast, rule sum.cong, blast)   
+      using assms(7-8) multipl_prod
+      by (metis (no_types, lifting) gcd_nat.bounded_iff mem_Collect_eq mult.commute)
+    also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1) * f(d2) * g(m div d1) * g(k div d2)))"
+    proof -
+      {fix d1 d2
+      assume "d1 dvd gcd a m" "d2 dvd gcd k b"
+      then have "g (m * k div (d1 * d2)) = g(m div d1) * g(k div d2)" 
+        using assms(7,9) multipl_div 
+        by (meson coprime_commute dvd_gcdD1 dvd_gcdD2) } note eq = this
+      show ?thesis 
+        apply(rule sum.cong,blast,rule sum.cong,blast)
+        using eq by auto
+    qed
+    also have "... = 
+        (\<Sum>i\<in>{d1. d1 dvd gcd a m}.
+     \<Sum>j\<in>{d2. d2 dvd gcd k b}.
+       f i * g (m div i) * (f j * g (k div j)))"
+      by(rule sum.cong,blast,rule sum.cong,blast,simp)   
+    also have "... = (\<Sum>d1 | d1 dvd gcd a m. f d1 * g (m div d1)) *
+          (\<Sum>d2 | d2 dvd gcd k b. f d2 * g (k div d2))"
+      using  sum_product[of 
+          "\<lambda> d1. f(d1) * g(m div d1)" _
+          "\<lambda> d2. f(d2) * g(k div d2)"
+          ] by simp 
+    also have "... = s f g m a * s f g k b"
+      unfolding s_def 
+      by (simp add: gcd.commute)
+    finally show ?thesis by blast
+qed
 
-   have "(\<Sum> (d1, d2) | d1 dvd gcd a m \<and> d2 dvd gcd k b.
-     f (case (d1, d2) of (d1, d2) \<Rightarrow> d1 * d2) *
-     g (m * k div (case (d1, d2) of (d1, d2) \<Rightarrow> d1 * d2))) = 
-   (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
-     f (case x of (d1, d2) \<Rightarrow> d1 * d2) *
-     g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2)))"
-     
-     apply(auto simp add: prod.splits)
-    
-  qed 
+corollary s_m_a_b:
+ fixes f g :: "nat \<Rightarrow> complex"
+ assumes "a > 0" "b > 0" "m > 0" (* remove cond. on m,n *)
+ assumes "coprime b m"
+ assumes "multiplicative f" and "multiplicative g"
+ shows "s f g m (a*b) = s f g m a"
+proof -
+  have "s f g m (a*b) = s f g m a * s f g 1 b"
+    using assms s_mult_preservation[of a b m 1 f g] by simp
+  also have "... = s f g m a * f 1 * g 1"
+    using s_1_n  by auto
+  also have "... = s f g m a"
+    using mult_unit[of f] mult_unit[of g] assms(5-6) by auto
+  finally show "s f g m (a*b) = s f g m a" by blast
+qed
 
-   
+corollary s_mk_a:
+ fixes f g :: "nat \<Rightarrow> complex"
+ assumes "a > 0" "k > 0" "m > 0" (* remove cond. on m,n *)
+ assumes "coprime a k" and "coprime k m"
+ assumes "multiplicative f" and "multiplicative g"
+ shows "s f g (m*k) a = s f g m a * g k"
+proof -
+  have "s f g (m*k) a = s f g m a * s f g k 1"
+    using assms s_mult_preservation[of a 1 m k f g] by simp
+  also have "... = s f g m a * f(1) * g(k)" 
+    using s_k_1 by auto
+  also have "... = s f g m a *  g k" 
+    using mult_unit[of f] assms(6) by auto
+  finally show ?thesis by blast
+qed
+
+corollary multi_c_mk_ab:
+ assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
+ assumes "coprime a k" "coprime b m" "coprime m k"
+ shows "c (m*k) (a*b) = c m a * c k b"
+proof -
+  have "c (m*k) (a*b) = s id moebius_mu (m*k) (a*b)" 
+    using c_k_s_form assms(2,3) by simp
+  also have "... = (s id moebius_mu m a) * (s id moebius_mu k b)"
+    using s_mult_preservation[of a b m k id moebius_mu]
+          assms mult_id mult_moebius coprime_commute[of m k]
+    by simp
+  also have "... = c m a * c k b" using c_k_s_form assms by simp
+  finally show ?thesis by simp
+qed
+
+corollary multi_c_m:
+ assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
+ assumes "coprime b m" 
+ shows "c m (a*b) = c m a"
+  using assms c_k_s_form mult_id mult_moebius s_m_a_b by auto
+
+corollary multi_c_mk:
+ assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
+ assumes "coprime a k" "coprime m k" 
+ shows "c (m*k) a = c m a * moebius_mu k"
+  using assms
+  by (metis c_k_1 coprime_1_left mult.commute mult.left_neutral multi_c_mk_ab zero_less_one)
+
+definition "c_multiplicative f = 
+  ((\<forall> a b. f(a*b) = f(a)*f(b)) \<and> f(1) \<noteq> 0)" 
+  for f :: "nat \<Rightarrow> complex"
+
+
+lemma 
+  fixes f :: "nat \<Rightarrow> complex"
+  shows "(\<Sum> d | d dvd n. moebius_mu d * f d) = 
+         (\<Prod> p | prime p \<and> p dvd n. 1 - f(p))"
+
+ thm dirichlet_inverse
+
+theorem
+  fixes f h :: "nat \<Rightarrow> complex" and n k :: nat
+  defines "g \<equiv> (\<lambda> k. moebius_mu k * h k)" 
+  defines "F \<equiv> dirichlet_prod f g"
+  defines "N \<equiv> k div gcd n k" 
+  assumes "c_multiplicative f" "multiplicative h" 
+  assumes "prime p \<Longrightarrow> f(p) \<noteq> 0 \<and> f(p) \<noteq> h(p)"
+  shows "s f g k n = (F(k)*g(N)) div (F(N))"
+proof -
+  have "F(k) = dirichlet_prod g f k"
+    unfolding F_def using dirichlet_prod_commutes by metis
+
+  also have "... = (\<Sum> d | d dvd k. f(k div d) * moebius_mu d * h d)"
+    
 qed
 
 end

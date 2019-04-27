@@ -244,27 +244,79 @@ lemma periodic_sum_periodic_shift:
 
 section\<open>Gcd\<close>
 
+lemma sub:
+  fixes a b c d :: nat
+  assumes "coprime a c" "coprime a d" "coprime b c" "coprime b d"
+  shows "coprime (a*b) (c*d)"
+  by (simp add: assms)
+
 lemma linear_gcd:
-  fixes a b h k :: nat
-  assumes "a > 0" "b > 0" "h > 0" "k > 0" 
-  shows "(gcd (a*h) (b*k)) = 
-   ((gcd a b) * (gcd h k) * 
-    (gcd (a div gcd a b) (k div gcd h k)) *
-     (gcd (b div gcd a b) (h div gcd h k)))"     
+  fixes a b c d :: nat
+  assumes "a > 0" "b > 0" "c > 0" "d > 0"
+  assumes "coprime a c" "coprime b d" 
+  shows "gcd (a*b) (c*d) = (gcd a d) * (gcd b c)"
 proof -
-  let ?prod = "(gcd a b) * (gcd h k)"
-  let ?qa = "(a div gcd a b)"
-  let ?qb = "(a div gcd a b)" 
-  let ?qk = "(k div gcd h k)" 
-  let ?qh = "(h div gcd h k)" 
-  have "?prod * ?qa = 
-  have "(?prod * (gcd ?qa ?qk) * (gcd ?qb ?qh)) = 
-        (
-    (gcd (a div gcd a b) (k div gcd h k)) *
-     (gcd (b div gcd a b) (h div gcd h k)))
-  "
-    
-    thm gcd_mult_distrib_nat
+  define q1 :: nat where "q1 = a div gcd a d" 
+  define q2 :: nat where "q2 = c div gcd b c" 
+  define q3 :: nat where "q3 = b div gcd b c"
+  define q4 :: nat where "q4 = d div gcd a d"
+  
+  from this assms
+  have "coprime q1 q2" "coprime q3 q4" 
+    unfolding q1_def q2_def q3_def q4_def
+    by (metis coprime_commute coprime_mult_left_iff 
+              dvd_div_mult_self gcd_dvd1 gcd_dvd2)+
+  moreover have "coprime q1 q4" "coprime q3 q2"
+    unfolding q1_def q2_def q3_def q4_def 
+    using assms div_gcd_coprime by blast+
+  ultimately have 1: "coprime (q1*q3) (q2*q4)"
+    using  sub[of q1 q2 q4 q3] by simp    
+  have "gcd (a*b) (c*d) = (gcd a d) * (gcd b c) * gcd (q1*q3) (q2*q4)"
+    unfolding q1_def q2_def q3_def q4_def
+    using gcd_mult_distrib_nat dvd_div_mult_self gcd_dvd1 gcd_dvd2
+    by (smt mult.assoc mult.commute) (* fix this *)
+  from this 1 show "gcd (a*b) (c*d) = (gcd a d) * (gcd b c)" by auto
+qed  
+
+lemma reindex_product_bij:
+  fixes a b m k :: nat
+  defines "S \<equiv> {(d1,d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}"
+  defines "T \<equiv> {d. d dvd (gcd a m) * (gcd k b)}"
+  defines "f \<equiv> (\<lambda> (d1,d2). d1 * d2)"
+  assumes "coprime a k"
+  shows "bij_betw f S T"
+  unfolding bij_betw_def
+proof
+  show inj: "inj_on f S"
+    unfolding f_def 
+  proof -
+    {fix d1 d2 d1' d2'
+    assume "(d1,d2) \<in> S" "(d1',d2') \<in> S"
+    then have dvd: "d1 dvd gcd a m" "d2 dvd gcd k b" 
+              "d1' dvd gcd a m" "d2' dvd gcd k b"
+      unfolding S_def by simp+
+    assume "f (d1,d2) = f (d1',d2')" 
+    then have eq: "d1 * d2 = d1' * d2'" 
+      unfolding f_def by simp
+    from eq dvd have eq1: "d1 = d1'" 
+      by (simp,meson assms coprime_crossproduct_nat coprime_divisors)
+    from eq dvd have eq2: "d2 = d2'"
+      by (metis assms(4) coprime_commute coprime_divisors coprime_dvd_mult_right_iff  
+           dvd_triv_right gcd_nat.antisym gcd_nat.boundedE)
+    from eq1 eq2 have "d1 = d1' \<and> d2 = d2'" by simp} 
+   then show "inj_on (\<lambda>(d1, d2). d1 * d2) S" 
+    using S_def f_def by(intro inj_onI,blast)
+  qed
+  show surj: "f ` S = T" 
+  proof -
+    {fix d
+      have "d dvd (gcd a m) * (gcd k b)
+       \<longleftrightarrow> (\<exists> d1 d2. d = d1*d2 \<and> d1 dvd gcd a m \<and> d2 dvd gcd k b)"
+        using division_decomp mult_dvd_mono by blast}
+      then show ?thesis
+        unfolding f_def S_def T_def image_def
+        by auto
+  qed
 qed
 
 section\<open>Roots of unity\<close>
@@ -1329,6 +1381,9 @@ qed
 definition "s f g = 
   (\<lambda> (k::nat) (n::nat). \<Sum> d | d dvd (gcd n k). f(d) * g(k div d))"
 
+lemma s_k_1: "s f g k 1 = f(1) * g(k)"
+  unfolding s_def by auto
+
 lemma s_k_periodic: "periodic (s f g k) k"
   unfolding s_def periodic_def by simp
 
@@ -1566,20 +1621,112 @@ proof -
   also have "... = c k n" unfolding ramanujan_def by simp
   finally show ?thesis unfolding s_def by auto
 qed
+
+subsection \<open>Multiplicative properties\<close>
     
 definition "multiplicative f = (\<forall> a b. f(a*b) = f(a)*f(b))" 
   for f :: "nat \<Rightarrow> complex"
 
+lemma 
+  assumes "multiplicative f"
+  shows "f(1) = 1" 
+proof -
+  have "f(1) = f(1*1)" by simp
+  then have "f(1) = f(1) * f(1)"
+    using assms unfolding multiplicative_def by algebra
+  then have "f(1) = 1" apply(simp add: algebra_simps)
+qed
 
-theorem 
+lemma multipl_div: 
+  fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "multiplicative f" "d1 dvd m" "d2 dvd k"
+  shows "f ((m*k) div (d1*d2)) = f(m div d1) * f(k div d2)"
+  using assms
+  unfolding multiplicative_def 
+  by (metis div_mult_div_if_dvd)
+
+theorem s_mult_preservation:
   fixes f g :: "nat \<Rightarrow> complex"
+  assumes "a > 0" "b > 0" "m > 0" "k > 0" (* remove cond. on m,n *)
   assumes "coprime a k" and  "coprime b m"
   assumes "multiplicative f" and "multiplicative g"
   shows "s f g (m*k) (a*b) = (s f g m a)*(s f g k b)"
 proof -
-  from assms(1-2) have "gcd (m*k) (a*b) = gcd a m * gcd k b"
-   using coprime_iff_gcd_eq_1 
-              
+  from assms(1-6) have eq: "gcd (m*k) (a*b) = gcd a m * gcd k b"
+   by (simp add: linear_gcd  gcd.commute mult.commute)
+  have "s f g (m*k) (a*b) = 
+        (\<Sum> d | d dvd gcd (m*k) (a*b). f(d) * g((m*k) div d))"
+    unfolding s_def using gcd.commute by metis
+  also have "... = 
+     (\<Sum> d | d dvd gcd a m * gcd k b. f(d) * g((m*k) div d))"
+    using eq by simp
+  also have "... = 
+     (\<Sum> (d1,d2) | d1 dvd gcd a m \<and>  d2 dvd gcd k b. 
+          f(d1*d2) * g((m*k) div (d1*d2)))" 
+  proof -
+    have b: "bij_betw (\<lambda>(d1, d2). d1 * d2)
+   {(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}
+   {d. d dvd gcd a m * gcd k b}" 
+      using assms(5) reindex_product_bij by blast
+    have "(\<Sum> (d1, d2) | d1 dvd gcd a m \<and> d2 dvd gcd k b.
+     f (d1 * d2) * g (m * k div (d1 * d2))) = 
+      (\<Sum>x\<in>{(d1, d2). d1 dvd gcd a m \<and> d2 dvd gcd k b}.
+     f (case x of (d1, d2) \<Rightarrow> d1 * d2)*
+       g (m * k div (case x of (d1, d2) \<Rightarrow> d1 * d2)))"
+        by(rule sum.cong,auto)
+      also have "... = (\<Sum>d | d dvd gcd a m * gcd k b. f d * g (m * k div d))"
+        using b by(rule sum.reindex_bij_betw[of "\<lambda> (d1,d2). d1*d2" ])
+      finally show ?thesis by argo     
+    qed 
+  also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1*d2) * g((m*k) div (d1*d2))))"
+      by (simp add: sum.cartesian_product)(rule sum.cong,auto) 
+    also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1) * f(d2) * g((m*k) div (d1*d2))))"
+      apply(rule sum.cong,blast)   
+      using assms(7) unfolding multiplicative_def by simp
+    also have "... = (\<Sum> d1 | d1 dvd gcd a m.
+     (\<Sum> d2 |  d2 dvd gcd k b. 
+          f(d1) * f(d2) * g(m div d1) * g(k div d2)))"
+    proof -
+      {fix d1 d2
+      assume "d1 dvd gcd a m" "d2 dvd gcd k b"
+      then have "g (m * k div (d1 * d2)) = g(m div d1) * g(k div d2)" 
+        using assms(8) multipl_div by simp } note eq = this
+      show ?thesis 
+        apply(rule sum.cong,blast,rule sum.cong,blast)
+        using eq by auto
+    qed
+    find_theorems " (\<Sum> _ . _) * (\<Sum> _ . _)"
+    thm  sum_product
+    also have "... = 
+        (\<Sum>i\<in>{d1. d1 dvd gcd a m}.
+     \<Sum>j\<in>{d2. d2 dvd gcd k b}.
+       f i * g (m div i) * (f j * g (k div j)))"
+      by(rule sum.cong,blast,rule sum.cong,blast,simp)   
+    also have "... = (\<Sum>d1 | d1 dvd gcd a m. f d1 * g (m div d1)) *
+          (\<Sum>d2 | d2 dvd gcd k b. f d2 * g (k div d2))"
+      using  sum_product[of 
+          "\<lambda> d1. f(d1) * g(m div d1)" _
+          "\<lambda> d2. f(d2) * g(k div d2)"
+          ] by simp 
+    also have "... = s f g m a * s f g k b"
+      unfolding s_def 
+      by (simp add: gcd.commute)
+    finally show ?thesis by blast
 qed
+
+corollary s_m_a_b:
+ fixes f g :: "nat \<Rightarrow> complex"
+ assumes "a > 0" "b > 0" "m > 0" (* remove cond. on m,n *)
+ assumes "coprime b m"
+ assumes "multiplicative f" and "multiplicative g"
+ shows "s f g m (a*b) = s f g m a"
+proof -
+  have "s f g m (a*b) = s f g m a * s f g 1 b"
+    using assms s_mult_preservation[of a b m 1 f g] by simp
+  also have "... = s f g m a"
 
 end
