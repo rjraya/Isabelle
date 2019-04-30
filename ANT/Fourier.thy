@@ -319,6 +319,15 @@ proof
   qed
 qed
 
+section \<open>Moebius\<close>
+
+lemma moebius_not_c:
+  assumes "\<not> coprime N d"
+  shows "moebius_mu (N*d) = 0"
+  using assms
+  unfolding moebius_mu_def squarefree_def coprime_def
+  by (metis mult_dvd_mono power2_eq_square)
+
 section\<open>Roots of unity\<close>
 
 definition "unity_root k n = 
@@ -1632,51 +1641,108 @@ corollary c_k_s_form:
 
 subsection \<open>Multiplicative properties\<close>
 
-print_locale multiplicative_function
-(* see existing multiplicative_function *)
-definition "multiplicative f = 
-  ((\<forall> a b. coprime a b \<longrightarrow> f(a*b) = f(a)*f(b)) \<and> f(1) \<noteq> 0)" 
-  for f :: "nat \<Rightarrow> complex"
+lemma mult_id: "multiplicative_function id" 
+  by (simp add: multiplicative_function_def)
 
-lemma mult_unit:
-  assumes "multiplicative f"
-  shows "f(1) = 1" 
-proof -
-  have eq: "coprime 1 1" by simp
-  have "f(1) = f(1*1)" by simp
-  then have "f(1) = f(1) * f(1)"
-    using assms eq unfolding multiplicative_def by fastforce
-  then show "f(1) = 1" 
-    using assms unfolding multiplicative_def by simp
+lemma mult_moebius: "multiplicative_function moebius_mu"
+  using Moebius_Mu.moebius_mu.multiplicative_function_axioms
+  by simp
+
+lemma mult_of_nat: "multiplicative_function of_nat" 
+  using multiplicative_function_def of_nat_0 of_nat_1 of_nat_mult by blast
+
+lemma non_zero_c:
+  fixes f :: "nat \<Rightarrow> complex"
+  assumes "completely_multiplicative_function f" 
+          "d \<noteq> 0"
+          "\<And> p. prime p \<Longrightarrow> f(p) \<noteq> 0" 
+  shows "f(d) \<noteq> 0"
+  using assms(2)
+proof(induction d rule: nat_less_induct)
+  case (1 n)
+  then show ?case 
+  proof(cases "n = 1")
+    case True
+    then show ?thesis 
+      using assms(1)
+      unfolding completely_multiplicative_function_def by simp
+  next
+    case False
+    then obtain p where 2:"prime p \<and> p dvd n" 
+      using prime_factor_nat by blast
+    then obtain a where 3: "n = p * a \<and> a \<noteq> 0" 
+      using 1 by (metis dvdE mult_0_right)
+    then have 4: "f(a) \<noteq> 0" using 1 
+      using 2 prime_nat_iff by fastforce
+    have 5: "f(p) \<noteq> 0" using assms(3) 2 by simp
+    from 3 4 5 show ?thesis
+      by (simp add: assms(1) completely_multiplicative_function.mult)
+  qed
 qed
 
-lemma mult_id: "multiplicative id" unfolding multiplicative_def by simp
-
-lemma mult_moebius: "multiplicative moebius_mu"
-  unfolding multiplicative_def
-  using moebius_mu.mult_coprime by auto
-
-lemma multipl_prod: 
+lemma multipl_prod:
   fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
-  assumes "multiplicative f" "d1 dvd m" "d2 dvd k" "coprime m k"
+  assumes "multiplicative_function f" "d1 dvd m" "d2 dvd k" "coprime m k"
   shows "f (d1*d2) = f(d1) * f(d2)"
-  using assms
-  unfolding multiplicative_def 
-  using coprime_divisors by blast
+  by (meson assms coprime_divisors multiplicative_function.mult_coprime)
 
 lemma multipl_div: 
   fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
-  assumes "multiplicative f" "d1 dvd m" "d2 dvd k" "coprime m k"
+  assumes "multiplicative_function f" "d1 dvd m" "d2 dvd k" "coprime m k"
   shows "f ((m*k) div (d1*d2)) = f(m div d1) * f(k div d2)"
   using assms
-  unfolding multiplicative_def 
-  by (metis coprime_divisors div_mult_div_if_dvd dvd_mult_div_cancel dvd_triv_right)
+  unfolding multiplicative_function_def
+  using assms(1) multiplicative_function.mult_coprime by fastforce
+
+lemma multipl_div_c: 
+  fixes m k d1 d2 :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "completely_multiplicative_function f" 
+          "d1 dvd m" "d2 dvd k" 
+  shows "f ((m*k) div (d1*d2)) = f(m div d1) * f(k div d2)"
+  using assms
+proof -
+  have "f ((m*k) div (d1*d2)) = f((m div d1) * (k div d2))"
+    using assms(2,3) by fastforce
+  also have "... = f(m div d1) * f(k div d2)"
+    using assms unfolding completely_multiplicative_function_def
+    by (simp,metis One_nat_def le_eq_less_or_eq less_Suc0 mult.left_neutral mult.right_neutral mult_zero_left mult_zero_right not_le)
+  finally show ?thesis by simp
+qed
+
+lemma multipl_div_mono: 
+  fixes m k d :: nat and f :: "nat \<Rightarrow> complex"
+  assumes "completely_multiplicative_function f" 
+          "d dvd k" "d > 0" 
+          "\<And> p. prime p \<Longrightarrow> f(p) \<noteq> 0" 
+  shows "f (k div d) = f(k) div f(d)"
+proof -
+  have "d \<noteq> 0" using assms(2,3) by auto
+  then have nz: "f(d) \<noteq> 0" using assms(1,4) non_zero_c by simp
+
+  from assms(2,3) obtain a where div: "k = a * d "
+    by fastforce
+  have "f (k div d) = f ((a*d) div d)" using div by simp
+  also have "... = f(a)" 
+    using assms(3) div by simp
+  also have "... = f(a)*f(d) div f(d)" 
+    using nz by auto
+  also have "... = f(a*d) div f(d)" 
+    by (simp add: div assms(1) completely_multiplicative_function.mult)
+  also have "... = f (k) div f(d)" using div by simp
+  finally show ?thesis by simp
+qed
+
+lemma comp_to_mult: "completely_multiplicative_function f \<Longrightarrow>
+       multiplicative_function f"
+  unfolding completely_multiplicative_function_def
+            multiplicative_function_def by auto
 
 theorem s_mult_preservation:
   fixes f g :: "nat \<Rightarrow> complex"
   assumes "a > 0" "b > 0" "m > 0" "k > 0" (* remove cond. on m,n *)
   assumes "coprime a k" "coprime b m" "coprime k m"
-  assumes "multiplicative f" and "multiplicative g"
+  assumes "multiplicative_function f" and 
+          "multiplicative_function g"
   shows "s f g (m*k) (a*b) = (s f g m a)*(s f g k b)"
 proof -
   from assms(1-6) have eq: "gcd (m*k) (a*b) = gcd a m * gcd k b"
@@ -1749,7 +1815,8 @@ corollary s_m_a_b:
  fixes f g :: "nat \<Rightarrow> complex"
  assumes "a > 0" "b > 0" "m > 0" (* remove cond. on m,n *)
  assumes "coprime b m"
- assumes "multiplicative f" and "multiplicative g"
+ assumes "multiplicative_function f" and 
+         "multiplicative_function g"
  shows "s f g m (a*b) = s f g m a"
 proof -
   have "s f g m (a*b) = s f g m a * s f g 1 b"
@@ -1757,7 +1824,8 @@ proof -
   also have "... = s f g m a * f 1 * g 1"
     using s_1_n  by auto
   also have "... = s f g m a"
-    using mult_unit[of f] mult_unit[of g] assms(5-6) by auto
+    using  assms(5-6) 
+    by (simp add: multiplicative_function_def)
   finally show "s f g m (a*b) = s f g m a" by blast
 qed
 
@@ -1765,7 +1833,8 @@ corollary s_mk_a:
  fixes f g :: "nat \<Rightarrow> complex"
  assumes "a > 0" "k > 0" "m > 0" (* remove cond. on m,n *)
  assumes "coprime a k" and "coprime k m"
- assumes "multiplicative f" and "multiplicative g"
+ assumes "multiplicative_function f" and 
+         "multiplicative_function g"
  shows "s f g (m*k) a = s f g m a * g k"
 proof -
   have "s f g (m*k) a = s f g m a * s f g k 1"
@@ -1773,7 +1842,8 @@ proof -
   also have "... = s f g m a * f(1) * g(k)" 
     using s_k_1 by auto
   also have "... = s f g m a *  g k" 
-    using mult_unit[of f] assms(6) by auto
+    using assms(6)
+    by(simp add: multiplicative_function_def)
   finally show ?thesis by blast
 qed
 
@@ -1784,10 +1854,11 @@ corollary multi_c_mk_ab:
 proof -
   have "c (m*k) (a*b) = s id moebius_mu (m*k) (a*b)" 
     using c_k_s_form assms(2,3) by simp
+  
   also have "... = (s id moebius_mu m a) * (s id moebius_mu k b)"
     using s_mult_preservation[of a b m k id moebius_mu]
-          assms mult_id mult_moebius coprime_commute[of m k]
-    by simp
+          assms mult_id mult_moebius mult_of_nat         
+          coprime_commute[of m k] by auto
   also have "... = c m a * c k b" using c_k_s_form assms by simp
   finally show ?thesis by simp
 qed
@@ -1796,7 +1867,8 @@ corollary multi_c_m:
  assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
  assumes "coprime b m" 
  shows "c m (a*b) = c m a"
-  using assms c_k_s_form mult_id mult_moebius s_m_a_b by auto
+  using assms c_k_s_form mult_id mult_moebius 
+        mult_of_nat s_m_a_b by auto
 
 corollary multi_c_mk:
  assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
@@ -1805,32 +1877,154 @@ corollary multi_c_mk:
   using assms
   by (metis c_k_1 coprime_1_left mult.commute mult.left_neutral multi_c_mk_ab zero_less_one)
 
-definition "c_multiplicative f = 
-  ((\<forall> a b. f(a*b) = f(a)*f(b)) \<and> f(1) \<noteq> 0)" 
-  for f :: "nat \<Rightarrow> complex"
+(* TODO Remove, 2.18 *)
+lemma sum_divisors_moebius_mu_times_multiplicative:
+  fixes f :: "nat \<Rightarrow> 'a :: {comm_ring_1}"
+  assumes "multiplicative_function f" "n > 0"
+  shows   "(\<Sum>d | d dvd n. moebius_mu d * f d) = (\<Prod>p\<in>prime_factors n. 1 - f p)"
+proof -
+  define g where "g = (\<lambda>n. \<Sum>d | d dvd n. moebius_mu d * f d)"
+  define g' where "g' = dirichlet_prod (\<lambda>n. moebius_mu n * f n) (\<lambda>n. if n = 0 then 0 else 1)"
+  interpret f: multiplicative_function f by fact
+  have "multiplicative_function (\<lambda>n. if n = 0 then 0 else 1 :: 'a)"
+    by standard auto
+  interpret multiplicative_function g' unfolding g'_def
+    by (intro multiplicative_dirichlet_prod multiplicative_function_mult
+              moebius_mu.multiplicative_function_axioms assms) fact+
 
+  have g'_primepow: "g' (p ^ k) = 1 - f p" if "prime p" "k > 0" for p k
+  proof -
+    have "g' (p ^ k) = (\<Sum>i\<le>k. moebius_mu (p ^ i) * f (p ^ i))"
+      using that by (simp add: g'_def dirichlet_prod_prime_power)
+    also have "\<dots> = (\<Sum>i\<in>{0, 1}. moebius_mu (p ^ i) * f (p ^ i))"
+      using that by (intro sum.mono_neutral_right) (auto simp: moebius_mu_power')
+    also have "\<dots> = 1 - f p"
+      using that by (simp add: moebius_mu.prime)
+    finally show ?thesis .
+  qed
 
-lemma 
-  fixes f :: "nat \<Rightarrow> complex"
-  shows "(\<Sum> d | d dvd n. moebius_mu d * f d) = 
-         (\<Prod> p | prime p \<and> p dvd n. 1 - f(p))"
+  have "g' n = g n"
+    by (simp add: g_def g'_def dirichlet_prod_def)
+  also from assms have "g' n = (\<Prod>p\<in>prime_factors n. g' (p ^ multiplicity p n))"
+      by (intro prod_prime_factors) auto
+  also have "\<dots> = (\<Prod>p\<in>prime_factors n. 1 - f p)"
+    by (intro prod.cong) (auto simp: g'_primepow prime_factors_multiplicity)
+  finally show ?thesis by (simp add: g_def)
+qed
 
- thm dirichlet_inverse
+lemma sum_divisors_moebius_mu_times_multiplicative_revisited:
+  fixes f :: "nat \<Rightarrow> 'a :: {comm_ring_1}"
+  assumes "multiplicative_function f" "n > 0" "N > 0" 
+  shows   "(\<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d) = 
+           (\<Prod>p\<in>{p. p \<in> prime_factors n \<and> \<not> (p dvd N)}. 1 - f p)"
+proof -
+  define g where "g = (\<lambda>n. \<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d)"
+  
+qed
 
 theorem
   fixes f h :: "nat \<Rightarrow> complex" and n k :: nat
   defines "g \<equiv> (\<lambda> k. moebius_mu k * h k)" 
   defines "F \<equiv> dirichlet_prod f g"
   defines "N \<equiv> k div gcd n k" 
-  assumes "c_multiplicative f" "multiplicative h" 
-  assumes "prime p \<Longrightarrow> f(p) \<noteq> 0 \<and> f(p) \<noteq> h(p)"
+  assumes "completely_multiplicative_function f" 
+          "multiplicative_function h" 
+  assumes "\<And> p. prime p \<Longrightarrow> f(p) \<noteq> 0 \<and> f(p) \<noteq> h(p)" 
+  assumes "k > 0" "n > 0"  
   shows "s f g k n = (F(k)*g(N)) div (F(N))"
 proof -
+  have 1: "multiplicative_function (\<lambda> p. h(p) div f(p))"
+    using multiplicative_function_divide
+          comp_to_mult assms(4,5) by blast
+
   have "F(k) = dirichlet_prod g f k"
     unfolding F_def using dirichlet_prod_commutes by metis
+  also have "... = (\<Sum> d | d dvd k. moebius_mu d * h d * f(k div d))"
+    unfolding g_def dirichlet_prod_def by blast
+  also have "... = (\<Sum> d | d dvd k. moebius_mu d * h d * (f(k) div f(d)))"
+    using multipl_div_mono[of f _ k] assms(4,6) 
+    by(intro sum.cong, auto, force)   
+  also have "... = f(k) * (\<Sum> d | d dvd k. moebius_mu d * (h d div f(d)))"
+    by(simp add: sum_distrib_left algebra_simps)
+  also have "... = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
+    using sum_divisors_moebius_mu_times_multiplicative[of "\<lambda> p. h p div f p" k] 1
+          assms(7) by simp
+  finally have "F(k) = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
+    by blast
 
-  also have "... = (\<Sum> d | d dvd k. f(k div d) * moebius_mu d * h d)"
-    
-qed
-
+  define a where "a \<equiv> gcd n k" 
+  have 2: "k = a*N" unfolding a_def N_def by auto
+  have 3: "a > 0" using a_def assms(7,8) by simp
+  have bij: "bij_betw (\<lambda> d. a div d) {d. d dvd a} {d. d dvd a}"
+    unfolding bij_betw_def
+  proof
+    show inj: "inj_on (\<lambda> d. a div d) {d. d dvd a}"
+      using inj_on_def "3" dvd_div_eq_2 by blast
+    show surj: "(\<lambda> d. a div d) ` {d. d dvd a} = {d. d dvd a}"
+      unfolding image_def 
+    proof 
+      show " {y. \<exists>x\<in>{d. d dvd a}. y = a div x} \<subseteq> {d. d dvd a}"
+        by auto
+      show "{d. d dvd a} \<subseteq> {y. \<exists>x\<in>{d. d dvd a}. y = a div x}"
+      proof 
+        fix d
+        assume a: "d \<in> {d. d dvd a}"
+        from a have 1: "(a div d) \<in> {d. d dvd a}" by auto
+        from a have 2: "d = a div (a div d)" using 3 by auto
+        from 1 2 show "d \<in> {y. \<exists>x\<in>{d. d dvd a}. y = a div x} " by blast        
+      qed
+    qed
+  qed
+  
+  have "s f g k n = (\<Sum> d | d dvd a. f(d)*moebius_mu(k div d)*h(k div d))"
+    unfolding s_def g_def a_def by(simp add: mult.assoc)
+  also have "... = (\<Sum> d | d dvd a. f(d) * moebius_mu(a*N div d)*h(a*N div d))"
+    using 2 by blast
+  also have "... = (\<Sum> d | d dvd a. f(a div d) * moebius_mu(N*d)*h(N*d))"
+    (is "?a = ?b")
+  proof -
+    define f_aux where "f_aux \<equiv> (\<lambda> d. f d * moebius_mu (a * N div d) * h (a * N div d))"
+    have 1: "?a = (\<Sum>d | d dvd a. f_aux d)" using f_aux_def by blast
+    {fix d :: nat
+    assume "d dvd a"
+    then have "N * a div (a div d) = N * d" 
+      using 3 by force}
+    then have 2: "?b = (\<Sum>d | d dvd a. f_aux (a div d))" 
+      unfolding f_aux_def by(simp add: algebra_simps)
+    show "?a = ?b" 
+    using sum.reindex_bij_betw[of "((div) a)" "{d. d dvd a}" "{d. d dvd a}"]
+          bij 1 2 by metis
+  qed
+  also have "... = moebius_mu N * h N *(\<Sum> d | d dvd a \<and> coprime d n. f(a div d) * moebius_mu d * h d)"
+   (is "?a = ?b")
+  proof -
+    have "?a = (\<Sum> d | d dvd a \<and> coprime N d. f(a div d) * moebius_mu (N*d) * h (N*d))"
+      by(rule sum.mono_neutral_right)
+        (auto simp add: moebius_not_c 3)
+    also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * f(a div d) * moebius_mu d * h d)"
+    proof(rule sum.cong,simp)
+      fix d
+      assume a: "d \<in> {d. d dvd a \<and> coprime N d}"
+      then have 1: "moebius_mu (N*d) = moebius_mu N * moebius_mu d"
+        using mult_moebius unfolding multiplicative_function_def 
+        by (simp add: moebius_mu.mult_coprime)
+      from a have 2: "h (N*d) = h N * h d"
+         using assms(5) unfolding multiplicative_function_def 
+         by (simp add: assms(5) multiplicative_function.mult_coprime)
+     show "f (a div d) * moebius_mu (N * d) * h (N * d) =
+         moebius_mu N * h N * f (a div d) * moebius_mu d * h d"
+       by(simp add: divide_simps 1 2)
+   qed
+   also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * (f a div f d) * moebius_mu d * h d)"
+     apply(rule sum.cong,simp,simp) (*fix this*)
+     using multipl_div_mono[of f _ a] assms(4,6-8) 3 by force
+   also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
+     by(simp add: sum_distrib_left algebra_simps)
+(*
+   
+   also have "... = moebius_mu N * h N *(\<Sum> d | d dvd a \<and> coprime N d. (f(a) div f(d)) * moebius_mu d * h d)"
+     apply(simp add: algebra_simps) 
+     apply(intro sum.cong)
+     using multipl_div_mono[of f _ a] assms(4,6-8) 3
+*)    
 end
