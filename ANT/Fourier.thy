@@ -2,12 +2,13 @@ theory Fourier
   imports 
     "HOL-Number_Theory.Number_Theory"
     "HOL-Analysis.Analysis"
+    Dirichlet_Series.More_Totient
     Dirichlet_Series.Moebius_Mu
     Polynomial_Interpolation.Lagrange_Interpolation
     Polynomial_Factorization.Fundamental_Theorem_Algebra_Factorized
 begin
 
-section\<open>Sums\<close>
+section\<open>Sums and products\<close>
 
 lemma sum_eq_ineq: "n > 0 \<Longrightarrow> (\<Sum>i\<le>n-1. f i) = (\<Sum>i<n. f i)" 
   for n :: nat and f :: "nat \<Rightarrow> complex"
@@ -27,6 +28,46 @@ lemma sum_div_reduce: (* generalize *)
    (\<Sum>c \<in> {1..k div d}. f (c*d))" 
    by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
      (use assms  in \<open>fastforce simp: div_le_mono\<close>)+
+
+lemma prod_div_add:
+  fixes f :: "nat \<Rightarrow> complex"
+  assumes "finite A" "finite B" "A \<inter> B = {}"
+  shows "(\<Prod> i \<in> A \<union> B. f i) = ((\<Prod> i \<in> A. f i) * (\<Prod> i \<in> B. f i))"
+  by (simp add: assms prod.union_disjoint)
+
+lemma prod_div_sub:
+  fixes f :: "nat \<Rightarrow> complex"
+  assumes "finite A" "B \<subseteq> A" "\<forall> b \<in> B. f b \<noteq> 0"
+  shows "(\<Prod> i \<in> A - B. f i) = ((\<Prod> i \<in> A. f i) div (\<Prod> i \<in> B. f i))"
+  using assms
+proof(induction "card B" arbitrary: B)
+case 0
+  then show ?case 
+    using infinite_super by fastforce
+next
+  case (Suc n)
+  then show ?case 
+  proof -
+    obtain B' x where decomp: "B = B' \<union> {x} \<and> x \<notin> B'" 
+      using Suc(2) 
+      by (metis card_eq_SucD inf_sup_aci(5) insert_is_Un)
+    then have B'card: "card B' = n" using Suc(2) 
+      using Suc.prems(2) assms(1) finite_subset by fastforce
+    have "prod f (A - B) = prod f ((A-B') - {x})"
+      using decomp 
+      by (metis Diff_insert Un_insert_right sup_bot.right_neutral)
+    also have "... = (prod f (A-B')) div f x"  
+      using prod_diff1[of "A-B'" f x] Suc decomp by auto
+    also have "... = (prod f A div prod f B') div f x"
+      using Suc(1)[of B'] Suc(3) B'card decomp
+            Suc.prems(2) Suc.prems(3) by force
+    also have "... = prod f A div (prod f B' * f x)"
+      by auto
+    also have "... = prod f A div prod f B"
+      using decomp Suc.prems(2) assms(1) finite_subset by fastforce
+    finally show ?thesis by blast
+  qed
+qed
 
 section\<open>Periodic functions\<close>
 
@@ -242,7 +283,7 @@ lemma periodic_sum_periodic_shift:
          (\<Sum>l \<in> {d'..d'+k-1}. f l)"
 *)
 
-section\<open>Gcd\<close>
+section\<open>Gcd and prime factorizations\<close>
 
 lemma sub:
   fixes a b c d :: nat
@@ -317,6 +358,38 @@ proof
         unfolding f_def S_def T_def image_def
         by auto
   qed
+qed
+
+lemma p_div_set:
+  shows "{p. p \<in>prime_factors a \<and> \<not> p dvd N} = 
+          ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
+     (is "?A = ?B") 
+proof 
+   show "?A \<subseteq> ?B" 
+   proof(simp)
+     {fix p 
+     assume as: "p \<in># prime_factorization a \<and> \<not> p dvd N"
+     then have 1: "p \<in> prime_factors (a * N)" 
+       by (metis divisors_zero dvdI dvd_trans in_prime_factors_iff)
+     from as have 2: "p \<notin> prime_factors N" by blast
+     from 1 2 have "p \<in> prime_factors (a * N) - prime_factors N"
+       by blast}
+     then show "{p. p \<in># prime_factorization a \<and> \<not> p dvd N}
+    \<subseteq> prime_factors (a * N) - prime_factors N" by blast
+   qed
+
+   show "?B \<subseteq> ?A"
+   proof(simp)
+     {fix p 
+     assume as: "p \<in> prime_factors (a * N) - prime_factors N"
+     then have 1: "\<not> p dvd N" 
+       by (metis DiffE in_prime_factors_imp_prime mult.commute mult_eq_0_iff prime_factorization_empty_iff prime_factorsI  set_mset_empty)
+     from as have 2: "p \<in># prime_factorization a" 
+       by (metis DiffD1 \<open>\<not> p dvd N\<close> in_prime_factors_iff mult_eq_0_iff prime_dvd_multD)
+     from 1 2 have "p \<in> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast}
+   then show " prime_factors (a * N) - prime_factors N
+    \<subseteq> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast
+   qed
 qed
 
 section \<open>Moebius\<close>
@@ -1651,6 +1724,9 @@ lemma mult_moebius: "multiplicative_function moebius_mu"
 lemma mult_of_nat: "multiplicative_function of_nat" 
   using multiplicative_function_def of_nat_0 of_nat_1 of_nat_mult by blast
 
+lemma mult_of_nat_c: "completely_multiplicative_function of_nat" 
+  by (simp add: completely_multiplicative_function_def)
+
 lemma non_zero_c:
   fixes f :: "nat \<Rightarrow> complex"
   assumes "completely_multiplicative_function f" 
@@ -1912,26 +1988,39 @@ proof -
   finally show ?thesis by (simp add: g_def)
 qed
 
+lemma multiplicative_ind_coprime [intro]: "multiplicative_function (ind
+(coprime N))"
+  by (intro multiplicative_function_ind) auto
+
 lemma sum_divisors_moebius_mu_times_multiplicative_revisited:
   fixes f :: "nat \<Rightarrow> 'a :: {comm_ring_1}"
-  assumes "multiplicative_function f" "n > 0" "N > 0" 
-  shows   "(\<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d) = 
+  assumes "multiplicative_function f" "n > 0" "N > 0"
+  shows   "(\<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d) =
            (\<Prod>p\<in>{p. p \<in> prime_factors n \<and> \<not> (p dvd N)}. 1 - f p)"
 proof -
-  define g where "g = (\<lambda>n. \<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d)"
-  
+  have "(\<Sum>d | d dvd n \<and> coprime N d. moebius_mu d * f d) =
+          (\<Sum>d | d dvd n. moebius_mu d * (ind (coprime N) d * f d))"
+    using assms by (intro sum.mono_neutral_cong_left) (auto simp: ind_def)
+  also have "\<dots> = (\<Prod>p\<in>prime_factors n. 1 - ind (coprime N) p * f p)"
+    using assms by (intro sum_divisors_moebius_mu_times_multiplicative)
+                   (auto intro: multiplicative_function_mult)
+  also from assms have "\<dots> = (\<Prod>p | p \<in> prime_factors n \<and> \<not>(p dvd N). 1 -
+f p)"
+    by (intro prod.mono_neutral_cong_right)
+       (auto simp: ind_def prime_factors_dvd coprime_commute dest:
+prime_imp_coprime)
+  finally show ?thesis .
 qed
 
-theorem
-  fixes f h :: "nat \<Rightarrow> complex" and n k :: nat
+lemma F_form:
+  fixes f h :: "nat \<Rightarrow> complex" and k :: nat
   defines "g \<equiv> (\<lambda> k. moebius_mu k * h k)" 
   defines "F \<equiv> dirichlet_prod f g"
-  defines "N \<equiv> k div gcd n k" 
+  assumes "k > 0"
   assumes "completely_multiplicative_function f" 
           "multiplicative_function h" 
   assumes "\<And> p. prime p \<Longrightarrow> f(p) \<noteq> 0 \<and> f(p) \<noteq> h(p)" 
-  assumes "k > 0" "n > 0"  
-  shows "s f g k n = (F(k)*g(N)) div (F(N))"
+  shows "F(k) = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
 proof -
   have 1: "multiplicative_function (\<lambda> p. h(p) div f(p))"
     using multiplicative_function_divide
@@ -1943,18 +2032,36 @@ proof -
     unfolding g_def dirichlet_prod_def by blast
   also have "... = (\<Sum> d | d dvd k. moebius_mu d * h d * (f(k) div f(d)))"
     using multipl_div_mono[of f _ k] assms(4,6) 
-    by(intro sum.cong, auto, force)   
+    by(intro sum.cong,auto,force)  
   also have "... = f(k) * (\<Sum> d | d dvd k. moebius_mu d * (h d div f(d)))"
     by(simp add: sum_distrib_left algebra_simps)
   also have "... = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
     using sum_divisors_moebius_mu_times_multiplicative[of "\<lambda> p. h p div f p" k] 1
-          assms(7) by simp
-  finally have "F(k) = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
+          assms(3) by simp
+  finally show F_eq: "F(k) = f(k) * (\<Prod>p\<in>prime_factors k. 1 - (h p div f p))"
     by blast
+qed
 
+(* theorem 8.8 *)
+theorem s_k_n_dirichlet_expr:
+  fixes f h :: "nat \<Rightarrow> complex" and n k :: nat
+  defines "g \<equiv> (\<lambda> k. moebius_mu k * h k)" 
+  defines "F \<equiv> dirichlet_prod f g"
+  defines "N \<equiv> k div gcd n k" 
+  assumes "completely_multiplicative_function f" 
+          "multiplicative_function h" 
+  assumes "\<And> p. prime p \<Longrightarrow> f(p) \<noteq> 0 \<and> f(p) \<noteq> h(p)" 
+  assumes "k > 0" "n > 0"  
+  shows "s f g k n = (F(k)*g(N)) div (F(N))"
+proof -
   define a where "a \<equiv> gcd n k" 
   have 2: "k = a*N" unfolding a_def N_def by auto
   have 3: "a > 0" using a_def assms(7,8) by simp
+  have Ngr0: "N > 0" using assms(7,8) 2 N_def by fastforce
+  have f_k_not_z: "f k \<noteq> 0" 
+    using non_zero_c assms(4,6,7) by blast
+  have f_N_not_z: "f N \<noteq> 0" 
+      using non_zero_c assms(4,6) Ngr0 by blast
   have bij: "bij_betw (\<lambda> d. a div d) {d. d dvd a} {d. d dvd a}"
     unfolding bij_betw_def
   proof
@@ -1995,7 +2102,7 @@ proof -
     using sum.reindex_bij_betw[of "((div) a)" "{d. d dvd a}" "{d. d dvd a}"]
           bij 1 2 by metis
   qed
-  also have "... = moebius_mu N * h N *(\<Sum> d | d dvd a \<and> coprime d n. f(a div d) * moebius_mu d * h d)"
+  also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
    (is "?a = ?b")
   proof -
     have "?a = (\<Sum> d | d dvd a \<and> coprime N d. f(a div d) * moebius_mu (N*d) * h (N*d))"
@@ -2011,20 +2118,129 @@ proof -
       from a have 2: "h (N*d) = h N * h d"
          using assms(5) unfolding multiplicative_function_def 
          by (simp add: assms(5) multiplicative_function.mult_coprime)
-     show "f (a div d) * moebius_mu (N * d) * h (N * d) =
+      show "f (a div d) * moebius_mu (N * d) * h (N * d) =
          moebius_mu N * h N * f (a div d) * moebius_mu d * h d"
        by(simp add: divide_simps 1 2)
-   qed
-   also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * (f a div f d) * moebius_mu d * h d)"
+    qed
+    also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * (f a div f d) * moebius_mu d * h d)"
      apply(rule sum.cong,simp,simp) (*fix this*)
      using multipl_div_mono[of f _ a] assms(4,6-8) 3 by force
-   also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
-     by(simp add: sum_distrib_left algebra_simps)
-(*
+    also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
+      by(simp add: sum_distrib_left algebra_simps)
+    finally show ?thesis by blast
+  qed
+  also have "... =
+           moebius_mu N * h N * f a * (\<Prod>p\<in>{p. p \<in> prime_factors a \<and> \<not> (p dvd N)}. 1 - (h p div f p))"
+   proof -
+     have "multiplicative_function (\<lambda> d. h d div f d)" 
+       using multiplicative_function_divide 
+             comp_to_mult 
+             assms(4,5) by blast
+     then have "(\<Sum>d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d)) =
+    (\<Prod>p\<in>{p. p \<in> prime_factors a \<and> \<not> (p dvd N)}. 1 - (h p div f p))"
+       using sum_divisors_moebius_mu_times_multiplicative_revisited[
+         of "(\<lambda> d. h d div f d)" a N]         
+           assms(8) Ngr0 3 by blast 
+    then show ?thesis by argo
+  qed    
+  also have "... = f(a) * moebius_mu(N) * h(N) * 
+     ((\<Prod>p\<in>{p. p \<in> prime_factors (a*N)}. 1 - (h p div f p)) div
+     (\<Prod>p\<in>{p. p \<in> prime_factors N}. 1 - (h p div f p)))"
+  proof -
+    have "{p. p \<in>prime_factors a \<and> \<not> p dvd N} = 
+          ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
+      using p_div_set[of a N] by blast
+
+    then have "(\<Prod>p\<in>{p. p \<in>prime_factors a \<and> \<not> p dvd N}. 1 - h p / f p) = 
+          prod (\<lambda> p. 1 - h p / f p) ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
+      by auto
+    also have "... = prod (\<lambda> p. 1 - h p / f p) {p. p \<in>prime_factors (a*N)} div
+                     prod (\<lambda> p. 1 - h p / f p) {p. p \<in>prime_factors N}"
+      by(intro prod_div_sub)
+        (simp,metis "2" Collect_mono N_def a_def dvd_triv_left in_diffD prime_factorization_divide,
+         simp,metis assms(6) in_prime_factors_iff)     
+    also have "... = (\<Prod>p\<in>{p. p \<in> prime_factors (a*N)}. 1 - (h p div f p)) div
+     (\<Prod>p\<in>{p. p \<in> prime_factors N}. 1 - (h p div f p))" by blast
+    finally have "(\<Prod>p\<in>{p. p \<in>prime_factors a \<and> \<not> p dvd N}. 1 - h p / f p) = 
+        (\<Prod>p\<in>{p. p \<in> prime_factors (a*N)}. 1 - (h p div f p)) div
+     (\<Prod>p\<in>{p. p \<in> prime_factors N}. 1 - (h p div f p))" 
+      using \<open>(\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)} - {p. p \<in># prime_factorization N}. 1 - h p / f p) = (\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)}. 1 - h p / f p) / (\<Prod>p\<in>{p. p \<in># prime_factorization N}. 1 - h p / f p)\<close> \<open>(\<Prod>p\<in>{p. p \<in># prime_factorization a \<and> \<not> p dvd N}. 1 - h p / f p) = (\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)} - {p. p \<in># prime_factorization N}. 1 - h p / f p)\<close> by auto
+      (* fix this : equation should be chained correctly *)
+    then show ?thesis by simp
+  qed
+  also have "... = f(a) * moebius_mu(N) * h(N) * (F(k) div f(k)) * (f(N) div F(N))"
+   (is "?a = ?b")
+  proof -
+    have "F(N) = (f N) *(\<Prod>p\<in> prime_factors N. 1 - (h p div f p))"
+      unfolding F_def g_def
+      by(intro F_form)(auto simp add: Ngr0 assms(4-6))
+    then have eq_1: "(\<Prod>p\<in> prime_factors N. 1 - (h p div f p)) = 
+               F N div f N" using 2 f_N_not_z by simp
+    have "F(k) = (f k) * (\<Prod>p\<in> prime_factors k. 1 - (h p div f p))"
+      unfolding F_def g_def
+      by(intro F_form)(auto simp add: assms(4-7))
+    then have eq_2: "(\<Prod>p\<in> prime_factors k. 1 - (h p div f p)) = 
+               F k div f k" using 2 f_k_not_z by simp
+
+    have "?a = f a * moebius_mu N * h N * 
+           ((\<Prod>p\<in> prime_factors k. 1 - (h p div f p)) div
+           (\<Prod>p\<in> prime_factors N. 1 - (h p div f p)))"
+      using 2 by(simp add: algebra_simps) 
+    also have  "... = f a * moebius_mu N * h N * ((F k div f k) div (F N div f N))"
+      by(simp add: eq_1 eq_2)
+    finally show ?thesis by simp
+  qed
+  also have "... = moebius_mu N * h N * ((F k * f a * f N) div (F N * f k))"
+    by(simp add: algebra_simps) 
+  also have "... = moebius_mu N * h N * ((F k * f(a*N)) div (F N * f k))"
+  proof -
+    have "f a * f N = f (a*N)" 
+    proof(cases "a = 1 \<or> N = 1")
+      case True
+      then show ?thesis  
+        using assms(4) completely_multiplicative_function_def[of f] 
+        by auto
+    next
+      case False
+      then show ?thesis 
+        using 2 assms(4) completely_multiplicative_function_def[of f] 
+             Ngr0 3 by auto
+    qed
+    then show ?thesis by simp
+  qed 
+  also have "... = moebius_mu N * h N * ((F k * f(k)) div (F N * f k))"
+    using 2 by blast
+  also have "... = g(N) * (F k div F N)"
+    using f_k_not_z g_def by simp
+  also have "... = (F(k)*g(N)) div (F(N))" by auto
+  finally show ?thesis by simp
+qed
+
+(* TODO proof corollary 
+corollary 
+ fixes k n :: nat
+ assumes "k > 0" "n > 0" 
+ shows "c k n = totient k * moebius_mu (k div gcd n k) div totient (k div gcd n k)" 
+proof -
+  
+
+
+  define F where "F \<equiv> (\<lambda> d. dirichlet_prod id moebius_mu d)"
+  define N where "N \<equiv> n div gcd n k" 
+
+  have 1: "F k = totient k"
+    by (simp add: F_def dirichlet_prod_commutes totient_conv_moebius_mu)
+  have "c k n = s id moebius_mu k n"
+    using c_k_s_form assms by blast
+  also have "... = 
+  dirichlet_prod id moebius_mu k *
+  (moebius_mu N) div
+  dirichlet_prod id moebius_mu N"   
+    unfolding F_def 
+    apply(simp add: algebra_simps assms N_def)
    
-   also have "... = moebius_mu N * h N *(\<Sum> d | d dvd a \<and> coprime N d. (f(a) div f(d)) * moebius_mu d * h d)"
-     apply(simp add: algebra_simps) 
-     apply(intro sum.cong)
-     using multipl_div_mono[of f _ a] assms(4,6-8) 3
-*)    
+  
+qed
+*)
+        
 end
