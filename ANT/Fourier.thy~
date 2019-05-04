@@ -284,6 +284,100 @@ lemma periodic_sum_periodic_shift:
          (\<Sum>l \<in> {d'..d'+k-1}. f l)"
 *)
 
+lemma self_bij_0_k:
+  fixes a k :: nat
+  assumes "coprime a k" "[a*i = 1] (mod k)" "k > 0" 
+  shows "bij_betw (\<lambda> r. r*a mod k) {0..k-1} {0..k-1}"
+  unfolding bij_betw_def
+proof
+  show "inj_on (\<lambda> r. r*a mod k) {0..k-1}"
+  proof -
+    {fix r1 r2
+    assume in_k: "r1 \<in> {0..k-1}" "r2 \<in> {0..k-1}"
+    assume as: "[r1*a = r2*a] (mod k)"
+    then have "[r1*a*i = r2*a*i] (mod k)" 
+      using cong_scalar_right by blast
+    then have "[r1 = r2] (mod k)" 
+      using cong_mult_rcancel_nat as assms(1) by simp
+    then have "r1 = r2" using in_k
+      using assms(3) cong_less_modulus_unique_nat by auto}
+    note eq = this
+    show ?thesis unfolding inj_on_def 
+      by(safe, simp add: eq cong_def)
+  qed
+  define f where "f = (\<lambda>r. r * a mod k)"
+  show "f ` {0..k - 1} = {0..k - 1} "
+    unfolding image_def
+  proof(standard)
+    show "{y. \<exists>x\<in>{0..k - 1}. y = f x} \<subseteq> {0..k - 1}" 
+    proof -
+      {fix y
+      assume "y \<in> {y. \<exists>x\<in>{0..k - 1}. y = f x}" 
+      then obtain x where "y = f x" by blast
+      then have "y \<in> {0..k-1}"
+        unfolding f_def
+        using Suc_pred assms(3) lessThan_Suc_atMost by fastforce}
+      then show ?thesis by blast
+    qed
+    show "{0..k - 1} \<subseteq> {y. \<exists>x\<in>{0..k - 1}. y = f x}"
+    proof -
+      {fix x 
+        assume ass: "x \<in> {0..k-1}"
+        then have "x * i mod k \<in> {0..k-1}"
+          by (metis One_nat_def Suc_pred assms(3) atMost_atLeast0 atMost_iff less_Suc_eq_le mod_less_divisor)
+        then have "f (x * i mod k) = x"
+        proof -
+          have "f (x * i mod k) = (x * i mod k) * a mod k"
+            unfolding f_def by blast
+          also have "... = (x*i*a) mod k" 
+            by (simp add: mod_mult_left_eq) 
+          also have "... = (x*1) mod k" 
+            using assms(2) unfolding cong_def 
+            by (metis mod_mult_right_eq mult.assoc mult.commute)
+          also have "... = x" using ass assms(3) by auto
+          finally show ?thesis .
+        qed
+        then have "x \<in> {y. \<exists>x\<in>{0..k - 1}. y = f x}" 
+          using \<open>x * i mod k \<in> {0..k - 1}\<close> by force}
+      then show ?thesis by blast 
+    qed
+  qed
+qed
+
+lemma periodic_homothecy:
+  assumes "periodic f k"
+  shows "periodic (\<lambda> l. f(l*a)) k"
+  unfolding periodic_def
+proof 
+  fix n
+  have "f ((n + k) * a) = f(n*a+k*a)" by(simp add: algebra_simps)
+  also have "... = f(n*a)" 
+    using mult_period[OF assms] unfolding periodic_def by simp
+  finally show "f ((n + k) * a) = f (n * a)" by simp
+qed
+
+theorem periodic_remove_homothecy:
+  assumes "coprime a k" "periodic f k" "k > 0" 
+  shows "(\<Sum> l = 1..k. f(l)) = (\<Sum> l = 1..k. f(l*a))" 
+proof -
+  obtain i where inv: "[a*i = 1] (mod k)"
+    using assms(1) coprime_iff_invertible_nat[of a k] by auto
+  from this self_bij_0_k assms
+  have bij: "bij_betw (\<lambda>r. r * a mod k) {0..k - 1} {0..k - 1}" by blast
+  
+  have "(\<Sum> l = 1..k. f(l)) = (\<Sum> l = 0..k-1. f(l))"
+    using periodic_sum_periodic_shift[of f k 1] assms by simp
+  also have "... = (\<Sum> l = 0..k-1. f(l*a mod k))"
+    using sum.reindex_bij_betw[OF bij] by metis
+  also have "... = (\<Sum> l = 0..k-1. f(l*a))"
+    apply(rule sum.cong,simp)
+    using mod_periodic[OF assms(2)] mod_mod_trivial by blast
+  also have "... = (\<Sum> l = 1..k. f(l*a))"
+    using periodic_sum_periodic_shift[of "(\<lambda> l. f(l*a))" k 1]
+          periodic_homothecy[OF assms(2)] assms(3) by fastforce  
+  finally show ?thesis by blast     
+qed
+
 section\<open>Gcd and prime factorizations\<close>
 
 lemma sub:
@@ -2293,8 +2387,14 @@ end
 context 
   includes no_vec_lambda_notation
   fixes \<chi> k
-  assumes "\<chi> \<in> dcharacters k"
+  assumes is_char: "\<chi> \<in> dcharacters k"
 begin
+
+(* TODO remove when integrating periodic and periodic_function *)
+lemma dir_periodic: "periodic \<chi> k"
+  unfolding periodic_def 
+  using is_char dcharacters_def
+  by (simp add: dcharacter.periodic)
 
 definition "gauss_sum n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))"
 
@@ -2317,8 +2417,78 @@ proof -
   also have "... = c k n" unfolding ramanujan_def by blast
   finally show ?thesis .
 qed
-lemma "\<exists> comp. \<forall> k. \<chi> k * comp k = 1" 
-  
+
+lemma cnj_chi_n:
+  assumes "coprime n k"
+  shows "cnj (\<chi> n) * \<chi> n = 1"
+proof -
+  have "cnj (\<chi> n) * \<chi> n = cmod (\<chi> n)^2"
+    by (simp add: mult.commute complex_mult_cnj cmod_def)
+  also have "... = 1" 
+    using dcharacter.norm[of k \<chi> n]  is_char 
+          assms dcharacters_def[of k] by simp
+  finally show ?thesis .
+qed
+
+lemma gauss_reduction:
+  assumes "coprime n k" "k > 0"
+  shows "gauss_sum n = cnj (\<chi> n) * gauss_sum 1"
+proof -  
+  have "gauss_sum n = (\<Sum> r = 1..k . \<chi>(r) * unity_root k (r*n))"
+    unfolding gauss_sum_def by simp
+  also have "... = (\<Sum> r = 1..k . cnj (\<chi>(n)) * \<chi> n * \<chi> r * unity_root k (r*n))"
+    by(rule sum.cong,simp,subst cnj_chi_n,auto simp add: assms)
+  also have "... = (\<Sum> r = 1..k . cnj (\<chi>(n)) * \<chi> (n*r) * unity_root k (r*n))"
+    apply(rule sum.cong,simp)   
+    using is_char by(simp add: dcharacters_def dcharacter.mult)
+  also have "... = cnj (\<chi>(n)) * (\<Sum> r = 1..k . \<chi> (n*r) * unity_root k (r*n))"
+    by(simp add: sum_distrib_left algebra_simps)
+  also have "...= cnj (\<chi>(n)) * (\<Sum> r = 1..k . \<chi> (r)* unity_root k (r))"
+  proof -
+    have 1: "periodic (\<lambda> r. \<chi> (r)* unity_root k r) k" 
+      using dir_periodic unity_periodic mult_periodic by blast
+    have "(\<Sum> r = 1..k . \<chi> (n*r) * unity_root k (r*n)) = 
+          (\<Sum> r = 1..k . \<chi> (r)* unity_root k (r))"
+      using periodic_remove_homothecy[OF assms(1) 1 assms(2)]
+      by(simp add: algebra_simps)
+    then show ?thesis by argo
+  qed
+  also have "... = cnj (\<chi>(n)) * gauss_sum 1" 
+    using gauss_sum_def by simp
+  finally show ?thesis .
+qed
+
+definition 
+ "separable n = (gauss_sum n = cnj (\<chi> n) * gauss_sum 1)"
+
+corollary gauss_coprime_separable:
+  assumes "coprime n k" "k > 0" 
+  shows "separable n" 
+  using gauss_reduction[OF assms] unfolding separable_def by simp
+
+lemma global_separability_condition:
+  assumes "k > 0" 
+  shows "(\<forall> n. separable n) \<longleftrightarrow> (\<forall> n. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
+proof -
+  {fix n 
+  assume "\<not> coprime n k"
+  then have "\<chi>(n) = 0"
+    using is_char dcharacters_def 
+    using dcharacter.eq_zero_iff by blast
+  then have "cnj (\<chi> n) = 0" by blast
+  then have "separable n \<longleftrightarrow> gauss_sum n = 0" 
+    unfolding separable_def by auto} note not_case = this
+  show ?thesis 
+    using assms gauss_coprime_separable 
+          not_case separable_def by blast      
+qed
+
+theorem 
+  assumes "(\<forall> n. separable n)"
+  shows "(cmod (gauss_sum 1))^2 = k" 
+proof -
+
+qed
 
 
 end
