@@ -2823,32 +2823,148 @@ next
 qed
 
 (*theorem 8.17*)
-theorem
-  assumes "d dvd k" "d > 0" "k > 0" 
+theorem ind_mod_characterized:
+  assumes "d dvd k" "d > 1" "k > 0" 
   assumes "\<chi>\<^sub>1 = principal_dchar k" 
   shows "induced_modulus d \<longleftrightarrow> 
          (\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
 proof
-  assume "induced_modulus d" 
+  assume as_im: "induced_modulus d" 
   thm technical_m
   define f where
-    "f \<equiv> (\<lambda> n. n + (\<Prod> p | prime p \<and> p dvd k \<and> \<not> (p dvd n). p)*d)"
+    "f \<equiv> (\<lambda> n. n + 
+      (if n = 1 then
+         0
+       else (prod id {p. prime p \<and> p dvd k \<and> \<not> (p dvd n)})*d)
+      )"
+  have m_1: "f 1 = 1" unfolding f_def by simp
   {fix n
   assume as: "coprime n d" 
-  have "[f n = n] (mod d)" 
-    using technical_m(1)[of k n d "f n" 
+  have "[f n = n] (mod d)" "coprime (f n) k" 
+    using technical_m[of k n d "f n" 
       "(\<Prod> p | prime p \<and> p dvd k \<and> \<not> (p dvd n). p)",
-       OF assms(3) as] by(simp add: f_def)}
+       OF assms(3) as] by(auto simp add: f_def)
+  }
   note m_prop = this
   
   define \<Phi> where
    "\<Phi> \<equiv> (\<lambda> n. (if \<not> coprime n d then 0 else \<chi>(f n)))"
+
+  have \<Phi>_1: "\<Phi> 1 = 1" 
+    unfolding \<Phi>_def 
+  proof(simp)
+    from m_1 show "\<chi> (f (Suc 0)) = 1" 
+      using dcharacter.Suc_0[OF chi_dcharacter] by simp
+  qed
+
+  from assms(2) have "d > 0" by simp
+  from chi_on_congruent_induced_modulus
+          [OF assms(1) \<open>d > 0\<close>] as_im 
+      have b: "(\<forall>a b. coprime a k \<and> coprime b k \<and> 
+                   [a = b] (mod d) \<longrightarrow> \<chi> a = \<chi> b)" by blast
+
+  have \<Phi>_periodic:  " \<forall>a. \<Phi> (a + d) = \<Phi> a" 
+  proof 
+    fix a
+    have "gcd (a+d) d = gcd a d" by auto
+    then have cop: "coprime (a+d) d = coprime a d"  
+      using coprime_iff_gcd_eq_1 by presburger
+    show "\<Phi> (a + d) = \<Phi> a"
+    proof(cases "coprime a d")
+      case True
+      from True cop have cop_ad: "coprime (a+d) d" by blast      
+      have p1: "[f (a+d) = f a] (mod d)" 
+        using m_prop(1)[of "a+d", OF cop_ad] 
+              m_prop(1)[of "a",OF True] by (simp add: cong_def)
+      have p2: "coprime (f (a+d)) k" "coprime (f a) k" 
+        using m_prop(2)[of "a+d", OF cop_ad]
+              m_prop(2)[of "a", OF True] by blast+ 
+      from b p1 p2 have eq: "\<chi> (f (a + d)) = \<chi> (f a)" by blast
+      show ?thesis 
+        unfolding \<Phi>_def 
+        by(subst cop,simp,safe, simp add: eq) 
+    next
+      case False
+      then show ?thesis unfolding \<Phi>_def by(subst cop,simp)
+    qed  
+  qed
+
+  have \<Phi>_mult: "\<forall>a b. a \<in> totatives d \<longrightarrow>
+          b \<in> totatives d \<longrightarrow> \<Phi> (a * b) = \<Phi> a * \<Phi> b"
+  proof(safe)
+    fix a b
+    assume "a \<in> totatives d" "b \<in> totatives d"  
+    consider (ab) "coprime a d \<and> coprime b d" | 
+             (a)  "coprime a d \<and> \<not> coprime b d" |
+             (b)  "coprime b d \<and> \<not> coprime a d" |
+             (n)  "\<not> coprime a d \<and> \<not> coprime b d" by blast
+    then show "\<Phi> (a * b) = \<Phi> a * \<Phi> b" 
+    proof cases
+      case ab 
+      then have c_ab: 
+        "coprime (a*b) d" "coprime a d" "coprime b d" by simp+ 
+      then have p1: "[f (a * b) = a * b] (mod d)" "coprime (f (a * b)) k"
+        using m_prop[of "a*b", OF c_ab(1)] by simp+
+      moreover have p2: "[f a = a] (mod d)" "coprime (f a) k"
+                    "[f b = b] (mod d)" "coprime (f b) k"
+        using m_prop[of "a",OF c_ab(2)]
+              m_prop[of "b",OF c_ab(3) ] by simp+
+      have p1s: "[f (a * b) = (f a) * (f b)] (mod d)"
+      proof -
+        have "[f (a * b) = a * b] (mod d)"
+          using p1(1) by blast
+        moreover have "[a * b = f(a) * f(b)] (mod d)" 
+          using p2(1) p2(3) by (simp add: cong_mult cong_sym)
+        ultimately show ?thesis using cong_trans by blast
+      qed
+      have p2s: "coprime (f a*f b) k"
+        using p2(2) p2(4) by simp
+      have "\<chi> (f (a * b)) = \<chi> (f a * f b)" 
+        using p1s p2s p1(2) b by blast 
+      then show ?thesis 
+        unfolding \<Phi>_def 
+        using dcharacter.mult[OF chi_dcharacter]
+        by(simp add: c_ab)
+    next case a then show ?thesis unfolding \<Phi>_def by simp
+    next case b then show ?thesis unfolding \<Phi>_def by simp  
+    next case n then show ?thesis unfolding \<Phi>_def by simp
+    qed 
+  qed
+
   show "\<exists>\<Phi>. dcharacter d \<Phi> \<and> (\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n)" 
   proof(standard,rule conjI) 
     show "dcharacter d \<Phi>" 
-      unfolding dcharacter_def residues_nat_def
-      apply(rule conjI) 
-      using one_ind_mod_if_pc
+      unfolding dcharacter_def residues_nat_def dcharacter_axioms_def 
+      using assms(2) \<Phi>_def f_def \<Phi>_mult \<Phi>_1 \<Phi>_periodic by simp
+    show "\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n" 
+    proof
+      fix n
+      show "\<chi> n = \<Phi> n * \<chi>\<^sub>1 n"
+      proof(cases "coprime n k")
+        case True
+        then have "coprime n d" using assms(1) by auto
+        then have "\<Phi>(n) = \<chi>(f n)" using \<Phi>_def by simp
+        moreover have "[f n = n] (mod d)" 
+          using m_prop[OF \<open>coprime n d\<close>] by simp
+        moreover have "\<chi>\<^sub>1 n = 1" 
+          using assms(4) principal_dchar_def \<open>coprime n k\<close> by auto
+        ultimately show "\<chi>(n) = \<Phi>(n) * \<chi>\<^sub>1(n)" 
+        proof -
+          assume "\<Phi> n = \<chi> (f n)" "[f n = n] (mod d)" "\<chi>\<^sub>1 n = 1"
+          then have "\<chi> n = \<chi> (f n)"
+            by (metis True \<open>coprime n d\<close> \<open>dcharacter d \<Phi>\<close> \<open>local.induced_modulus d\<close> assms(1) assms(3) chi_dcharacter chi_on_congruent_induced_modulus dcharacter.eq_zero_iff dvd_pos_nat)
+          also have "... = \<Phi> n" by (simp add: \<open>\<Phi> n = \<chi> (f n)\<close>)
+          also have "... = \<Phi> n * \<chi>\<^sub>1 n" by(simp add: \<open>\<chi>\<^sub>1 n = 1\<close>)
+          finally show ?thesis by simp
+        qed
+      next
+        case False
+        then have "\<chi> n = 0" "\<chi>\<^sub>1 n = 0"
+          using chi_dcharacter dcharacter.eq_zero_iff apply blast 
+          using False assms(4) principal_dchar_def by simp       
+        then show ?thesis by simp
+      qed      
+    qed
   qed
 next
   assume "(\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
@@ -2859,7 +2975,7 @@ next
     fix n
     assume 2: "coprime n k" "[n = 1] (mod d)"
     then have "\<chi>\<^sub>1 n = 1" "\<Phi> n = 1" 
-    proof(simp add: assms(3) principal_dchar_def)
+    proof(simp add: assms(4) principal_dchar_def)
       have "\<Phi> n = \<Phi> (n mod d)" by(simp add: dcharacter.mod[OF 1(1), of n])
       also have "... = \<Phi> (1 mod d)" using cong_def[of n 1 d] 2(2) by simp
       also have "... = \<Phi> 1" using assms(2) "1"(1) dcharacter.mod by blast
@@ -2869,6 +2985,8 @@ next
     then show "\<chi> n = 1" using 1(2) by simp    
   qed
 qed
+
+
 
 end
         
