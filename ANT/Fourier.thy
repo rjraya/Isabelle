@@ -487,6 +487,57 @@ proof
    qed
  qed
 
+
+(*exercise 8.4*)
+lemma technical_m:
+  fixes n a d :: nat
+  assumes 0: "n > 0" 
+  assumes 1: "coprime a d"
+  assumes 2: "m = a + q*d" 
+  assumes 3: "q \<equiv> (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)"
+  shows "[m = a] (mod d)" "coprime m n"
+proof(simp add: 2 cong_add_lcancel_0_nat cong_mult_self_right)
+  have fin: "finite {p. prime p \<and> p dvd n \<and> \<not> (p dvd a)}" by (simp add: "0")
+  {fix p
+  assume 4: "prime p" "p dvd m" "p dvd n"
+  have "p = 1"
+  proof(cases "p dvd a")
+    case True
+    from this 2 4(2) have "p dvd q*d" 
+      by (simp add: dvd_add_right_iff)
+    then have a1: "p dvd q \<or> p dvd d"
+      using 4(1) prime_dvd_mult_iff by blast
+    
+    have a2: "\<not> (p dvd q)" 
+    proof(rule ccontr,simp)  
+      assume "p dvd q"
+      then have "p dvd (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)" unfolding 3 by simp
+      then have "\<exists>x\<in>{p. prime p \<and> p dvd n \<and> \<not> p dvd a}. p dvd x"
+        using prime_dvd_prod_iff[OF fin 4(1)] by simp
+      then obtain x where c: "p dvd x \<and> prime x \<and> \<not> x dvd a" by blast
+      then have "p = x" using 4(1) by (simp add: primes_dvd_imp_eq)
+      then show "False" using True c by auto
+    qed
+    have a3: "\<not> (p dvd d)" using True "1" "4"(1) coprime_def not_prime_unit by auto
+  
+    from a1 a2 a3 show ?thesis by simp
+  next
+    case False
+    then have "p dvd q" 
+    proof -
+      have in_s: "p \<in> {p. prime p \<and> p dvd n \<and> \<not> p dvd a}"
+        using False 4(3) 4(1) by simp
+      show "p dvd q" 
+        unfolding 3 using dvd_prodI[OF fin in_s ] by fast
+    qed
+    then have "p dvd q*d" by simp
+    then have "p dvd a" using 4(2) 2 by (simp add: dvd_add_left_iff)
+    then show ?thesis using False by auto
+  qed}
+  then show "coprime m n" 
+    by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)
+qed
+
 section \<open>Moebius\<close>
 
 lemma moebius_not_c:
@@ -2725,6 +2776,99 @@ proof(safe)
     using gauss_sum_1_mod_square_eq_k assms(2) by blast
 qed
 
+(* theorem 8.16 *)
+lemma chi_on_congruent_induced_modulus:
+  assumes "d dvd k" "d > 0" 
+  shows "induced_modulus d \<longleftrightarrow> (\<forall> a b. coprime a k \<and> coprime b k \<and> [a = b] (mod d) \<longrightarrow> \<chi>(a) = \<chi>(b))"
+proof 
+  assume 1: "induced_modulus d"
+  show "(\<forall> a b. coprime a k \<and> coprime b k \<and> [a = b] (mod d) \<longrightarrow> \<chi>(a) = \<chi>(b))"
+  proof(safe)
+    fix a b
+    assume 2: "coprime a k" "coprime b k" "[a = b] (mod d)"
+    show "\<chi>(a) = \<chi>(b)" 
+    proof -
+      from 2(1) obtain a' where "[a*a' = 1] (mod k)"
+        using cong_solve by blast
+      from this assms(1) have "[a*a' = 1] (mod d)"
+        using cong_dvd_modulus_nat by blast
+      from this 1 have "\<chi>(a*a') = 1" 
+        unfolding induced_modulus_def 
+        by (meson "2"(2) \<open>[a * a' = 1] (mod k)\<close> cong_imp_coprime_nat cong_sym coprime_divisors gcd_nat.refl one_dvd)
+      then have 3: "\<chi>(a)*\<chi>(a') = 1" 
+        using chi_dcharacter dcharacter.mult by simp
+
+      from 2(3) have "[a*a' = b*a'] (mod d)" by (simp add: cong_scalar_right)
+      moreover have 4: "[b*a' = 1] (mod d)" 
+        using \<open>[a * a' = 1] (mod d)\<close> calculation cong_sym cong_trans by blast
+      from this 1 have "\<chi>(b*a') = 1" 
+        unfolding induced_modulus_def 
+        by (metis "2"(2) \<open>[a * a' = 1] (mod k)\<close> cong_imp_coprime cong_sym coprime_mult_left_iff mult.right_neutral)
+      then have 4: "\<chi>(b)*\<chi>(a') = 1" 
+        using chi_dcharacter dcharacter.mult by simp
+
+      from 3 4 show "\<chi>(a) = \<chi>(b)" 
+        apply(cases "\<chi>(a') = 0",auto simp add: field_simps)
+        using mult_cancel_left by fastforce
+    qed
+  qed
+next 
+  assume "\<forall>a b. coprime a k \<and> coprime b k \<and> [a = b] (mod d) \<longrightarrow> \<chi> a = \<chi> b"
+  then have "\<forall>a . coprime a k \<and> coprime 1 k \<and> [a = 1] (mod d) \<longrightarrow> \<chi> a = \<chi> 1"
+    by blast
+  then have "\<forall>a . coprime a k \<and> [a = 1] (mod d) \<longrightarrow> \<chi> a = 1"
+    using dcharacter.Suc_0[OF chi_dcharacter] coprime_1_left by simp
+  then show "induced_modulus d"
+    unfolding induced_modulus_def using assms(1) by blast
+qed
+
+(*theorem 8.17*)
+theorem
+  assumes "d dvd k" "d > 0" "k > 0" 
+  assumes "\<chi>\<^sub>1 = principal_dchar k" 
+  shows "induced_modulus d \<longleftrightarrow> 
+         (\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
+proof
+  assume "induced_modulus d" 
+  thm technical_m
+  define f where
+    "f \<equiv> (\<lambda> n. n + (\<Prod> p | prime p \<and> p dvd k \<and> \<not> (p dvd n). p)*d)"
+  {fix n
+  assume as: "coprime n d" 
+  have "[f n = n] (mod d)" 
+    using technical_m(1)[of k n d "f n" 
+      "(\<Prod> p | prime p \<and> p dvd k \<and> \<not> (p dvd n). p)",
+       OF assms(3) as] by(simp add: f_def)}
+  note m_prop = this
+  
+  define \<Phi> where
+   "\<Phi> \<equiv> (\<lambda> n. (if \<not> coprime n d then 0 else \<chi>(f n)))"
+  show "\<exists>\<Phi>. dcharacter d \<Phi> \<and> (\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n)" 
+  proof(standard,rule conjI) 
+    show "dcharacter d \<Phi>" 
+      unfolding dcharacter_def residues_nat_def
+      apply(rule conjI) 
+      using one_ind_mod_if_pc
+  qed
+next
+  assume "(\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
+  then obtain \<Phi> where 1: "dcharacter d \<Phi>" "(\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n)" by blast
+  show "induced_modulus d"
+    unfolding induced_modulus_def    
+  proof(rule conjI,fact,safe)
+    fix n
+    assume 2: "coprime n k" "[n = 1] (mod d)"
+    then have "\<chi>\<^sub>1 n = 1" "\<Phi> n = 1" 
+    proof(simp add: assms(3) principal_dchar_def)
+      have "\<Phi> n = \<Phi> (n mod d)" by(simp add: dcharacter.mod[OF 1(1), of n])
+      also have "... = \<Phi> (1 mod d)" using cong_def[of n 1 d] 2(2) by simp
+      also have "... = \<Phi> 1" using assms(2) "1"(1) dcharacter.mod by blast
+      also have "... = 1" using dcharacter.Suc_0[OF 1(1)] by simp
+      finally show "\<Phi> n = 1" by simp
+    qed
+    then show "\<chi> n = 1" using 1(2) by simp    
+  qed
+qed
 
 end
         
