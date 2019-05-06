@@ -683,6 +683,12 @@ lemma "cnj (a*\<i>) = -a*\<i>" for a :: real
 lemma unity_cnj: "cnj (unity_root k m) = unity_root k (-m)" 
   unfolding unity_exp exp_cnj by simp  
 
+lemma unity_div_num:
+  assumes "k > 0" "d > 0" "d dvd k"
+  shows "unity_root k (x * (k div d)) = unity_root d x"
+  using assms dvd_div_mult_self unity_div by auto
+ 
+
 section\<open>Geometric sum\<close>
 
 text\<open>
@@ -2443,7 +2449,8 @@ begin
 no_notation vec_lambda (binder "\<chi>" 10)
 end
 
-context 
+subsection\<open>Basic notions\<close>
+context
   includes no_vec_lambda_notation
   fixes \<chi> k
   assumes is_char: "\<chi> \<in> dcharacters k"
@@ -2451,6 +2458,14 @@ begin
 
 lemma chi_dcharacter: "dcharacter k \<chi>" 
   using is_char unfolding dcharacters_def by simp
+
+(*
+ Observe that the case k = 1 corresponds to the trivial
+ character (\<lambda> x . 1) which is not of interest here.
+*)
+lemma mod_positive: "k > 1" 
+  using chi_dcharacter 
+  unfolding dcharacter_def residues_nat_def by simp
 
 (* TODO remove when integrating periodic and periodic_function *)
 lemma dir_periodic: "periodic \<chi> k"
@@ -2461,7 +2476,7 @@ lemma dir_periodic: "periodic \<chi> k"
 definition "gauss_sum n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))"
 
 lemma ramanujan_to_gauss:
-  assumes "\<chi> = principal_dchar k" "k > 0" 
+  assumes "\<chi> = principal_dchar k"  
   shows "gauss_sum n = c k n" 
 proof -
   {fix m
@@ -2492,10 +2507,12 @@ proof -
   finally show ?thesis .
 qed
 
+(* theorem 8.9 *)
 lemma gauss_reduction:
-  assumes "coprime n k" "k > 0"
+  assumes "coprime n k" 
   shows "gauss_sum n = cnj (\<chi> n) * gauss_sum 1"
 proof -  
+  have k_gr_0: "k > 0" using mod_positive by simp
   have "gauss_sum n = (\<Sum> r = 1..k . \<chi>(r) * unity_root k (r*n))"
     unfolding gauss_sum_def by simp
   also have "... = (\<Sum> r = 1..k . cnj (\<chi>(n)) * \<chi> n * \<chi> r * unity_root k (r*n))"
@@ -2511,8 +2528,8 @@ proof -
       using dir_periodic unity_periodic mult_periodic by blast
     have "(\<Sum> r = 1..k . \<chi> (n*r) * unity_root k (r*n)) = 
           (\<Sum> r = 1..k . \<chi> (r)* unity_root k (r))"
-      using periodic_remove_homothecy[OF assms(1) 1 assms(2)]
-      by(simp add: algebra_simps)
+      using periodic_remove_homothecy[OF assms(1) 1 k_gr_0]
+      by(simp add: algebra_simps k_gr_0)
     then show ?thesis by argo
   qed
   also have "... = cnj (\<chi>(n)) * gauss_sum 1" 
@@ -2520,17 +2537,18 @@ proof -
   finally show ?thesis .
 qed
 
-definition 
- "separable n = (gauss_sum n = cnj (\<chi> n) * gauss_sum 1)"
+definition "separable n = (gauss_sum n = cnj (\<chi> n) * gauss_sum 1)"
 
 corollary gauss_coprime_separable:
-  assumes "coprime n k" "k > 0" 
+  assumes "coprime n k" 
   shows "separable n" 
   using gauss_reduction[OF assms] unfolding separable_def by simp
 
+
+
+(* theorem 8.10 *)
 lemma global_separability_condition:
-  assumes "k > 0" 
-  shows "(\<forall> n. separable n) \<longleftrightarrow> (\<forall> n. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
+  "(\<forall> n. separable n) \<longleftrightarrow> (\<forall> n. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
 proof -
   {fix n 
   assume "\<not> coprime n k"
@@ -2541,8 +2559,54 @@ proof -
   then have "separable n \<longleftrightarrow> gauss_sum n = 0" 
     unfolding separable_def by auto} note not_case = this
   show ?thesis 
-    using assms gauss_coprime_separable 
+    using gauss_coprime_separable 
           not_case separable_def by blast      
+qed
+
+corollary principal_not_totally_separable:
+  assumes "\<chi> = principal_dchar k"
+  shows "\<not> (\<forall> n > 0. separable n)"
+proof -
+  have k_gr_0: "k > 0" using mod_positive by auto
+   
+
+  have tot_0: "totient k \<noteq> 0" by (simp add: k_gr_0)
+  have moeb_0: "\<exists> n. moebius_mu (k div gcd n k) \<noteq> 0" 
+    by (metis div_self gcd_nat.idem k_gr_0 moebius_mu.one zero_less_iff_neq_zero zero_neq_one)
+  
+  {fix n :: nat
+  assume as: "n > 0"
+  have "gauss_sum n = c k n"
+    using ramanujan_to_gauss[OF assms(1)] .  
+  also have "... = 
+   (totient k) * moebius_mu (k div gcd n k) /
+     (totient (k div gcd n k))"
+    using c_k_n_dirichlet_expr[OF k_gr_0 as] 
+    by (metis (no_types, lifting) of_int_moebius_mu of_int_mult of_int_of_nat_eq of_real_divide of_real_of_int_eq)
+  finally have "gauss_sum n = 
+    (totient k) * moebius_mu (k div gcd n k) /
+     (totient (k div gcd n k))" by blast}
+  note lem = this
+  have 1: "k > 0" using k_gr_0 by simp
+  have 2: "\<not> coprime k k" using k_gr_0 using mod_positive by auto
+  have 3: "gauss_sum k \<noteq> 0" 
+    using lem[of k, OF k_gr_0] tot_0 moebius_mu_1 by simp
+  from 1 2 3 have
+    "\<exists> n. n > 0 \<and> \<not> coprime n k \<and> gauss_sum n \<noteq> 0" by blast
+  then obtain n where "n > 0 \<and> \<not> coprime n k \<and> gauss_sum n \<noteq> 0" by blast
+
+  note right_not_zero = this
+  {fix n
+  assume "\<not> coprime n k" 
+  then have "\<chi>(n) = 0" 
+    using assms principal_dchar_def by simp
+  then have "cnj (\<chi>(n)) = 0" by blast
+  then have "cnj (\<chi>(n)) * gauss_sum 1 = 0" by simp 
+  }
+  note left_not_zero = this
+  then show ?thesis 
+     unfolding separable_def 
+     using right_not_zero by auto
 qed
 
 (* theorem 8.11 *)
@@ -2672,7 +2736,12 @@ proof -
     using assms(1) by simp
 qed
 
+subsection\<open>Induced moduli and primitive characters\<close>
+
 definition "induced_modulus d = ((d dvd k) \<and> (\<forall> a. coprime a k \<and> [a = 1] (mod d) \<longrightarrow> \<chi> a = 1))"
+
+lemma zero_not_ind_mod: "\<not> induced_modulus 0" 
+  unfolding induced_modulus_def using mod_positive by simp
 
 lemma g_non_zero_ind_mod:
   assumes "gauss_sum n \<noteq> 0" "\<not> coprime n k" "n > 0" "k > 0"
@@ -2771,7 +2840,7 @@ proof(safe)
   assume "n > 0" 
   then show "separable n"
     using global_separability_condition 1
-    by (metis assms(2) chi_dcharacter complex_cnj_zero dcharacter.eq_zero gauss_coprime_separable gcd_eq_0_iff gcd_eq_1_imp_coprime less_one linorder_neqE_nat mult_not_zero neq0_conv separable_def)
+    by (metis chi_dcharacter complex_cnj_zero dcharacter.eq_zero gauss_coprime_separable gcd_eq_0_iff gcd_eq_1_imp_coprime less_one linorder_neqE_nat mult_not_zero neq0_conv separable_def)
   } then show "(cmod (gauss_sum 1))^2 = k"
     using gauss_sum_1_mod_square_eq_k assms(2) by blast
 qed
@@ -2823,8 +2892,11 @@ next
 qed
 
 (*theorem 8.17*)
+
+(* the case d = 1 is exactly the case 
+   described in one_ind_mod_if_pc *)
 theorem ind_mod_characterized:
-  assumes "d dvd k" "d > 1" "k > 0" 
+  assumes "d dvd k" "d \<noteq> 1" "k > 0" 
   assumes "\<chi>\<^sub>1 = principal_dchar k" 
   shows "induced_modulus d \<longleftrightarrow> 
          (\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
@@ -2857,7 +2929,7 @@ proof
       using dcharacter.Suc_0[OF chi_dcharacter] by simp
   qed
 
-  from assms(2) have "d > 0" by simp
+  from assms(1-3) have "d > 0" by auto
   from chi_on_congruent_induced_modulus
           [OF assms(1) \<open>d > 0\<close>] as_im 
       have b: "(\<forall>a b. coprime a k \<and> coprime b k \<and> 
@@ -2930,12 +3002,13 @@ proof
     next case n then show ?thesis unfolding \<Phi>_def by simp
     qed 
   qed
-
+  have d_gr_1: "d > 1" using assms(1,2) 
+    using \<open>0 < d\<close> by linarith
   show "\<exists>\<Phi>. dcharacter d \<Phi> \<and> (\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n)" 
   proof(standard,rule conjI) 
     show "dcharacter d \<Phi>" 
       unfolding dcharacter_def residues_nat_def dcharacter_axioms_def 
-      using assms(2) \<Phi>_def f_def \<Phi>_mult \<Phi>_1 \<Phi>_periodic by simp
+      using d_gr_1 \<Phi>_def f_def \<Phi>_mult \<Phi>_1 \<Phi>_periodic by simp
     show "\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n" 
     proof
       fix n
@@ -2986,8 +3059,200 @@ next
   qed
 qed
 
+subsection\<open>The conductor of a character\<close>
+
+definition "conductor = Min {d. induced_modulus d}"
+
+lemma conductor_fin: "finite {d. induced_modulus d}"
+proof -
+  let ?A = "{d. induced_modulus d}" 
+  have "?A \<subseteq> {d. d dvd k}" 
+    unfolding induced_modulus_def by blast
+  moreover have "finite {d. d dvd k}" using mod_positive by simp
+  ultimately show "finite ?A" using finite_subset by auto
+qed
+
+lemma k_in_conductor: 
+  "k \<in> {d. induced_modulus d}"
+  using mod_positive k_is_ind_mod by simp
+
+lemma conductor_in_conductor:
+ "conductor \<in> {d. induced_modulus d}"
+proof -
+  have "{d. induced_modulus d} \<noteq> {}" using k_in_conductor by blast
+  then show "conductor \<in> {d. induced_modulus d}" 
+    using Min_in[OF conductor_fin ] conductor_def by auto
+qed
+
+lemma conductor_dvd: "conductor dvd k"
+ using conductor_in_conductor unfolding induced_modulus_def by blast
+
+lemma conductor_is_mod: "induced_modulus conductor" 
+  using conductor_in_conductor unfolding induced_modulus_def by blast
+
+lemma conductor_gr_0: "conductor > 0"
+  unfolding conductor_def using zero_not_ind_mod 
+  using conductor_def conductor_is_mod neq0_conv by fastforce
+
+lemma conductor_1_principal: "conductor = 1 \<longleftrightarrow> \<chi> = principal_dchar k" 
+proof
+  assume "conductor = 1" 
+  then have "induced_modulus 1"
+    using conductor_in_conductor by auto
+  then show "\<chi> = principal_dchar k"
+    using one_ind_mod_if_pc by blast
+next
+  assume "\<chi> = principal_dchar k"
+  then have "induced_modulus 1" using one_ind_mod_if_pc by auto
+  then show "conductor = 1" 
+    by (metis Min_le conductor_def conductor_fin conductor_gr_0 le_neq_implies_less mem_Collect_eq nat_dvd_not_less one_dvd)
+qed
+
+lemma primitive_conductor:
+  assumes "\<not> primitive_character"
+  shows "conductor < k" 
+  by (metis  Min_le assms conductor_def conductor_dvd conductor_fin 
+            div_greater_zero_iff dvd_div_eq_0_iff le_neq_implies_less 
+            mem_Collect_eq not_le not_less_zero primitive_character_def)
+
+end
+
+
+thm primitive_character_def conductor_def
+context 
+  includes no_vec_lambda_notation
+begin
+
+(* theorem 8.18 *)
+theorem primitive_principal_form:
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  assumes "\<chi>\<^sub>1 = principal_dchar k"
+  assumes "\<chi> \<noteq> principal_dchar k"  
+  shows "\<exists> \<Phi>. primitive_character \<Phi> (conductor \<chi> k) \<and>
+              (\<forall> n. \<chi>(n) = \<Phi>(n) * \<chi>\<^sub>1(n))"
+proof -
+  have k_gr_0: "k > 0" using mod_positive[OF assms(1)] by simp
+  define d where "d = conductor \<chi> k" 
+  have "induced_modulus \<chi> k d" 
+    unfolding d_def using conductor_is_mod[OF assms(1)] by blast
+  then have d_not_1: "d \<noteq> 1" 
+    using assms(3) one_ind_mod_if_pc[OF assms(1)] by auto
+  from ind_mod_characterized[OF assms(1) _ d_not_1 k_gr_0 assms(2)]
+  obtain \<Phi> where \<Phi>_def: "dcharacter d \<Phi> \<and> (\<forall>n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n)"
+    using \<open>induced_modulus \<chi> k d\<close> induced_modulus_def is_char by blast
+  have phi_dchars: "\<Phi> \<in> dcharacters d" using \<Phi>_def dcharacters_def by auto
+ 
+  have \<Phi>_prim: "primitive_character \<Phi> d" 
+  proof(rule ccontr)
+    assume "\<not> primitive_character \<Phi> d"   
+    then obtain q where 
+      1: "q dvd d \<and> q < d \<and> induced_modulus \<Phi> d q"
+      using primitive_character_def
+            induced_modulus_def phi_dchars by blast
+    then have 2: "induced_modulus \<chi> k q" 
+    proof -
+      thm induced_modulus_def
+      {fix n
+      assume mod_1: "[n = 1] (mod q)" 
+      assume cop: "coprime n k" 
+      have "\<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n)" using \<Phi>_def by auto
+      also have "... = \<Phi>(n)" 
+        using cop by (simp add: assms(2) principal_dchar_def)  
+      also have "... = 1" 
+          using 1 mod_1 induced_modulus_def[OF phi_dchars,of q] 
+                \<open>induced_modulus \<chi> k d\<close> cop induced_modulus_def is_char by auto
+      finally have "\<chi>(n) = 1" by blast}
+
+      then show ?thesis 
+        using induced_modulus_def "1" 
+              \<open>induced_modulus \<chi> k d\<close> is_char by auto
+    qed
+     
+    show "False" 
+    proof-
+      from 1 have le: "q < d" by simp
+      from d_def conductor_def[OF assms(1)]
+      have min: "d = Min {d. induced_modulus \<chi> k d}" by blast
+      thm assms(1)
+      thm Min_le[of "{d. induced_modulus \<chi> k d}" q]
+      from min 2 have "d \<le> q" 
+        using Min_le[of "{d. induced_modulus \<chi> k d}" q]
+        using conductor_fin is_char by blast
+      then show "False" using le by simp
+    qed
+  qed     
+
+  from \<Phi>_def \<Phi>_prim d_def show ?thesis by blast
+qed
+
+theorem 
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  shows "primitive_character \<chi> k \<longleftrightarrow> (\<forall> n. n > 0 \<longrightarrow> separable \<chi> k n)"
+proof 
+  assume "primitive_character \<chi> k" 
+  show "(\<forall> n. n > 0 \<longrightarrow> separable \<chi> k n)" 
+    using \<open>primitive_character \<chi> k\<close> mod_positive primitive_encoding(2) is_char
+    by blast
+next
+  assume tot_separable: "\<forall>n>0. separable \<chi> k n" 
+  show "primitive_character \<chi> k"
+  proof(cases "\<chi> = principal_dchar k")
+    case True
+    then show ?thesis
+      using principal_not_totally_separable[OF assms(1) True]
+            tot_separable by blast
+  next
+    case False
+    {assume as: "\<not> primitive_character \<chi> k"
+     have "\<exists> r. \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0"
+     proof -
+       have "k > 1" using is_char mod_positive by auto
+       define d where "d = conductor \<chi> k"
+       have "d > 0" unfolding d_def using conductor_gr_0[OF assms(1)] .
+       have "d < k" unfolding d_def using primitive_conductor[OF assms(1) as] .
+       have "d dvd k" unfolding d_def using conductor_dvd[OF assms(1)] by blast
+       define r where "r = k div d"
+       have "gcd r k > 1" unfolding r_def 
+        by (metis One_nat_def Suc_lessI \<open>1 < k\<close> \<open>d < k\<close> conductor_dvd d_def dvd_mult_div_cancel dvd_triv_right gcd_nat.absorb1 gcd_pos_nat is_char mult.right_neutral nat_neq_iff)
+       then have 1: "\<not> coprime r k" by auto
+       define \<chi>\<^sub>1 where "\<chi>\<^sub>1 = principal_dchar k" 
+       from primitive_principal_form[OF assms(1) \<chi>\<^sub>1_def False]
+       obtain \<Phi> where prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n))" by blast
+
+       have "gauss_sum \<chi> k r  = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*r))"
+         unfolding gauss_sum_def[OF assms(1)] by blast
+       also have "... = (\<Sum> m = 1..k . \<Phi>(m)*\<chi>\<^sub>1(m) * unity_root k (m*r))"
+         by(rule sum.cong,auto simp add: prod) 
+       also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m)*\<chi>\<^sub>1(m) * unity_root k (m*r))"
+         apply(rule sum.mono_neutral_right,simp,blast)
+         using \<chi>\<^sub>1_def unfolding principal_dchar_def by auto
+       also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m)*\<chi>\<^sub>1(m) * unity_root d m)"
+       proof(rule sum.cong,simp)
+         fix x
+         assume "x \<in> {m \<in> {1..k}. coprime m k}" 
+         have "k > 0" using \<open>k > 1\<close> by simp
+         have "unity_root k (int (x * r)) = unity_root d (int x)"
+           using unity_div_num[OF \<open>k > 0\<close> \<open>d > 0\<close> \<open>d dvd k\<close>]
+           by(simp add: algebra_simps r_def)
+         then show "\<Phi> x * \<chi>\<^sub>1 x * unity_root k (int (x * r)) =
+                    \<Phi> x * \<chi>\<^sub>1 x * unity_root d (int x)" by auto
+       qed
+       also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m)"
+         by(rule sum.cong,auto simp add: \<chi>\<^sub>1_def principal_dchar_def)
+       also have "... = (totient k div totient d) * (\<Sum> m | m \<in> {1..k} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+         
+       }
+  then show "primitive_character \<chi> k" 
+    using gauss_reduction gauss_coprime_separable 
+    sorry
+    then show ?thesis
+      
+      sorry
+  qed
+qed
 
 
 end
-        
+
+
 end
