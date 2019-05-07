@@ -70,6 +70,30 @@ next
   qed
 qed 
 
+lemma sum_over_classes:
+  fixes f :: "nat \<Rightarrow> nat" and g :: "nat \<Rightarrow> complex"
+  assumes  "finite A" 
+  assumes "\<forall> y \<in> f ` A. card {x \<in> A. f(x) = y} = n"
+  shows "sum (\<lambda> k. g(f(k))) A = sum (\<lambda> k. n*g k) (f ` A)"
+proof -
+  {fix y
+  assume as: "y \<in> f ` A" 
+  have "(\<Sum>k\<in>{x \<in> A. f x = y}. g (f k)) = n* g y"
+    by(simp, subst assms(2), auto simp add: as)}
+  note inner_sum = this
+  thm inner_sum
+  have "sum (\<lambda> k. g(f(k))) A = (\<Sum>y\<in>f ` A. \<Sum>k\<in>{x \<in> A. f x = y}. g (f k))" 
+    using sum_image_gen[of A "(\<lambda> k. g(f(k)))" f] assms(1) by blast
+  also have "... = (\<Sum>y\<in>f ` A. n * g (y))" 
+  proof(rule sum.cong,simp)
+    fix x
+    assume lo: "x \<in> f ` A"
+    show "(\<Sum>k\<in>{xa \<in> A. f xa = x}. g (f k)) = of_nat n * g x"     
+      by(subst inner_sum,simp add: lo,simp)
+  qed
+  finally show ?thesis by blast
+qed
+
 section\<open>Periodic functions\<close>
 
 definition 
@@ -536,6 +560,143 @@ proof(simp add: 2 cong_add_lcancel_0_nat cong_mult_self_right)
   qed}
   then show "coprime m n" 
     by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)
+qed
+
+lemma chinese_solution:
+  fixes r d k :: nat
+  assumes "r \<noteq> 0" "d \<noteq> 0" "coprime r d" "d dvd k" "k \<noteq> 0"
+  shows "\<exists> n. [n = r] (mod d) \<and> coprime n k"
+proof -
+  define k' where "k' = \<Prod> {p. prime p \<and> p dvd k \<and> \<not> p dvd d}"
+  have "coprime k' d" 
+    unfolding k'_def 
+    by (metis (no_types, lifting) mem_Collect_eq prime_imp_coprime_nat prod_coprime_left)
+  then have "coprime d k'" using coprime_commute[of k' d] by blast
+  have "k' \<noteq> 0" 
+    unfolding k'_def 
+    by (metis (no_types, lifting) mem_Collect_eq not_prime_0 prod.infinite prod_zero_iff zero_neq_one)
+  from chinese_remainder[of d k' r 1, OF \<open>coprime d k'\<close> assms(2) \<open>k' \<noteq> 0\<close>]
+  obtain x q1 q2 where "x = r + q1 * d \<and> x = 1 + q2 * k'" by blast
+  then have eq: "[x = r] (mod d) \<and> [x = 1] (mod k')" 
+    by (metis cong_add_lcancel_0_nat cong_to_1'_nat)
+  then have cop: "coprime x k" 
+  proof -
+   have "coprime x k'" using eq 
+     using cong_imp_coprime_nat cong_sym coprime_1_left by blast
+   have "coprime x d" using eq 
+     using assms(3) cong_imp_coprime_nat cong_sym by blast 
+   have "\<forall> p. prime p \<and> p dvd k \<longrightarrow> coprime x p" 
+     unfolding k'_def
+   proof(safe)
+     fix p 
+     assume "prime p" "p dvd k" 
+     then show "coprime x p" 
+     proof(cases "p dvd d")
+       case True then show ?thesis using \<open>coprime x d\<close> by auto
+     next
+       case False
+       then show ?thesis  
+       proof -
+         have "p \<in> {p. prime p \<and> p dvd k \<and> \<not> p dvd d}"
+           using \<open>prime p\<close> \<open>p dvd k\<close> False by auto
+         then have "p dvd k'" unfolding k'_def
+         proof -           
+           have "finite {p. prime p \<and> p dvd k \<and> \<not> p dvd d}" 
+             using assms(5) by auto
+           from prod_dvd_prod_subset[of "{p. prime p \<and> p dvd k \<and> \<not> p dvd d}" "{p}" id, 
+                OF this, simplified]
+           have "prod id {p} dvd prod id {p. prime p \<and> p dvd k \<and> \<not> p dvd d}" 
+             using \<open>prime p\<close> \<open>p dvd k\<close> \<open>\<not> p dvd d\<close> by simp
+           then show "p dvd \<Prod>{p. prime p \<and> p dvd k \<and> \<not> p dvd d}" by simp
+         qed
+         then show "coprime x p" using \<open>coprime x k'\<close> k'_def by fastforce
+       qed
+     qed
+   qed
+   note lem = this
+   {fix p
+   have "prime p \<Longrightarrow> p dvd x \<Longrightarrow> p dvd k \<Longrightarrow> p = 1"
+     using lem by (meson coprime_absorb_right dvd_antisym one_dvd)
+   } then show "coprime x k" (* generalize this argument, also apears in technical_m *)
+    by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)    
+  qed
+  show ?thesis using cop eq by blast
+qed
+
+lemma double_finite_surj:
+  fixes f :: "nat \<Rightarrow> nat" and A B :: "nat set"
+  assumes "finite A" "finite B" 
+          "f ` A = B" "g ` B = A"
+  shows "card A = card B"
+  using assms 
+  by (metis card_image_le le_antisym)
+
+lemma 
+  assumes "d dvd m" "m > 1" "d > 0" 
+  assumes "y \<in> totatives d" 
+  shows "card {x \<in> totatives m. [x = y] (mod d)} = 
+         card {x \<in> totatives m. [x = 1] (mod d)}"
+proof -
+  let ?A = "{x \<in> totatives m. [x = y] (mod d)}"
+  let ?B = "{x \<in> totatives m. [x = 1] (mod d)}"
+  assume "d dvd m" "m > 1" "d > 0" 
+  assume y_tot: "y \<in> totatives d" 
+  then have y_cop: "coprime y d" unfolding totatives_def by blast
+  then obtain y' where y'_def: "[y'*y = 1] (mod d)" 
+    by (metis cong_solve mult.commute)
+  have y_not_0: "y \<noteq> 0" using y_tot unfolding totatives_def by auto
+  have d_not_0: "d \<noteq> 0" using assms(3) by blast
+  have m_not_0: "m \<noteq> 0" using assms(2) by auto
+  let ?f = "\<lambda> x. y'*x"
+  let ?g = "\<lambda> x. y*x"
+  have 1: "finite ?A" by simp
+  have 2: "finite ?B" by simp
+  have 3: "?f ` ?A = ?B" 
+  proof -
+    fix t
+    assume "t \<in> ?B"
+    then have "t \<in> totatives m \<and> [t = 1] (mod d)" by auto
+    then have "\<exists> x \<in> ?A. y'*x = t" 
+    proof -
+      from  chinese_solution[of y d m, 
+           OF y_not_0 d_not_0 y_cop assms(1) 
+           m_not_0]
+      obtain n where "[n = y] (mod d) \<and> coprime n m" by blast
+      
+    qed
+    thm chinese_solution[] assms
+  qed
+    sorry
+
+    have 4: "?g ` ?B = ?A" sorry
+  
+    from double_finite_surj[OF 1 2 3 4]
+    show "card {x \<in> totatives m. [x = y] (mod d)} = 
+         card {x \<in> totatives m. [x = 1] (mod d)}"
+
+
+ 
+  have "bij_betw (\<lambda> x. (y*x) mod d)
+                 {x \<in> totatives m. [x = 1] (mod d)} 
+                 {x \<in> totatives m. [x = y] (mod d)}"
+    unfolding bij_betw_def
+  proof
+    show "inj_on (\<lambda>x. y * x mod d)
+     {x \<in> totatives m. [x = 1] (mod d)}" 
+      unfolding inj_on_def
+    proof(safe)
+      fix x z
+      assume "x \<in> totatives m" "[x = 1] (mod d)"
+      assume "z \<in> totatives m" "[z = 1] (mod d)"
+      assume "y * x mod d = y * z mod d" 
+      then have "[y*x = y*z] (mod d)" using cong_def by blast
+      then have "[y'*y*x = y'*y*z] (mod d)" using cong_mult_lcancel_nat cong_scalar_left y_cop by blast
+      then have "[x = z] (mod d)" using y'_def using \<open>[y * x = y * z] (mod d)\<close> cong_mult_lcancel_nat y_cop by blast
+      then show "x = z" 
+      proof -
+
+      qed
+    qed
 qed
 
 section \<open>Moebius\<close>
