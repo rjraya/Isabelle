@@ -2,6 +2,7 @@ theory Fourier
   imports 
     "HOL-Number_Theory.Number_Theory"
     "HOL-Analysis.Analysis"
+    "HOL-Algebra.Coset"
     Dirichlet_L.Dirichlet_Characters
     Dirichlet_Series.More_Totient
     Dirichlet_Series.Moebius_Mu
@@ -562,142 +563,213 @@ proof(simp add: 2 cong_add_lcancel_0_nat cong_mult_self_right)
     by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)
 qed
 
-lemma chinese_solution:
-  fixes r d k :: nat
-  assumes "r \<noteq> 0" "d \<noteq> 0" "coprime r d" "d dvd k" "k \<noteq> 0"
-  shows "\<exists> n. [n = r] (mod d) \<and> coprime n k"
-proof -
-  define k' where "k' = \<Prod> {p. prime p \<and> p dvd k \<and> \<not> p dvd d}"
-  have "coprime k' d" 
-    unfolding k'_def 
-    by (metis (no_types, lifting) mem_Collect_eq prime_imp_coprime_nat prod_coprime_left)
-  then have "coprime d k'" using coprime_commute[of k' d] by blast
-  have "k' \<noteq> 0" 
-    unfolding k'_def 
-    by (metis (no_types, lifting) mem_Collect_eq not_prime_0 prod.infinite prod_zero_iff zero_neq_one)
-  from chinese_remainder[of d k' r 1, OF \<open>coprime d k'\<close> assms(2) \<open>k' \<noteq> 0\<close>]
-  obtain x q1 q2 where "x = r + q1 * d \<and> x = 1 + q2 * k'" by blast
-  then have eq: "[x = r] (mod d) \<and> [x = 1] (mod k')" 
-    by (metis cong_add_lcancel_0_nat cong_to_1'_nat)
-  then have cop: "coprime x k" 
+lemma coprime_iff_prime_factors_disjoint:
+  fixes x y :: "'a :: factorial_semiring"
+  assumes "x \<noteq> 0" "y \<noteq> 0"
+  shows "coprime x y \<longleftrightarrow> prime_factors x \<inter> prime_factors y = {}"
+proof 
+  assume "coprime x y"
+  have False if "p \<in> prime_factors x" "p \<in> prime_factors y" for p
   proof -
-   have "coprime x k'" using eq 
-     using cong_imp_coprime_nat cong_sym coprime_1_left by blast
-   have "coprime x d" using eq 
-     using assms(3) cong_imp_coprime_nat cong_sym by blast 
-   have "\<forall> p. prime p \<and> p dvd k \<longrightarrow> coprime x p" 
-     unfolding k'_def
-   proof(safe)
-     fix p 
-     assume "prime p" "p dvd k" 
-     then show "coprime x p" 
-     proof(cases "p dvd d")
-       case True then show ?thesis using \<open>coprime x d\<close> by auto
-     next
-       case False
-       then show ?thesis  
-       proof -
-         have "p \<in> {p. prime p \<and> p dvd k \<and> \<not> p dvd d}"
-           using \<open>prime p\<close> \<open>p dvd k\<close> False by auto
-         then have "p dvd k'" unfolding k'_def
-         proof -           
-           have "finite {p. prime p \<and> p dvd k \<and> \<not> p dvd d}" 
-             using assms(5) by auto
-           from prod_dvd_prod_subset[of "{p. prime p \<and> p dvd k \<and> \<not> p dvd d}" "{p}" id, 
-                OF this, simplified]
-           have "prod id {p} dvd prod id {p. prime p \<and> p dvd k \<and> \<not> p dvd d}" 
-             using \<open>prime p\<close> \<open>p dvd k\<close> \<open>\<not> p dvd d\<close> by simp
-           then show "p dvd \<Prod>{p. prime p \<and> p dvd k \<and> \<not> p dvd d}" by simp
-         qed
-         then show "coprime x p" using \<open>coprime x k'\<close> k'_def by fastforce
-       qed
-     qed
-   qed
-   note lem = this
-   {fix p
-   have "prime p \<Longrightarrow> p dvd x \<Longrightarrow> p dvd k \<Longrightarrow> p = 1"
-     using lem by (meson coprime_absorb_right dvd_antisym one_dvd)
-   } then show "coprime x k" (* generalize this argument, also apears in technical_m *)
-    by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)    
+    from that assms have "p dvd x" "p dvd y"
+      by (auto simp: prime_factors_dvd)
+    with \<open>coprime x y\<close> have "p dvd 1"
+      using coprime_common_divisor by auto
+    with that assms show False by (auto simp: prime_factors_dvd)
   qed
-  show ?thesis using cop eq by blast
+  thus "prime_factors x \<inter> prime_factors y = {}" by auto
+next
+  assume disjoint: "prime_factors x \<inter> prime_factors y = {}"
+  show "coprime x y"
+  proof (rule coprimeI)
+    fix d assume d: "d dvd x" "d dvd y"
+    show "is_unit d"
+    proof (rule ccontr)
+      assume "\<not>is_unit d"
+      moreover from this and d assms have "d \<noteq> 0" by auto
+      ultimately obtain p where p: "prime p" "p dvd d"
+        using prime_divisor_exists by auto
+      with d and assms have "p \<in> prime_factors x \<inter> prime_factors y"
+        by (auto simp: prime_factors_dvd)
+      with disjoint show False by auto
+    qed
+  qed
 qed
 
-lemma double_finite_surj:
-  fixes f :: "nat \<Rightarrow> nat" and A B :: "nat set"
-  assumes "finite A" "finite B" 
-          "f ` A = B" "g ` B = A"
-  shows "card A = card B"
-  using assms 
-  by (metis card_image_le le_antisym)
+lemma coprime_cong_prime_factors:
+  fixes x y :: "'a :: factorial_semiring_gcd"
+  assumes "x \<noteq> 0" "y \<noteq> 0" "x' \<noteq> 0" "y' \<noteq> 0"
+  assumes "prime_factors x = prime_factors x'"
+  assumes "prime_factors y = prime_factors y'"
+  shows   "coprime x y \<longleftrightarrow> coprime x' y'"
+  using assms by (simp add: coprime_iff_prime_factors_disjoint)
 
-lemma 
-  assumes "d dvd m" "m > 1" "d > 0" 
-  assumes "y \<in> totatives d" 
-  shows "card {x \<in> totatives m. [x = y] (mod d)} = 
-         card {x \<in> totatives m. [x = 1] (mod d)}"
+lemma kernel_partition:
+  fixes m n :: nat and f :: "nat \<Rightarrow> nat" and G H
+  assumes "G = residue_mult_group n"
+  assumes "H = residue_mult_group m"
+  assumes "f = (\<lambda>k. k mod m)"
+  assumes "m > 1" "n > 0" "m dvd n" 
+  shows "partition (carrier G) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+        and "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
+        and "card (kernel G H f) = totient n div totient m"
 proof -
-  let ?A = "{x \<in> totatives m. [x = y] (mod d)}"
-  let ?B = "{x \<in> totatives m. [x = 1] (mod d)}"
-  assume "d dvd m" "m > 1" "d > 0" 
-  assume y_tot: "y \<in> totatives d" 
-  then have y_cop: "coprime y d" unfolding totatives_def by blast
-  then obtain y' where y'_def: "[y'*y = 1] (mod d)" 
-    by (metis cong_solve mult.commute)
-  have y_not_0: "y \<noteq> 0" using y_tot unfolding totatives_def by auto
-  have d_not_0: "d \<noteq> 0" using assms(3) by blast
-  have m_not_0: "m \<noteq> 0" using assms(2) by auto
-  let ?f = "\<lambda> x. y'*x"
-  let ?g = "\<lambda> x. y*x"
-  have 1: "finite ?A" by simp
-  have 2: "finite ?B" by simp
-  have 3: "?f ` ?A = ?B" 
-  proof -
-    fix t
-    assume "t \<in> ?B"
-    then have "t \<in> totatives m \<and> [t = 1] (mod d)" by auto
-    then have "\<exists> x \<in> ?A. y'*x = t" 
-    proof -
-      from  chinese_solution[of y d m, 
-           OF y_not_0 d_not_0 y_cop assms(1) 
-           m_not_0]
-      obtain n where "[n = y] (mod d) \<and> coprime n m" by blast
-      
-    qed
-    thm chinese_solution[] assms
-  qed
-    sorry
+  have "1 < m" by fact
+  also have "m \<le> n" using \<open>n > 0\<close> \<open>m dvd n\<close> by (intro dvd_imp_le) auto
+  finally have "n > 1" .
+  note mn = \<open>m > 1\<close> \<open>n > 1\<close> \<open>m dvd n\<close> \<open>m \<le> n\<close>
 
-    have 4: "?g ` ?B = ?A" sorry
+  interpret n: residues_nat n G
+    using mn by unfold_locales (auto simp: assms)
+  interpret m: residues_nat m H
+    using mn by unfold_locales (auto simp: assms)
   
-    from double_finite_surj[OF 1 2 3 4]
-    show "card {x \<in> totatives m. [x = y] (mod d)} = 
-         card {x \<in> totatives m. [x = 1] (mod d)}"
-
-
- 
-  have "bij_betw (\<lambda> x. (y*x) mod d)
-                 {x \<in> totatives m. [x = 1] (mod d)} 
-                 {x \<in> totatives m. [x = y] (mod d)}"
-    unfolding bij_betw_def
-  proof
-    show "inj_on (\<lambda>x. y * x mod d)
-     {x \<in> totatives m. [x = 1] (mod d)}" 
-      unfolding inj_on_def
-    proof(safe)
-      fix x z
-      assume "x \<in> totatives m" "[x = 1] (mod d)"
-      assume "z \<in> totatives m" "[z = 1] (mod d)"
-      assume "y * x mod d = y * z mod d" 
-      then have "[y*x = y*z] (mod d)" using cong_def by blast
-      then have "[y'*y*x = y'*y*z] (mod d)" using cong_mult_lcancel_nat cong_scalar_left y_cop by blast
-      then have "[x = z] (mod d)" using y'_def using \<open>[y * x = y * z] (mod d)\<close> cong_mult_lcancel_nat y_cop by blast
-      then show "x = z" 
-      proof -
-
-      qed
+  from mn have subset: "f ` carrier G \<subseteq> carrier H"
+    by (auto simp: assms(1-3) residue_mult_group_def totatives_def
+             dest: coprime_common_divisor_nat intro!: Nat.gr0I)
+  moreover have "carrier H \<subseteq> f ` carrier G"
+  proof safe
+    fix k assume "k \<in> carrier H"
+    hence k: "k > 0" "k \<le> m" "coprime k m"             
+      by (auto simp: assms(2) residue_mult_group_def totatives_def)
+    from mn \<open>k \<in> carrier H\<close> have "k < m"
+      by (simp add: totatives_less assms(2) residue_mult_group_def)
+    define P where "P = {p \<in> prime_factors n. \<not>(p dvd m)}"
+    define a where "a = \<Prod>P"
+    have [simp]: "a \<noteq> 0" by (auto simp: P_def a_def intro!: Nat.gr0I)
+    have [simp]: "prime_factors a = P"
+    proof -
+      have "prime_factors a = set_mset (sum prime_factorization P)"
+        unfolding a_def using mn
+        by (subst prime_factorization_prod)
+           (auto simp: P_def prime_factors_dvd prime_gt_0_nat)
+      also have "sum prime_factorization P = (\<Sum>p\<in>P. {#p#})"
+        using mn by (intro sum.cong) (auto simp: P_def prime_factorization_prime prime_factors_dvd)
+      finally show ?thesis by (simp add: P_def)
     qed
+
+    from mn have "coprime m a"
+      by (subst coprime_iff_prime_factors_disjoint) (auto simp: P_def)
+    hence "\<exists>x. [x = k] (mod m) \<and> [x = 1] (mod a)"
+      by (intro binary_chinese_remainder_nat)
+    then obtain x where x: "[x = k] (mod m)" "[x = 1] (mod a)"
+      by auto
+    from x(1) mn k have [simp]: "x \<noteq> 0"
+      using coprime_common_divisor[of k m] by (auto intro!: Nat.gr0I simp: cong_def)
+      
+    from x(2) have "coprime x a"
+      using cong_imp_coprime cong_sym by force
+    hence "coprime x (a * m)"
+      using k cong_imp_coprime_nat[OF cong_sym[OF x(1)]] by auto
+    also have "?this \<longleftrightarrow> coprime x n" using mn
+      by (intro coprime_cong_prime_factors)
+         (auto simp: prime_factors_product P_def in_prime_factors_iff)
+    finally have "x mod n \<in> totatives n"
+      using mn by (auto simp: totatives_def intro!: Nat.gr0I)
+
+    moreover have "f (x mod n) = k"
+      using x(1) k mn \<open>k < m\<close> by (auto simp: assms(3) cong_def mod_mod_cancel)
+    ultimately show "k \<in> f ` carrier G"
+      by (auto simp: assms(1) residue_mult_group_def)
+  qed
+
+  ultimately have image_eq: "f ` carrier G = carrier H" by blast
+
+  have [simp]: "f (k \<otimes>\<^bsub>G\<^esub> l) = f k \<otimes>\<^bsub>H\<^esub> f l" if "k \<in> carrier G" "l \<in> carrier G" for k l
+    using that mn by (auto simp: assms(1-3) residue_mult_group_def totatives_def
+                                 mod_mod_cancel mod_mult_eq)
+  interpret f: group_hom G H f
+    using subset by unfold_locales (auto simp: hom_def)
+  
+  show "partition (carrier G) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+  proof 
+    show "\<And>a. a \<in> carrier G \<Longrightarrow>
+         \<exists>!b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<and> a \<in> b"
+    proof -
+      fix a
+      assume a_in: "a \<in> carrier G"
+      show "\<exists>!b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<and> a \<in> b"
+      proof -
+       (*exists*)
+        have "\<exists>b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<and> a \<in> b"
+          using a_in n.rcosets_part_G[OF f.subgroup_kernel]
+          by blast
+        then show ?thesis
+          using group.rcos_disjoint[OF n.is_group f.subgroup_kernel] by auto
+      qed       
+    qed
+  next
+    show "\<And>b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<Longrightarrow> b \<subseteq> carrier G"
+      using n.rcosets_part_G f.subgroup_kernel by auto
+  qed
+
+  (* sizes *)
+  have lagr: "card (carrier G) = card (rcosets\<^bsub>G\<^esub> kernel G H f) * card (kernel G H f)" 
+        using group.lagrange_finite[OF n.is_group n.fin f.subgroup_kernel] Coset.order_def[of G] by argo
+  have k_size: "card (kernel G H f) > 0" 
+    using f.subgroup_kernel finite_subset n.subgroupE(1) n.subgroupE(2) by fastforce
+  have G_size: "card (carrier G) = totient n"
+    using n.order Coset.order_def[of G] by simp
+  have H_size: " totient m = card (carrier H)"
+    using n.order Coset.order_def[of H] by simp
+  also have "... = card (carrier (G Mod kernel G H f))" 
+    using f.FactGroup_iso[OF image_eq] card_image f.FactGroup_inj_on f.FactGroup_onto image_eq by fastforce
+  also have "... = card (carrier G) div card (kernel G H f)"
+  proof -    
+    have "card (carrier (G Mod kernel G H f)) = 
+          card (rcosets\<^bsub>G\<^esub> kernel G H f)" 
+      unfolding FactGroup_def by simp
+    also have "... = card (carrier G) div card (kernel G H f)"
+      by(simp add: lagr k_size)
+    finally show ?thesis by blast
+  qed
+  also have "... = totient n div card (kernel G H f)"
+    using G_size by argo
+  finally have eq: "totient m = totient n div card (kernel G H f)" by simp
+  show "card (kernel G H f) = totient n div totient m"
+    using lagr G_size 
+    by (metis assms(4) div_mult_self_is_m eq k_size nonzero_mult_div_cancel_left not_one_less_zero totient_0_iff)
+  show "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
+  proof -
+    have H_size: " totient m = card (carrier H)"
+      using n.order Coset.order_def[of H] by simp
+    also have "... = card (carrier (G Mod kernel G H f))" 
+      using f.FactGroup_iso[OF image_eq] card_image f.FactGroup_inj_on f.FactGroup_onto image_eq by fastforce
+    also have "card (carrier (G Mod kernel G H f)) = 
+          card (rcosets\<^bsub>G\<^esub> kernel G H f)" 
+      unfolding FactGroup_def by simp 
+    finally show "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
+      by argo
+  qed
 qed
+
+lemma mod_coset:
+  fixes m n m1 m2 :: nat and f :: "nat \<Rightarrow> nat" and G H
+  assumes "G = residue_mult_group n"
+  assumes "H = residue_mult_group m"
+  assumes "f = (\<lambda>k. k mod m)"
+  assumes "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)"
+  assumes "m1 \<in> b" "m2 \<in> b"
+  shows "m1 mod m = m2 mod m"
+proof -
+  from assms(4)
+  obtain a :: nat where cos_expr: "b = (kernel G H f) #>\<^bsub>G\<^esub> a \<and> a \<in> carrier G" 
+    using RCOSETS_def[of G "kernel G H f"] by blast
+  
+  obtain m1' m2' where "m1 = m1'*a \<and> m1' \<in> kernel G H f"
+                       "m2 = m2'*a \<and> m2' \<in> kernel G H f"
+  proof - 
+    have "m1 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
+      using r_coset_def[of G "kernel G H f" a] cos_expr assms(5)
+      by blast
+    then obtain m1' where "m1 = m1' \<otimes>\<^bsub>G\<^esub> a \<and> m1' \<in> kernel G H f" 
+      by blast
+    interpret "m1' \<otimes>\<^bsub>G\<^esub> a = monoid.mult m1' a" 
+      using assms(1) unfolding residue_mult_group_def[of n] 
+      
+  qed
+qed
+
 
 section \<open>Moebius\<close>
 
@@ -3290,7 +3362,8 @@ theorem primitive_principal_form:
   assumes "\<chi>\<^sub>1 = principal_dchar k"
   assumes "\<chi> \<noteq> principal_dchar k"  
   shows "\<exists> \<Phi>. primitive_character \<Phi> (conductor \<chi> k) \<and>
-              (\<forall> n. \<chi>(n) = \<Phi>(n) * \<chi>\<^sub>1(n))"
+              (\<forall> n. \<chi>(n) = \<Phi>(n) * \<chi>\<^sub>1(n)) \<and>
+              \<Phi> \<in> dcharacters (conductor \<chi> k)"
 proof -
   have k_gr_0: "k > 0" using mod_positive[OF assms(1)] by simp
   define d where "d = conductor \<chi> k" 
@@ -3343,11 +3416,12 @@ proof -
     qed
   qed     
 
-  from \<Phi>_def \<Phi>_prim d_def show ?thesis by blast
+  from \<Phi>_def \<Phi>_prim d_def phi_dchars show ?thesis by blast
 qed
 
 theorem 
   assumes is_char: "\<chi> \<in> dcharacters k"
+  assumes "\<chi> \<noteq> principal_dchar k" 
   shows "primitive_character \<chi> k \<longleftrightarrow> (\<forall> n. n > 0 \<longrightarrow> separable \<chi> k n)"
 proof 
   assume "primitive_character \<chi> k" 
@@ -3368,8 +3442,10 @@ next
      have "\<exists> r. \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0"
      proof -
        have "k > 1" using is_char mod_positive by auto
+       then have "k > 0" by simp
        define d where "d = conductor \<chi> k"
        have "d > 0" unfolding d_def using conductor_gr_0[OF assms(1)] .
+       then have "d > 1" using assms(2) d_def conductor_1_principal[OF assms(1)] by auto
        have "d < k" unfolding d_def using primitive_conductor[OF assms(1) as] .
        have "d dvd k" unfolding d_def using conductor_dvd[OF assms(1)] by blast
        define r where "r = k div d"
@@ -3378,8 +3454,11 @@ next
        then have 1: "\<not> coprime r k" by auto
        define \<chi>\<^sub>1 where "\<chi>\<^sub>1 = principal_dchar k" 
        from primitive_principal_form[OF assms(1) \<chi>\<^sub>1_def False]
-       obtain \<Phi> where prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n))" by blast
-
+       obtain \<Phi> where 
+          prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n)) \<and> 
+                 primitive_character \<Phi> d \<and>
+                 \<Phi> \<in> dcharacters d" 
+         using d_def by blast
        have "gauss_sum \<chi> k r  = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*r))"
          unfolding gauss_sum_def[OF assms(1)] by blast
        also have "... = (\<Sum> m = 1..k . \<Phi>(m)*\<chi>\<^sub>1(m) * unity_root k (m*r))"
@@ -3400,9 +3479,61 @@ next
        qed
        also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m)"
          by(rule sum.cong,auto simp add: \<chi>\<^sub>1_def principal_dchar_def)
+       thm disjoint_sum[of _ _ "\<lambda> m. \<Phi>(m) * unity_root d m" ]
+       thm kernel_partition
        also have "... = (totient k div totient d) * (\<Sum> m | m \<in> {1..k} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+       proof -
+         define G where "G = residue_mult_group k"
+         define H where "H = residue_mult_group d"
+         define f where "f = (\<lambda> t. t mod d)" 
+         thm G_def
+          
+         from kernel_partition(2)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]
+         have fin_cosets: "finite (rcosets\<^bsub>G\<^esub> kernel G H f)"         
+           using \<open>1 < d\<close> card_infinite by fastforce
          
-       }
+         have fin_G: "finite (carrier G)"
+           unfolding G_def residue_mult_group_def by simp
+         thm kernel_partition
+         have "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
+               (\<Sum> m | m \<in> carrier G . \<Phi>(m) * unity_root d m)"
+           unfolding residue_mult_group_def totatives_def G_def
+           by(rule sum.cong,auto)
+         thm disjoint_sum[OF fin_cosets fin_G kernel_partition(1)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>], of f]
+         also have "... = sum (\<lambda> m. \<Phi>(m) * unity_root d m) (carrier G)" by simp
+         also have "... = 
+           sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+           by(rule disjoint_sum[OF fin_cosets fin_G 
+                  kernel_partition(1)[OF G_def H_def f_def 
+                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
+         also have "... =
+            (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
+                (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" by simp
+         also have "... = 
+            (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
+               ((totient k div totient d) * (SOME x . \<exists> m \<in> b. x = \<Phi> m * unity_root d (int m))))"
+         proof -
+           fix b m1 m2
+           assume b_in: "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)" 
+           assume m_in: "m1 \<in> b" "m2 \<in> b" 
+           have "\<Phi> m1 * unity_root d (int m1) = \<Phi> m2 * unity_root d (int m2)"
+           proof -
+             have "m1 mod d = m2 mod d"
+               using b_in m_in 
+               unfolding f_def
+               
+             have "\<Phi> \<in> dcharacters d" using prod by blast
+             then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
+             then have "\<Phi> m1 = \<Phi> m2" 
+               using mod_periodic[OF \<open>periodic \<Phi> d\<close>] 
+              
+           qed
+           have "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
+                 ((totient k div totient d) * (SOME x . \<exists> m \<in> b. x = \<Phi> m * unity_root d (int m)))"
+   
+         qed
+       qed
+       
   then show "primitive_character \<chi> k" 
     using gauss_reduction gauss_coprime_separable 
     sorry
