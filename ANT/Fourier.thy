@@ -613,6 +613,8 @@ lemma kernel_partition:
   shows "partition (carrier G) (rcosets\<^bsub>G\<^esub> kernel G H f)"
         and "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
         and "card (kernel G H f) = totient n div totient m"
+        and "b \<in>(rcosets\<^bsub>G\<^esub> kernel G H f) \<Longrightarrow> b \<noteq> {}"
+        and "b \<in>(rcosets\<^bsub>G\<^esub> kernel G H f) \<Longrightarrow> card (kernel G H f) = card b"
 proof -
   have "1 < m" by fact
   also have "m \<le> n" using \<open>n > 0\<close> \<open>m dvd n\<close> by (intro dvd_imp_le) auto
@@ -702,7 +704,7 @@ proof -
     show "\<And>b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<Longrightarrow> b \<subseteq> carrier G"
       using n.rcosets_part_G f.subgroup_kernel by auto
   qed
-
+   
   (* sizes *)
   have lagr: "card (carrier G) = card (rcosets\<^bsub>G\<^esub> kernel G H f) * card (kernel G H f)" 
         using group.lagrange_finite[OF n.is_group n.fin f.subgroup_kernel] Coset.order_def[of G] by argo
@@ -741,6 +743,21 @@ proof -
     finally show "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
       by argo
   qed
+
+  assume "b \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
+  then show "b \<noteq> {}"
+  proof -
+    have "card b = card (kernel G H f)"
+      using \<open>b \<in> rcosets\<^bsub>G\<^esub> kernel G H f\<close> f.subgroup_kernel n.card_rcosets_equal n.subgroupE(1) by auto
+    then have "card b > 0" 
+      by (simp add: k_size)
+    then show ?thesis by auto
+  qed
+
+  assume b_cos: "b \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
+  show "card (kernel G H f) = card b" 
+    using group.card_rcosets_equal[OF n.is_group b_cos] 
+          f.subgroup_kernel subgroup.subset by blast  
 qed
 
 lemma mod_coset:
@@ -750,26 +767,113 @@ lemma mod_coset:
   assumes "f = (\<lambda>k. k mod m)"
   assumes "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)"
   assumes "m1 \<in> b" "m2 \<in> b"
+  assumes "n > 1" "m dvd n"
   shows "m1 mod m = m2 mod m"
 proof -
+  have h_1: "\<one>\<^bsub>H\<^esub> = 1" 
+    using assms(2) unfolding residue_mult_group_def totatives_def by simp
+    
   from assms(4)
   obtain a :: nat where cos_expr: "b = (kernel G H f) #>\<^bsub>G\<^esub> a \<and> a \<in> carrier G" 
     using RCOSETS_def[of G "kernel G H f"] by blast
+  then have cop: "coprime a n" 
+    using assms(1) unfolding residue_mult_group_def totatives_def
+    by auto
   
-  obtain m1' m2' where "m1 = m1'*a \<and> m1' \<in> kernel G H f"
-                       "m2 = m2'*a \<and> m2' \<in> kernel G H f"
-  proof - 
-    have "m1 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
-      using r_coset_def[of G "kernel G H f" a] cos_expr assms(5)
-      by blast
-    then obtain m1' where "m1 = m1' \<otimes>\<^bsub>G\<^esub> a \<and> m1' \<in> kernel G H f" 
-      by blast
-    interpret "m1' \<otimes>\<^bsub>G\<^esub> a = monoid.mult m1' a" 
-      using assms(1) unfolding residue_mult_group_def[of n] 
-      
+  obtain a' where "[a * a' = 1] (mod n)"
+    using cong_solve_coprime_nat[OF cop] by auto
+  then have a_inv: "(a*a') mod n = 1" 
+    using cong_def[of "a*a'" 1 n] assms(7) by simp
+
+  have "m1 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
+       "m2 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
+    using r_coset_def[of G "kernel G H f" a] cos_expr assms(5,6)
+    by blast+
+  then have "m1 \<in> (\<Union>h\<in>kernel G H f. {(h * a) mod n})"
+            "m2 \<in> (\<Union>h\<in>kernel G H f. {(h * a) mod n})"
+    using assms(1) unfolding residue_mult_group_def[of n] 
+    by auto
+  then obtain m1' m2' where 
+    m_expr: "m1 = (m1'* a) mod n \<and> m1' \<in> kernel G H f" 
+            "m2 = (m2'* a) mod n \<and> m2' \<in> kernel G H f" 
+    by blast
+
+  have eq_1: "m1 mod m = a mod m" 
+  proof -
+    have "m1 mod m = ((m1'* a) mod n) mod m" using m_expr by blast
+    also have "... = (m1' * a) mod m" 
+      using euclidean_semiring_cancel_class.mod_mod_cancel assms(8) by blast
+    also have "... = (m1' mod m) * (a mod m) mod m" 
+      by (simp add: mod_mult_eq)
+    also have "... = (a mod m) mod m" 
+      using m_expr(1) h_1 unfolding kernel_def assms(3) by simp
+    also have "... = a mod m" by auto
+    finally show ?thesis by simp
   qed
+
+  have eq_2: "m2 mod m = a mod m" 
+  proof -
+    have "m2 mod m = ((m2'* a) mod n) mod m" using m_expr by blast
+    also have "... = (m2' * a) mod m" 
+      using euclidean_semiring_cancel_class.mod_mod_cancel assms(8) by blast
+    also have "... = (m2' mod m) * (a mod m) mod m" 
+      by (simp add: mod_mult_eq)
+    also have "... = (a mod m) mod m" 
+      using m_expr(2) h_1 unfolding kernel_def assms(3) by simp
+    also have "... = a mod m" by auto
+    finally show ?thesis by simp
+  qed
+
+  from eq_1 eq_2 show ?thesis by argo
 qed
 
+lemma cosets_units_bij:
+ fixes m n m1 m2 :: nat and f :: "nat \<Rightarrow> nat" and G H
+ assumes "G = residue_mult_group n"
+ assumes "H = residue_mult_group m"
+ assumes "f = (\<lambda>k. k mod m)"
+ assumes "n > 0" "m > 1" "m dvd n"
+ shows "bij_betw (\<lambda>b. (SOME x. \<exists> y \<in> b. x = f y)) (rcosets\<^bsub>G\<^esub> kernel G H f) (carrier H)"
+    unfolding bij_betw_def  
+proof 
+  show "inj_on (\<lambda>b. (SOME x. \<exists> y \<in> b. x = f y)) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+  proof
+    fix x y
+    assume as: "x \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
+           "y \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
+           "(SOME xa. \<exists>l\<in>x. xa = f l) =
+            (SOME xb. \<exists>l\<in>y. xb = f l)"
+    have "x \<noteq> {}" "y \<noteq> {}"
+      using kernel_partition(4)[OF 
+             assms(1) assms(2) assms(3) 
+               \<open>m > 1\<close> \<open>n > 0\<close> \<open>m dvd n\<close>]
+        \<open>x \<in> rcosets\<^bsub>G\<^esub> kernel G H f\<close>
+        \<open>y \<in> rcosets\<^bsub>G\<^esub> kernel G H f\<close>
+      by simp+
+    have "\<exists> xa. \<exists>l\<in>x. xa = f l" "\<exists> xb. \<exists>l\<in>y. xb = f l" 
+      using \<open>x \<noteq> {}\<close> \<open>y \<noteq> {}\<close> by blast+
+    have "\<exists> xa xb . (\<exists>l\<in>x. xa = f l) \<and>
+                    (\<exists>l\<in>y. xb = f l) \<and> 
+                    xa = xb"
+      using as(3) someI  sorry
+      
+    show "x = y"
+      
+      sorry
+  qed
+
+  show "(\<lambda>b. SOME x. \<exists>y\<in>b. x = f y) ` (rcosets\<^bsub>G\<^esub> kernel G H f) = carrier H"
+    unfolding image_def  
+  proof
+    let ?A = "{y. \<exists>x\<in>rcosets\<^bsub>G\<^esub> kernel G H f. y = (SOME xa. \<exists>y\<in>x. xa = f y)}"
+    let ?B = "carrier H"
+    show "?A \<subseteq> ?B" 
+     
+    proof -
+
+    qed
+  qed
+qed
 
 section \<open>Moebius\<close>
 
@@ -3351,7 +3455,7 @@ lemma primitive_conductor:
 end
 
 
-thm primitive_character_def conductor_def
+
 context 
   includes no_vec_lambda_notation
 begin
@@ -3419,6 +3523,93 @@ proof -
   from \<Phi>_def \<Phi>_prim d_def phi_dchars show ?thesis by blast
 qed
 
+subsection\<open>Primitive characters and separable Gauss sums\<close>
+
+lemma key_transform:
+ assumes \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>
+ shows "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
+  (totient k div totient d) * (\<Sum> m | m \<in> {1..k} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+proof -
+ define G where "G = residue_mult_group k"
+ define H where "H = residue_mult_group d"
+ define f where "f = (\<lambda> t. t mod d)" 
+       
+ from kernel_partition(2)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]
+ have fin_cosets: "finite (rcosets\<^bsub>G\<^esub> kernel G H f)"         
+  using \<open>1 < d\<close> card_infinite by fastforce
+        
+ have fin_G: "finite (carrier G)"
+   unfolding G_def residue_mult_group_def by simp
+
+ have "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
+       (\<Sum> m | m \<in> carrier G . \<Phi>(m) * unity_root d m)"
+  unfolding residue_mult_group_def totatives_def G_def
+  by(rule sum.cong,auto)
+ also have "... = sum (\<lambda> m. \<Phi>(m) * unity_root d m) (carrier G)" by simp
+ also have "... = sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+  by(rule disjoint_sum[OF fin_cosets fin_G 
+          kernel_partition(1)[OF G_def H_def f_def 
+                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
+ also have "... =
+  (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" by simp
+ also obtain l where "... = 
+  (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . ((totient k div totient d) * (\<Phi> (l b) * unity_root d (int (l b)))))"
+            "\<forall> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . l b \<in> b"  
+         proof -
+           {fix b
+            assume b_in: "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)" 
+            {fix m1 m2
+             assume m_in: "m1 \<in> b" "m2 \<in> b" 
+             have "\<Phi> m1 * unity_root d (int m1) = \<Phi> m2 * unity_root d (int m2)"
+             proof -
+              have m_mod: "m1 mod d = m2 mod d"               
+               using mod_coset[OF G_def H_def f_def b_in m_in \<open>k > 1\<close> \<open>d dvd k\<close>]
+               by blast
+              have "\<Phi> \<in> dcharacters d" using prod by blast
+              then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
+              have 1: "\<Phi> m1 = \<Phi> m2" 
+               using mod_periodic[OF \<open>periodic \<Phi> d\<close> m_mod] by simp 
+              have 2: "unity_root d m1 = unity_root d m2"
+               using m_mod unity_mod [of d] 
+               by (metis zmod_int)
+              from 1 2 show ?thesis by simp
+             qed}   
+             note all_eq_in_coset = this
+             have 
+              "\<exists> l. l \<in> b \<and> (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
+               ((totient k div totient d) * (\<Phi> l * unity_root d (int l)))"
+             proof -
+              have "b \<noteq> {}" 
+               using kernel_partition(4)[OF G_def H_def f_def 
+                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>] b_in by simp
+              then obtain l where 1: "l \<in> b" by blast
+              have 
+               "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
+                (\<Sum> m \<in> b. \<Phi> l * unity_root d (int l))"              
+                apply(rule sum.cong,simp)
+                using all_eq_in_coset \<open>l \<in> b\<close> by blast
+              also have "... = card b * \<Phi> l * unity_root d (int l)"
+               by simp
+              also have "... = (totient k div totient d) * \<Phi> l * unity_root d (int l)"
+               using kernel_partition(3)[OF G_def H_def f_def 
+                 \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>] 
+                 kernel_partition(5)[OF G_def H_def f_def 
+                 \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close> b_in] by argo
+              finally have 2:
+                "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) = 
+                 (totient k div totient d) * \<Phi> l * unity_root d (int l)" 
+               by blast
+              from 1 2 show ?thesis by auto
+             qed}
+             then obtain l  where 
+          "(\<forall> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f). l b \<in> b) \<and>
+           (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
+           ((totient k div totient d) * (\<Phi> (l b) * unity_root d (int (l b)))))"
+             
+       qed
+
+
+(* theorem 8.19 *)
 theorem 
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes "\<chi> \<noteq> principal_dchar k" 
@@ -3481,58 +3672,7 @@ next
          by(rule sum.cong,auto simp add: \<chi>\<^sub>1_def principal_dchar_def)
        thm disjoint_sum[of _ _ "\<lambda> m. \<Phi>(m) * unity_root d m" ]
        thm kernel_partition
-       also have "... = (totient k div totient d) * (\<Sum> m | m \<in> {1..k} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
-       proof -
-         define G where "G = residue_mult_group k"
-         define H where "H = residue_mult_group d"
-         define f where "f = (\<lambda> t. t mod d)" 
-         thm G_def
-          
-         from kernel_partition(2)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]
-         have fin_cosets: "finite (rcosets\<^bsub>G\<^esub> kernel G H f)"         
-           using \<open>1 < d\<close> card_infinite by fastforce
-         
-         have fin_G: "finite (carrier G)"
-           unfolding G_def residue_mult_group_def by simp
-         thm kernel_partition
-         have "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
-               (\<Sum> m | m \<in> carrier G . \<Phi>(m) * unity_root d m)"
-           unfolding residue_mult_group_def totatives_def G_def
-           by(rule sum.cong,auto)
-         thm disjoint_sum[OF fin_cosets fin_G kernel_partition(1)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>], of f]
-         also have "... = sum (\<lambda> m. \<Phi>(m) * unity_root d m) (carrier G)" by simp
-         also have "... = 
-           sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
-           by(rule disjoint_sum[OF fin_cosets fin_G 
-                  kernel_partition(1)[OF G_def H_def f_def 
-                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
-         also have "... =
-            (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
-                (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" by simp
-         also have "... = 
-            (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
-               ((totient k div totient d) * (SOME x . \<exists> m \<in> b. x = \<Phi> m * unity_root d (int m))))"
-         proof -
-           fix b m1 m2
-           assume b_in: "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)" 
-           assume m_in: "m1 \<in> b" "m2 \<in> b" 
-           have "\<Phi> m1 * unity_root d (int m1) = \<Phi> m2 * unity_root d (int m2)"
-           proof -
-             have "m1 mod d = m2 mod d"
-               using b_in m_in 
-               unfolding f_def
-               
-             have "\<Phi> \<in> dcharacters d" using prod by blast
-             then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
-             then have "\<Phi> m1 = \<Phi> m2" 
-               using mod_periodic[OF \<open>periodic \<Phi> d\<close>] 
-              
-           qed
-           have "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
-                 ((totient k div totient d) * (SOME x . \<exists> m \<in> b. x = \<Phi> m * unity_root d (int m)))"
-   
-         qed
-       qed
+       
        
   then show "primitive_character \<chi> k" 
     using gauss_reduction gauss_coprime_separable 
