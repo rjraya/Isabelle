@@ -615,6 +615,7 @@ lemma kernel_partition:
         and "card (kernel G H f) = totient n div totient m"
         and "b \<in>(rcosets\<^bsub>G\<^esub> kernel G H f) \<Longrightarrow> b \<noteq> {}"
         and "b \<in>(rcosets\<^bsub>G\<^esub> kernel G H f) \<Longrightarrow> card (kernel G H f) = card b"
+        and "bij_betw (\<lambda>b. (the_elem (f ` b))) (rcosets\<^bsub>G\<^esub> kernel G H f) (carrier H)"
 proof -
   have "1 < m" by fact
   also have "m \<le> n" using \<open>n > 0\<close> \<open>m dvd n\<close> by (intro dvd_imp_le) auto
@@ -629,7 +630,7 @@ proof -
   from mn have subset: "f ` carrier G \<subseteq> carrier H"
     by (auto simp: assms(1-3) residue_mult_group_def totatives_def
              dest: coprime_common_divisor_nat intro!: Nat.gr0I)
-  moreover have "carrier H \<subseteq> f ` carrier G"
+  moreover have super_set: "carrier H \<subseteq> f ` carrier G"
   proof safe
     fix k assume "k \<in> carrier H"
     hence k: "k > 0" "k \<le> m" "coprime k m"             
@@ -682,6 +683,17 @@ proof -
                                  mod_mod_cancel mod_mult_eq)
   interpret f: group_hom G H f
     using subset by unfold_locales (auto simp: hom_def)
+
+  show "bij_betw (\<lambda>b. (the_elem (f ` b))) (rcosets\<^bsub>G\<^esub> kernel G H f) (carrier H)"
+    unfolding bij_betw_def  
+  proof 
+    show "inj_on (\<lambda>b. (the_elem (f ` b))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+      using f.FactGroup_inj_on unfolding FactGroup_def by auto
+    have eq: "f ` carrier G = carrier H" 
+      using subset super_set by blast
+    show "(\<lambda>b. the_elem (f ` b)) ` (rcosets\<^bsub>G\<^esub> kernel G H f) = carrier H"
+      using f.FactGroup_onto[OF eq] unfolding FactGroup_def by simp
+  qed
   
   show "partition (carrier G) (rcosets\<^bsub>G\<^esub> kernel G H f)"
   proof 
@@ -704,6 +716,8 @@ proof -
     show "\<And>b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<Longrightarrow> b \<subseteq> carrier G"
       using n.rcosets_part_G f.subgroup_kernel by auto
   qed
+
+  
    
   (* sizes *)
   have lagr: "card (carrier G) = card (rcosets\<^bsub>G\<^esub> kernel G H f) * card (kernel G H f)" 
@@ -757,7 +771,7 @@ proof -
   assume b_cos: "b \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
   show "card (kernel G H f) = card b" 
     using group.card_rcosets_equal[OF n.is_group b_cos] 
-          f.subgroup_kernel subgroup.subset by blast  
+          f.subgroup_kernel subgroup.subset by blast    
 qed
 
 lemma mod_coset:
@@ -825,54 +839,6 @@ proof -
   qed
 
   from eq_1 eq_2 show ?thesis by argo
-qed
-
-lemma cosets_units_bij:
- fixes m n m1 m2 :: nat and f :: "nat \<Rightarrow> nat" and G H
- assumes "G = residue_mult_group n"
- assumes "H = residue_mult_group m"
- assumes "f = (\<lambda>k. k mod m)"
- assumes "n > 0" "m > 1" "m dvd n"
- shows "bij_betw (\<lambda>b. (SOME x. \<exists> y \<in> b. x = f y)) (rcosets\<^bsub>G\<^esub> kernel G H f) (carrier H)"
-    unfolding bij_betw_def  
-proof 
-  show "inj_on (\<lambda>b. (SOME x. \<exists> y \<in> b. x = f y)) (rcosets\<^bsub>G\<^esub> kernel G H f)"
-  proof
-    fix x y
-    assume as: "x \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
-           "y \<in> rcosets\<^bsub>G\<^esub> kernel G H f"
-           "(SOME xa. \<exists>l\<in>x. xa = f l) =
-            (SOME xb. \<exists>l\<in>y. xb = f l)"
-    have "x \<noteq> {}" "y \<noteq> {}"
-      using kernel_partition(4)[OF 
-             assms(1) assms(2) assms(3) 
-               \<open>m > 1\<close> \<open>n > 0\<close> \<open>m dvd n\<close>]
-        \<open>x \<in> rcosets\<^bsub>G\<^esub> kernel G H f\<close>
-        \<open>y \<in> rcosets\<^bsub>G\<^esub> kernel G H f\<close>
-      by simp+
-    have "\<exists> xa. \<exists>l\<in>x. xa = f l" "\<exists> xb. \<exists>l\<in>y. xb = f l" 
-      using \<open>x \<noteq> {}\<close> \<open>y \<noteq> {}\<close> by blast+
-    have "\<exists> xa xb . (\<exists>l\<in>x. xa = f l) \<and>
-                    (\<exists>l\<in>y. xb = f l) \<and> 
-                    xa = xb"
-      using as(3) someI  sorry
-      
-    show "x = y"
-      
-      sorry
-  qed
-
-  show "(\<lambda>b. SOME x. \<exists>y\<in>b. x = f y) ` (rcosets\<^bsub>G\<^esub> kernel G H f) = carrier H"
-    unfolding image_def  
-  proof
-    let ?A = "{y. \<exists>x\<in>rcosets\<^bsub>G\<^esub> kernel G H f. y = (SOME xa. \<exists>y\<in>x. xa = f y)}"
-    let ?B = "carrier H"
-    show "?A \<subseteq> ?B" 
-     
-    proof -
-
-    qed
-  qed
 qed
 
 section \<open>Moebius\<close>
@@ -1024,7 +990,8 @@ lemma unity_div_num:
   assumes "k > 0" "d > 0" "d dvd k"
   shows "unity_root k (x * (k div d)) = unity_root d x"
   using assms dvd_div_mult_self unity_div by auto
- 
+
+
 
 section\<open>Geometric sum\<close>
 
@@ -2885,7 +2852,7 @@ corollary gauss_coprime_separable:
 
 (* theorem 8.10 *)
 lemma global_separability_condition:
-  "(\<forall> n. separable n) \<longleftrightarrow> (\<forall> n. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
+  "(\<forall> n > 0. separable n) \<longleftrightarrow> (\<forall> n > 0. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
 proof -
   {fix n 
   assume "\<not> coprime n k"
@@ -3526,14 +3493,17 @@ qed
 subsection\<open>Primitive characters and separable Gauss sums\<close>
 
 lemma key_transform:
- assumes \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>
+ assumes prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n)) \<and> 
+                 primitive_character \<Phi> d \<and>
+                 \<Phi> \<in> dcharacters d"
+ assumes \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close> \<open>k > 1\<close>
  shows "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
-  (totient k div totient d) * (\<Sum> m | m \<in> {1..k} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+        (totient k div totient d) * (\<Sum> m | m \<in> {1..d} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
 proof -
  define G where "G = residue_mult_group k"
  define H where "H = residue_mult_group d"
  define f where "f = (\<lambda> t. t mod d)" 
-       
+
  from kernel_partition(2)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]
  have fin_cosets: "finite (rcosets\<^bsub>G\<^esub> kernel G H f)"         
   using \<open>1 < d\<close> card_infinite by fastforce
@@ -3549,68 +3519,102 @@ proof -
  also have "... = sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
   by(rule disjoint_sum[OF fin_cosets fin_G 
           kernel_partition(1)[OF G_def H_def f_def 
-                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
+ 
+                 \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
  also have "... =
   (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" by simp
- also obtain l where "... = 
-  (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . ((totient k div totient d) * (\<Phi> (l b) * unity_root d (int (l b)))))"
-            "\<forall> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . l b \<in> b"  
-         proof -
-           {fix b
-            assume b_in: "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)" 
-            {fix m1 m2
-             assume m_in: "m1 \<in> b" "m2 \<in> b" 
-             have "\<Phi> m1 * unity_root d (int m1) = \<Phi> m2 * unity_root d (int m2)"
-             proof -
-              have m_mod: "m1 mod d = m2 mod d"               
-               using mod_coset[OF G_def H_def f_def b_in m_in \<open>k > 1\<close> \<open>d dvd k\<close>]
-               by blast
-              have "\<Phi> \<in> dcharacters d" using prod by blast
-              then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
-              have 1: "\<Phi> m1 = \<Phi> m2" 
-               using mod_periodic[OF \<open>periodic \<Phi> d\<close> m_mod] by simp 
-              have 2: "unity_root d m1 = unity_root d m2"
-               using m_mod unity_mod [of d] 
-               by (metis zmod_int)
-              from 1 2 show ?thesis by simp
-             qed}   
-             note all_eq_in_coset = this
-             have 
-              "\<exists> l. l \<in> b \<and> (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
-               ((totient k div totient d) * (\<Phi> l * unity_root d (int l)))"
-             proof -
-              have "b \<noteq> {}" 
-               using kernel_partition(4)[OF G_def H_def f_def 
-                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>] b_in by simp
-              then obtain l where 1: "l \<in> b" by blast
-              have 
-               "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
-                (\<Sum> m \<in> b. \<Phi> l * unity_root d (int l))"              
-                apply(rule sum.cong,simp)
-                using all_eq_in_coset \<open>l \<in> b\<close> by blast
-              also have "... = card b * \<Phi> l * unity_root d (int l)"
-               by simp
-              also have "... = (totient k div totient d) * \<Phi> l * unity_root d (int l)"
-               using kernel_partition(3)[OF G_def H_def f_def 
-                 \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>] 
-                 kernel_partition(5)[OF G_def H_def f_def 
-                 \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close> b_in] by argo
-              finally have 2:
-                "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) = 
-                 (totient k div totient d) * \<Phi> l * unity_root d (int l)" 
-               by blast
-              from 1 2 show ?thesis by auto
-             qed}
-             then obtain l  where 
-          "(\<forall> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f). l b \<in> b) \<and>
-           (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) .
-           ((totient k div totient d) * (\<Phi> (l b) * unity_root d (int (l b)))))"
-             
-       qed
+ finally have 1: "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
+                  (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" 
+   using \<open>(\<Sum>m | m \<in> {1..k} \<and> coprime m k. \<Phi> m * unity_root d (int m)) = (\<Sum>m | m \<in> carrier G. \<Phi> m * unity_root d (int m))\<close> \<open>(\<Sum>m\<in>carrier G. \<Phi> m * unity_root d (int m)) = sum (sum (\<lambda>m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)\<close> by auto
+ have "... =
+  (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
+ proof(rule sum.cong,simp) 
+   fix b
+   assume b_in: "b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f)" 
+   note b_not_empty = kernel_partition(4)[OF G_def H_def f_def \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close> b_in] 
 
-
+   {
+     fix m1 m2
+     assume m_in: "m1 \<in> b" "m2 \<in> b" 
+     have m_mod: "m1 mod d = m2 mod d"   
+       using mod_coset[OF G_def H_def f_def b_in m_in \<open>k > 1\<close> \<open>d dvd k\<close>]
+       by blast
+   } note m_mod = this
+   {
+     fix m1 m2
+     assume m_in: "m1 \<in> b" "m2 \<in> b" 
+     have "\<Phi> m1 * unity_root d (int m1) = \<Phi> m2 * unity_root d (int m2)"
+     proof -
+      have "\<Phi> \<in> dcharacters d" using prod by blast
+      then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
+      have 1: "\<Phi> m1 = \<Phi> m2" 
+       using mod_periodic[OF \<open>periodic \<Phi> d\<close> m_mod[OF m_in]] by simp 
+      have 2: "unity_root d m1 = unity_root d m2"
+       using m_mod[OF m_in] unity_mod [of d] 
+       by (metis zmod_int)
+      from 1 2 show ?thesis by simp
+    qed
+   } note all_eq_in_coset = this   
+   
+   from all_eq_in_coset b_not_empty 
+   obtain l where l_prop: "l \<in> b \<and> (\<forall> y \<in> b. \<Phi> y * unity_root d (int y) = 
+                               \<Phi> l * unity_root d (int l))" by blast
+   
+   have "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
+         ((totient k div totient d) * (\<Phi> l * unity_root d (int l)))"
+   proof -
+     have 
+       "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) =
+        (\<Sum> m \<in> b. \<Phi> l * unity_root d (int l))"              
+       apply(rule sum.cong,simp)
+       using all_eq_in_coset l_prop by blast
+     also have "... = card b * \<Phi> l * unity_root d (int l)"
+       by simp
+     also have "... = (totient k div totient d) * \<Phi> l * unity_root d (int l)"
+       using kernel_partition(3)[OF G_def H_def f_def 
+           \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>] 
+             kernel_partition(5)[OF G_def H_def f_def 
+           \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close> b_in] by argo
+     finally have 2:
+       "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) = 
+        (totient k div totient d) * \<Phi> l * unity_root d (int l)" 
+       by blast
+     from b_not_empty 2 show ?thesis by auto
+   qed
+   also have "... = ((totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
+   proof -
+     have foral: "(\<And>y. y \<in> b \<Longrightarrow> f y = f l)" 
+       using m_mod l_prop unfolding f_def by blast
+     have eq: "f l = the_elem (f ` b)"
+       using the_elem_image_unique[of _ f l, OF b_not_empty, OF foral,simplified, symmetric] by simp
+     then show ?thesis
+      by (metis dir_periodic f_def mod_mod_trivial mod_periodic prod unity_mod zmod_int)
+   qed
+   finally show "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) = 
+                 ((totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
+     by blast
+ qed
+ have "... =
+            (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
+   by blast
+ also have "
+    ... = (\<Sum> h \<in> carrier H . (totient k div totient d) * (\<Phi> (h) * unity_root d (int (h))))"
+   by(rule sum.reindex_bij_betw[OF kernel_partition(6)[OF G_def H_def f_def
+                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]])
+ finally have 2: "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) = 
+                 (totient k div totient d)*(\<Sum> h \<in> carrier H .  (\<Phi> (h) * unity_root d (int (h))))"
+   using 1 
+   by (simp add: \<open>(\<Sum>b\<in>rcosets\<^bsub>G\<^esub> kernel G H f. of_nat (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b))))) = (\<Sum>h\<in>carrier H. of_nat (totient k div totient d) * (\<Phi> h * unity_root d (int h)))\<close> \<open>sum (sum (\<lambda>m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f) = (\<Sum>b\<in>rcosets\<^bsub>G\<^esub> kernel G H f. of_nat (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))\<close> sum_distrib_left)
+  also have "... = (totient k div totient d)*(\<Sum>m | m \<in> {1..d} \<and> coprime m d . (\<Phi> (m) * unity_root d (int (m))))"
+    unfolding H_def residue_mult_group_def 
+    apply(simp)
+    unfolding totatives_def 
+    by (simp add: Suc_le_eq)
+  finally show ?thesis by simp
+qed
+  
 (* theorem 8.19 *)
-theorem 
+theorem primitive_iff_gs_separable:
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes "\<chi> \<noteq> principal_dchar k" 
   shows "primitive_character \<chi> k \<longleftrightarrow> (\<forall> n. n > 0 \<longrightarrow> separable \<chi> k n)"
@@ -3630,7 +3634,7 @@ next
   next
     case False
     {assume as: "\<not> primitive_character \<chi> k"
-     have "\<exists> r. \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0"
+     have "\<exists> r. r \<noteq> 0 \<and> \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0"
      proof -
        have "k > 1" using is_char mod_positive by auto
        then have "k > 0" by simp
@@ -3640,16 +3644,22 @@ next
        have "d < k" unfolding d_def using primitive_conductor[OF assms(1) as] .
        have "d dvd k" unfolding d_def using conductor_dvd[OF assms(1)] by blast
        define r where "r = k div d"
+       have 0: "r \<noteq> 0" unfolding r_def 
+         using \<open>0 < k\<close> \<open>d dvd k\<close> dvd_div_gt0 by auto
        have "gcd r k > 1" unfolding r_def 
         by (metis One_nat_def Suc_lessI \<open>1 < k\<close> \<open>d < k\<close> conductor_dvd d_def dvd_mult_div_cancel dvd_triv_right gcd_nat.absorb1 gcd_pos_nat is_char mult.right_neutral nat_neq_iff)
        then have 1: "\<not> coprime r k" by auto
        define \<chi>\<^sub>1 where "\<chi>\<^sub>1 = principal_dchar k" 
        from primitive_principal_form[OF assms(1) \<chi>\<^sub>1_def False]
        obtain \<Phi> where 
-          prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n)) \<and> 
+          prod: "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n)) \<and>
                  primitive_character \<Phi> d \<and>
                  \<Phi> \<in> dcharacters d" 
          using d_def by blast
+       then have prod1: 
+                "(\<forall> n. \<chi>(n) = \<Phi>(n)*\<chi>\<^sub>1(n))"
+                "primitive_character \<Phi> d"
+                "\<Phi> \<in> dcharacters d" by blast+ 
        have "gauss_sum \<chi> k r  = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*r))"
          unfolding gauss_sum_def[OF assms(1)] by blast
        also have "... = (\<Sum> m = 1..k . \<Phi>(m)*\<chi>\<^sub>1(m) * unity_root k (m*r))"
@@ -3670,19 +3680,66 @@ next
        qed
        also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m)"
          by(rule sum.cong,auto simp add: \<chi>\<^sub>1_def principal_dchar_def)
-       thm disjoint_sum[of _ _ "\<lambda> m. \<Phi>(m) * unity_root d m" ]
-       thm kernel_partition
-       
-       
-  then show "primitive_character \<chi> k" 
-    using gauss_reduction gauss_coprime_separable 
-    sorry
-    then show ?thesis
-      
-      sorry
-  qed
+       also have "... = (totient k div totient d) * (\<Sum> m | m \<in> {1..d} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+         using key_transform[OF prod \<open>d > 1\<close> \<open>k > 0\<close> \<open>d dvd k\<close> \<open>k > 1\<close>] by blast
+       also have "... = (totient k div totient d) * gauss_sum \<Phi> d 1"
+       proof -
+         have "\<Phi> \<in> dcharacters d" using prod by simp
+         then have "gauss_sum \<Phi> d 1 =
+                    (\<Sum> m = 1..d . \<Phi> m * unity_root d (int (m )))"
+           using gauss_sum_def[of \<Phi> d 1] by simp
+         also have "... = 
+                    (\<Sum> m | m \<in> {1..d} . \<Phi> m * unity_root d (int (m )))"
+           by(rule sum.cong,auto)
+         also have "... = (\<Sum> m | m \<in> {1..d} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+         proof(rule sum.mono_neutral_right,simp,blast,safe)
+           have 1: "\<Phi> \<in> dcharacters d" "primitive_character \<Phi> d"
+             using prod by auto
+           fix i
+           assume as: "i \<in> {1..d}" "\<Phi> i * unity_root d (int i) \<noteq> 0"
+           show "coprime i d"
+           proof(rule ccontr)
+             assume "\<not> coprime i d"
+             then have "\<Phi> i  = 0"
+               using 1(1)
+               unfolding dcharacters_def dcharacter_def dcharacter_axioms_def
+               by blast
+             then have "\<Phi> i * unity_root d (int i) = 0" by auto
+             then show False using as(2) by blast
+           qed
+         qed
+         finally have "gauss_sum \<Phi> d 1 = (\<Sum> m | m \<in> {1..d} \<and> coprime m d. \<Phi>(m) * unity_root d m)"
+           by blast
+         then show ?thesis by argo
+       qed
+       finally have g_expr: "gauss_sum \<chi> k r = (totient k div totient d) * gauss_sum \<Phi> d 1"
+         by blast
+       have t_non_0: "totient k div totient d \<noteq> 0"
+         by (simp add: \<open>0 < k\<close> \<open>d dvd k\<close> dvd_div_gt0 totient_dvd) 
+       have "(cmod (gauss_sum \<Phi> d 1))\<^sup>2 = d" 
+         using primitive_encoding(3)[OF prod1(3,2) \<open>d > 0\<close>] by simp  
+       then have "gauss_sum \<Phi> d 1 \<noteq> 0" 
+         using \<open>0 < d\<close> by auto
+       then have 2: "gauss_sum \<chi> k r \<noteq> 0"
+         using g_expr t_non_0 by auto
+       from 0 1 2 show "\<exists>r. r \<noteq> 0 \<and> \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0" 
+         by blast
+     qed}
+   note contr = this
+   assume "\<chi> \<noteq> principal_dchar k"
+   show "primitive_character \<chi> k"
+   proof(rule ccontr)
+     assume "\<not> primitive_character \<chi> k"
+     then obtain r where 1: "r \<noteq> 0 \<and> \<not> coprime r k \<and> gauss_sum \<chi> k r \<noteq> 0"
+       using contr by blast
+     from global_separability_condition[OF is_char ]
+           tot_separable 
+     have 2: "(\<forall>n>0. \<not> coprime n k \<longrightarrow> gauss_sum \<chi> k n = 0)" 
+       by blast
+     from 1 2 show "False" by blast
+   qed
+ qed
 qed
-
 
 end
 
