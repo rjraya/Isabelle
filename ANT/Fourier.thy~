@@ -97,12 +97,14 @@ qed
 
 section\<open>Periodic functions\<close>
 
+print_locale periodic_fun_simple
+
 definition 
   "periodic f k = (\<forall> n. f(n+k) = f(n))" 
   for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
 
 lemma const_periodic:
-  "periodic (\<lambda> x. y) 0" 
+  "periodic (\<lambda> x. y) k" 
   unfolding periodic_def by blast
 
 lemma add_periodic:
@@ -402,6 +404,12 @@ proof -
           periodic_homothecy[OF assms(2)] assms(3) by fastforce  
   finally show ?thesis by blast     
 qed
+
+lemma scalar_mult_periodic:
+  fixes f :: "nat \<Rightarrow> complex" and a :: complex
+  assumes "periodic f k"
+  shows "periodic (\<lambda> n. a * f n) k"
+  using mult_periodic[OF const_periodic[of a k] assms(1)] by simp
 
 section\<open>Gcd and prime factorizations\<close>
 
@@ -2763,6 +2771,10 @@ begin
 lemma chi_dcharacter: "dcharacter k \<chi>" 
   using is_char unfolding dcharacters_def by simp
 
+lemma chi_0_0: "\<chi> 0 = 0"
+  using is_char dcharacters_def dcharacter_def dcharacter_axioms_def 
+  using dcharacter.zero_eq_0 by auto
+
 (*
  Observe that the case k = 1 corresponds to the trivial
  character (\<lambda> x . 1) which is not of interest here.
@@ -2778,6 +2790,24 @@ lemma dir_periodic: "periodic \<chi> k"
   by (simp add: dcharacter.periodic)
 
 definition "gauss_sum n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))"
+
+lemma gauss_sum_periodic: 
+  "periodic (\<lambda> n. gauss_sum n) k"
+proof - 
+  have "periodic \<chi> k" using dir_periodic by simp
+  let ?h = "\<lambda> m n. \<chi>(m) * unity_root k (m*n)"
+  {fix m :: nat
+  have "periodic (\<lambda> n. unity_root k (m*n)) k"
+    using unity_periodic_mult[of k m] by simp
+  have "periodic (?h m) k" 
+    using scalar_mult_periodic[OF \<open>periodic (\<lambda> n. unity_root k (m*n)) k\<close>]
+    by blast}
+  then have per_all: "\<forall>m \<in> {1..k}. periodic (?h m) k" by blast
+  have "periodic (\<lambda>n. (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))) k" 
+    using fin_sum_periodic_set[OF per_all] by blast
+  then show ?thesis
+    unfolding gauss_sum_def by blast
+qed
 
 lemma ramanujan_to_gauss:
   assumes "\<chi> = principal_dchar k"  
@@ -3143,8 +3173,8 @@ proof(safe)
   {fix n :: nat
   assume "n > 0" 
   then show "separable n"
-    using global_separability_condition 1
-    by (metis chi_dcharacter complex_cnj_zero dcharacter.eq_zero gauss_coprime_separable gcd_eq_0_iff gcd_eq_1_imp_coprime less_one linorder_neqE_nat mult_not_zero neq0_conv separable_def)
+    using global_separability_condition 1 
+    by (meson assms(1) assms(2) g_non_zero_ind_mod(1) g_non_zero_ind_mod(2) primitive_character_def)
   } then show "(cmod (gauss_sum 1))^2 = k"
     using gauss_sum_1_mod_square_eq_k assms(2) by blast
 qed
@@ -3740,6 +3770,167 @@ next
    qed
  qed
 qed
+
+definition "gauss_sum_int \<chi> k n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (int m*n))"
+
+lemma gauss_int_extends_nat:
+  fixes n :: nat
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  shows "gauss_sum \<chi> k n = gauss_sum_int \<chi> k (int n)" 
+    unfolding  gauss_sum_def[OF is_char] gauss_sum_int_def by auto
+
+lemma gauss_int_to_nat:
+ fixes n :: int
+ assumes is_char: "\<chi> \<in> dcharacters k"
+ shows "gauss_sum \<chi> k (nat (n mod k)) = gauss_sum_int \<chi> k n"
+proof(cases "n \<ge> 0")
+  case True
+  then have "gauss_sum_int \<chi> k n = gauss_sum \<chi> k (nat n)"
+    using gauss_int_extends_nat[OF is_char, of "nat n"]
+          nat_0_le[OF True] by argo
+  also have "... = gauss_sum \<chi> k (nat (n mod int k))"
+    using mod_periodic[OF gauss_sum_periodic[OF is_char]]
+    by (metis True mod_mod_trivial nat_int nat_mod_distrib of_nat_0_le_iff)
+  finally show ?thesis by argo
+next
+  case False
+  have "gauss_sum_int \<chi> k n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (int m*n))"
+    unfolding gauss_sum_int_def by simp
+  also have "... = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*(nat (n mod int k))))"
+  proof(rule sum.cong,simp)
+    fix x
+    assume "x \<in> {1..k}" 
+    have "unity_root k (int x * n) = unity_root k (int (x * nat (n mod int k)))" 
+      using unity_mod[of k "x*n"] 
+      by (metis int_ops(7) mult.commute semiring_normalization_rules(7) unity_mod_nat unity_pow)
+    then show " \<chi> x * unity_root k (int x * n) =
+         \<chi> x * unity_root k (int (x * nat (n mod int k)))" by argo
+  qed
+  also have "... =  gauss_sum \<chi> k (nat (n mod int k))"
+    unfolding gauss_sum_def[OF is_char] by auto
+  finally show ?thesis by argo
+qed
+
+lemma gauss_int_periodic:
+  fixes n :: int
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  shows "periodic (\<lambda> (x::int). gauss_sum_int \<chi> k x) k" 
+  using gauss_int_extends_nat gauss_sum_periodic is_char by auto
+
+proposition dir_char_fourier_expansion:
+  fixes m  k :: nat and \<chi> :: "nat \<Rightarrow> complex"
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  assumes "k > 0" 
+  shows "\<chi>(m) = (\<Sum> n = 1..k. (1 div of_nat k) * gauss_sum_int \<chi> k (-n) * unity_root k (m*n))"
+proof -
+  define g where "g = (\<lambda>x. 1 / of_nat k *
+      (\<Sum>m<k. \<chi> m * unity_root k (- int x * int m)))"
+  have per: "periodic \<chi> k" using dir_periodic[OF is_char] by simp
+  have "\<chi> m = (\<Sum>n<k. g n * unity_root k (m * int n))"
+    using fourier_expansion(2)[OF assms(2) per] g_def by blast
+  also have "... = (\<Sum>n = 1..k. g n * unity_root k (m * int n))"
+  proof -
+    have g_per: "periodic g k" using fourier_expansion(1)[OF assms(2) per g_def] by simp
+    have fact_per: "periodic (\<lambda> n. g n * unity_root k (int m * int n)) k"
+      using mult_periodic[OF g_per] unity_periodic_mult by auto
+    show ?thesis
+      using periodic_sum_periodic_shift[OF fact_per \<open>k > 0\<close>, of 1, simplified]
+      by (metis One_nat_def assms(2) atMost_atLeast0 calculation sum_eq_ineq)  
+  qed
+  also have "... = (\<Sum> n = 1..k. (1 div of_nat k) * gauss_sum_int \<chi> k (-n) * unity_root k (m*n))"
+  proof -
+    {fix n :: nat
+    have shift: "(\<Sum>m<k. \<chi> m * unity_root k (- int n * int m)) = 
+        (\<Sum>m = 1..k. \<chi> m * unity_root k (- int n * int m))"
+    proof -
+      have per_unit: "periodic (\<lambda> m. unity_root k (- int n * int m)) k"
+        using unity_periodic_mult by blast
+      then have prod_per: "periodic (\<lambda> m. \<chi> m * unity_root k (- int n * int m)) k"
+        using per mult_periodic by blast
+      show ?thesis
+        using periodic_sum_periodic_shift[OF prod_per \<open>k > 0\<close>, of 1, simplified]
+        by (metis (no_types, lifting) One_nat_def Suc_diff_le Suc_leI Suc_pred assms(2) atLeast0AtMost periodic_sum_periodic_shift plus_1_eq_Suc prod_per sum_eq_ineq zero_less_one)
+    qed
+    have "g n = 1 / of_nat k *
+      (\<Sum>m<k. \<chi> m * unity_root k (- int n * int m))"
+      using g_def by blast
+    also have "... = 1 / of_nat k *
+      (\<Sum>m = 1..k. \<chi> m * unity_root k (- int n * int m))"
+      using shift by simp
+    also have "... = 1 / of_nat k * gauss_sum_int \<chi> k (-n)"
+      unfolding gauss_sum_int_def 
+      by(simp add: algebra_simps)
+    finally have "g n = 1 / of_nat k * gauss_sum_int \<chi> k (-n)" by simp} 
+    note g_expr = this
+      show ?thesis
+        by(rule sum.cong, simp, simp add: g_expr) 
+    qed
+    finally show ?thesis by blast
+qed
+
+(* theorem 8.20 *)
+theorem 
+  fixes m  k :: nat and \<chi> :: "nat \<Rightarrow> complex"
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  assumes is_prim: "primitive_character \<chi> k"
+  assumes "k > 0" 
+  assumes "\<tau> \<chi> k = gauss_sum \<chi> k 1 div sqrt k" 
+  shows "\<chi>(m) = (\<tau> \<chi> k div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
+        and "abs(\<tau> \<chi> k) = 1"
+proof
+  have "\<chi> m =
+    (\<Sum>n = 1..k. 1 / of_nat k * gauss_sum_int \<chi> k (- int n) *
+      unity_root k (int (m * n)))"
+    using dir_char_fourier_expansion[OF is_char \<open>k > 0\<close>] by blast
+  also have "... = (\<Sum>n = 1..k. 1 / of_nat k * cnj((\<chi> (n mod k))) * ((gauss_sum \<chi> k 1) div k) *
+                    unity_root k (int (m * n)))"
+  proof -
+    fix n :: nat
+    assume "n > 0" "n \<le> k"
+    have per: "periodic (gauss_sum_int \<chi> k) (2*k)" 
+      using mult_period[OF gauss_int_periodic[OF is_char], of 2] 
+      by(simp add: algebra_simps)
+    have "gauss_sum_int \<chi> k (- int n) = gauss_sum_int \<chi> k ((- int n) mod 2*k)"
+      using per
+            mod_periodic 
+      
+    have "gauss_sum_int \<chi> k (- int n) = gauss_sum \<chi> k (nat ((-n) mod int k))" 
+      using gauss_int_to_nat[OF is_char, of "-int n"] by argo
+    also have "... = gauss_sum \<chi> k (nat ((-n) mod int (2*k)))"
+    proof -
+      have "periodic (gauss_sum \<chi> k) k"
+        using gauss_sum_periodic[OF is_char] by simp
+      have "periodic (gauss_sum \<chi> k) (2*k)" 
+        using mult_period[OF \<open>periodic (gauss_sum \<chi> k) k\<close>,of 2]
+        by(simp add: algebra_simps)
+      show ?thesis
+        using \<open>periodic (gauss_sum \<chi> k) (2*k)\<close> 
+    also have "... = cnj(\<chi>(nat ((-n) mod int k))) * gauss_sum \<chi> k 1"
+    proof(cases "n \<noteq> k")
+      case True
+      then have "(-n) mod int k > 0"  using \<open>n > 0\<close> \<open>n \<le> k\<close> 
+        by (smt assms(3) dual_order.order_iff_strict mod_less mod_minus_right of_nat_0_less_iff pos_mod_conj zmod_int zmod_zminus2_not_zero)
+      then show ?thesis
+        using primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>]
+        unfolding separable_def[OF is_char] 
+        using zero_less_nat_eq by blast
+    next
+      case False
+      then have "(-n) mod int k = 0" by simp
+      have "2*k > k" 
+        using False One_nat_def Suc_pred \<open>0 < n\<close> double_not_eq_Suc_double length_upt less_one log_exp2_gt mult.commute mult.left_neutral n_less_n_mult_m by auto
+      then show ?thesis 
+        using chi_0_0[OF is_char] 
+        apply(simp)
+          sorry
+      qed
+      
+      thm primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>]
+      unfolding separable_def[OF is_char] 
+      using \<open>n > 0\<close> 
+  qed
+qed
+
 
 end
 

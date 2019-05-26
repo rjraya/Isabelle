@@ -3869,68 +3869,269 @@ proof -
 qed
 
 (* theorem 8.20 *)
-theorem 
+theorem fourier_primitive_character:
   fixes m  k :: nat and \<chi> :: "nat \<Rightarrow> complex"
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes is_prim: "primitive_character \<chi> k"
   assumes "k > 0" 
   assumes "\<tau> \<chi> k = gauss_sum \<chi> k 1 div sqrt k" 
   shows "\<chi>(m) = (\<tau> \<chi> k div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
-        and "abs(\<tau> \<chi> k) = 1"
-proof
+        and "cmod(\<tau> \<chi> k) = 1"
+proof -
+  have chi_not_principal: "\<chi> \<noteq> principal_dchar k" 
+    using principal_not_totally_separable[OF is_char]
+          primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>] 
+    by blast
+  have "dcharacter k \<chi>" 
+    using is_char dcharacters_def by simp
+  have "periodic \<chi> k" 
+    using dir_periodic[OF is_char] by simp
+  then have case_0: "(\<Sum> n = 1..k . \<chi> n) = 0"
+  proof -
+    have "sum \<chi> {..<k} = sum \<chi> {1..k}"
+      using periodic_sum_periodic_shift[OF \<open>periodic \<chi> k\<close> \<open>k > 0\<close>, of 1,simplified]
+      by (metis One_nat_def assms(3) atMost_atLeast0 sum_eq_ineq)
+    show "(\<Sum> n = 1..k . \<chi> n) = 0"
+      using \<open>sum \<chi> {..<k} = sum \<chi> {1..k}\<close>
+            dcharacter.sum_dcharacter_block[OF \<open>dcharacter k \<chi>\<close>]
+            chi_not_principal by argo
+  qed
+
   have "\<chi> m =
     (\<Sum>n = 1..k. 1 / of_nat k * gauss_sum_int \<chi> k (- int n) *
       unity_root k (int (m * n)))"
     using dir_char_fourier_expansion[OF is_char \<open>k > 0\<close>] by blast
-  also have "... = (\<Sum>n = 1..k. 1 / of_nat k * cnj((\<chi> (n mod k))) * ((gauss_sum \<chi> k 1) div k) *
-                    unity_root k (int (m * n)))"
-  proof -
-    fix n :: nat
-    assume "n > 0" "n \<le> k"
-    have per: "periodic (gauss_sum_int \<chi> k) (2*k)" 
-      using mult_period[OF gauss_int_periodic[OF is_char], of 2] 
-      by(simp add: algebra_simps)
-    have "gauss_sum_int \<chi> k (- int n) = gauss_sum_int \<chi> k ((- int n) mod 2*k)"
-      using per
-            mod_periodic 
-      
-    have "gauss_sum_int \<chi> k (- int n) = gauss_sum \<chi> k (nat ((-n) mod int k))" 
-      using gauss_int_to_nat[OF is_char, of "-int n"] by argo
-    also have "... = gauss_sum \<chi> k (nat ((-n) mod int (2*k)))"
-    proof -
-      have "periodic (gauss_sum \<chi> k) k"
-        using gauss_sum_periodic[OF is_char] by simp
-      have "periodic (gauss_sum \<chi> k) (2*k)" 
-        using mult_period[OF \<open>periodic (gauss_sum \<chi> k) k\<close>,of 2]
-        by(simp add: algebra_simps)
-      show ?thesis
-        using \<open>periodic (gauss_sum \<chi> k) (2*k)\<close> 
-    also have "... = cnj(\<chi>(nat ((-n) mod int k))) * gauss_sum \<chi> k 1"
-    proof(cases "n \<noteq> k")
+  also have "... = (\<Sum>n = 1..k. 1 / of_nat k * gauss_sum \<chi> k (nat ((- n) mod k)) *
+      unity_root k (int (m * n)))"
+    by(rule sum.cong,simp,subst gauss_int_to_nat[OF is_char,symmetric],blast)
+  also have "... = (\<Sum>n = 1..k. 1 / of_nat k * cnj (\<chi> (nat ((- n) mod k))) * (gauss_sum \<chi> k 1) * unity_root k (int (m * n)))"
+  proof(rule sum.cong,simp)
+    fix n
+    assume "n \<in> {1..k}" 
+    have "gauss_sum \<chi> k (nat (- int n mod int k)) = 
+          cnj (\<chi> (nat (- int n mod int k))) * gauss_sum \<chi> k 1"
+    proof(cases "nat ((- n) mod k) > 0")
       case True
-      then have "(-n) mod int k > 0"  using \<open>n > 0\<close> \<open>n \<le> k\<close> 
-        by (smt assms(3) dual_order.order_iff_strict mod_less mod_minus_right of_nat_0_less_iff pos_mod_conj zmod_int zmod_zminus2_not_zero)
-      then show ?thesis
-        using primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>]
-        unfolding separable_def[OF is_char] 
-        using zero_less_nat_eq by blast
+      then show ?thesis 
+        using primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>] 
+        unfolding separable_def[OF is_char] by blast
     next
       case False
-      then have "(-n) mod int k = 0" by simp
-      have "2*k > k" 
-        using False One_nat_def Suc_pred \<open>0 < n\<close> double_not_eq_Suc_double length_upt less_one log_exp2_gt mult.commute mult.left_neutral n_less_n_mult_m by auto
-      then show ?thesis 
-        using chi_0_0[OF is_char] 
-        apply(simp)
-          sorry
+      then have nat_0: "nat ((- n) mod k) = 0" by blast
+      show ?thesis 
+      proof -
+        have "gauss_sum \<chi> k (nat (- int n mod int k)) = 
+              gauss_sum \<chi> k 0" using nat_0 by argo
+        also have "... =  (\<Sum>m = 1..k. \<chi> m)" 
+          unfolding gauss_sum_def[OF is_char] 
+          by(rule sum.cong,simp,simp add: unity_k_0)
+        also have "... = 0" using case_0 by blast
+        finally have 1: "gauss_sum \<chi> k (nat (- int n mod int k)) = 0"
+          by blast
+
+        have 2: "cnj (\<chi> (nat (- int n mod int k))) = 0"
+          using nat_0 dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] by simp
+        show ?thesis using 1 2 by simp
       qed
-      
-      thm primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>]
-      unfolding separable_def[OF is_char] 
-      using \<open>n > 0\<close> 
+    qed
+    then show "1 / of_nat k * gauss_sum \<chi> k (nat (- int n mod int k)) * unity_root k (int (m * n)) =
+         1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) * gauss_sum \<chi> k 1 * unity_root k (int (m * n))" by auto
   qed
+  also have "... = (\<Sum>n = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) * (gauss_sum \<chi> k 1) * unity_root k (int (m * (nat (int n mod int k)))))"
+  proof(rule sum.cong,simp)
+    fix x   
+    assume "x \<in> {1..k}" 
+    have "unity_root k (m * x) = unity_root k (m * x mod k)"
+      using unity_mod_nat[of k "m*x"] 
+      by (simp add: nat_mod_as_int)
+    also have "... = unity_root k (m * (x mod k))"
+      by (metis mod_mult_right_eq of_nat_mod unity_mod)
+    finally have "unity_root k (m * x) = unity_root k (m * (x mod k))" by blast
+    then show "1 / of_nat k *
+         cnj (\<chi> (nat (- int x mod int k))) *
+         gauss_sum \<chi> k 1 *
+         unity_root k (int (m * x)) =
+         1 / of_nat k *
+         cnj (\<chi> (nat (- int x mod int k))) *
+         gauss_sum \<chi> k 1 *
+         unity_root k (int (m * nat (int x mod int k)))" 
+      by (simp add: nat_mod_as_int)    
+  qed
+  also have "... = (\<Sum>n = 0..k-1. 1 / of_nat k * cnj (\<chi> n) * (gauss_sum \<chi> k 1) * unity_root k (- int (m * n)))"
+  proof -
+    have b: "bij_betw (\<lambda> n. nat((-n) mod k)) {1..k} {0..k-1}"
+      unfolding bij_betw_def
+    proof 
+      show "inj_on (\<lambda>n. nat (- int n mod int k)) {1..k}"
+        unfolding inj_on_def
+      proof(safe)
+        fix x y
+        assume a1: "x \<in> {1..k}" "y \<in> {1..k}"
+        assume a2: "nat (- x mod k) = nat (- y mod k)"
+        then have 3: "k - x = k - y" 
+          by (smt Euclidean_Division.pos_mod_sign a1(1) a1(2) atLeastAtMost_iff diff_is_0_eq int_nat_eq less_one mod_if mod_minus_cong nat_int nat_mod_distrib nat_zminus_int not_le of_nat_0_less_iff)
+        then show "x = y" using a1 by auto
+      qed
+      show "(\<lambda>n. nat (- int n mod int k)) ` {1..k} = {0..k - 1}"
+        unfolding image_def 
+      proof
+        let ?A = "{y. \<exists>x\<in>{1..k}. y = nat (- int x mod int k)}"
+        let ?B = "{0..k - 1}" 
+        show "?A \<subseteq> ?B" 
+        proof
+          fix y
+          assume "y \<in> {y. \<exists>x\<in>{1..k}. y = nat (- int x mod int k)}"
+          then obtain x where "x\<in>{1..k} \<and> y = nat (- int x mod int k)" by blast
+          then show "y \<in> {0..k - 1}" 
+            by (metis One_nat_def Suc_pred assms(3) atMost_atLeast0 atMost_iff int_nat_eq less_Suc_eq_le nat_int of_nat_0 of_nat_0_less_iff of_nat_less_iff unique_euclidean_semiring_numeral_class.pos_mod_bound)
+        qed
+        show "?A \<supseteq> ?B" 
+        proof 
+          fix x
+          assume 1: "x \<in> {0..k-1}"
+          then have "k - x \<in> {1..k}"
+            using assms(3) by auto
+          have "x = nat (- int (k-x) mod int k)"
+          proof -
+            have "nat (- int (k-x) mod int k) = nat (int x) mod int k"
+              by (smt Euclidean_Division.pos_mod_sign \<open>k - x \<in> {1..k}\<close> atLeastAtMost_iff int_nat_eq int_ops(6) mod_add_self2 not_one_le_zero of_nat_le_0_iff)
+            also have "... = x" 
+              using 1 
+              by (metis One_nat_def Suc_pred assms(3) atLeastAtMost_iff less_Suc_eq_le mod_less nat_int of_nat_mod)
+            finally show ?thesis by presburger
+          qed
+          then show "x \<in> {y. \<exists>x\<in>{1..k}. y = nat (- int x mod int k)}"
+            using \<open>k - x \<in> {1..k}\<close> by blast
+        qed
+      qed
+    qed
+    show ?thesis 
+    proof -
+      have 1: "(\<Sum>n = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) *
+        gauss_sum \<chi> k 1 * unity_root k (int (m * nat (int n mod int k)))) = 
+            (\<Sum>x = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
+        gauss_sum \<chi> k 1 * unity_root k (- int (m * nat (- int x mod int k))))"
+      proof(rule sum.cong,simp)
+        fix x
+        
+        have "(int m * (int x mod int k)) mod k =
+              (m*x) mod k" 
+          by (simp add: mod_mult_right_eq zmod_int)
+        also have "... = (- ((- int (m*x) mod k))) mod k" 
+          by (simp add: mod_minus_eq of_nat_mod)
+        also have "... = (- (int m * (- int x mod int k))) mod k"
+          by (metis (mono_tags, hide_lams) mod_minus_eq mod_mult_right_eq mult_minus_right of_nat_mult)
+        finally have "(int m * (int x mod int k)) mod k = (- (int m * (- int x mod int k))) mod k"
+          by blast
+        
+        then have "unity_root k (int m * (int x mod int k)) =
+              unity_root k (- (int m * (- int x mod int k)))"
+          by (metis unity_mod)
+        then show "1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
+         gauss_sum \<chi> k 1 *
+         unity_root k (int (m * nat (int x mod int k))) =
+         1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
+         gauss_sum \<chi> k 1 *
+         unity_root k (- int (m * nat (- int x mod int k)))" by auto
+      qed
+      also have 2: "(\<Sum>x = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
+          gauss_sum \<chi> k 1 * unity_root k (- int (m * nat (- int x mod int k)))) =
+            (\<Sum>md = 0..k - 1. 1 / of_nat k * cnj (\<chi> md) * gauss_sum \<chi> k 1 *
+          unity_root k (- int (m * md)))"
+       using sum.reindex_bij_betw[OF b, of "\<lambda> md. 1 / of_nat k * cnj (\<chi> md) * gauss_sum \<chi> k 1 * unity_root k (- int (m * md))"]
+       by blast
+      also have 3: "... = (\<Sum>n = 0..k - 1.
+        1 / of_nat k * cnj (\<chi> n) * gauss_sum \<chi> k 1 *
+        unity_root k (- int (m * n)))" by blast
+      finally have "(\<Sum>n = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) *
+        gauss_sum \<chi> k 1 * unity_root k (int (m * nat (int n mod int k)))) = 
+          (\<Sum>n = 0..k - 1.
+        1 / of_nat k * cnj (\<chi> n) * gauss_sum \<chi> k 1 *
+        unity_root k (- int (m * n)))" using 1 2 3 by argo
+      then show ?thesis by blast
+    qed
+  qed
+  also have "... = (\<Sum>n = 1..k.
+         1 / of_nat k * cnj (\<chi> n) * gauss_sum \<chi> k 1 *
+         unity_root k (- int (m * n)))"
+  proof -
+    let ?f = "(\<lambda> n. 1 / of_nat k * cnj (\<chi> n) * gauss_sum \<chi> k 1 * unity_root k (- int (m * n)))"
+    have "?f 0 = 0" 
+      using dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] by auto
+    have "?f k = 0" 
+      using dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] 
+             mod_periodic[OF \<open>periodic \<chi> k\<close>, of k 0,simplified]
+      by simp
+    have "(\<Sum>n = 0..k - 1. ?f n) = (\<Sum>n = 1..k - 1. ?f n)"
+      using sum_shift_lb_Suc0_0[of ?f, OF \<open>?f 0 = 0\<close>]
+      by auto
+    also have "... = (\<Sum>n = 1..k. ?f n)"
+      using \<open>?f k = 0\<close> by (metis (no_types, lifting) One_nat_def Suc_pred add.right_neutral assms(3) not_less_eq sum_cl_ivl_Suc)
+    finally show ?thesis by blast
+  qed
+  also have "... = (\<Sum>n = 1..k.
+          (\<tau> \<chi> k div sqrt k) * cnj (\<chi> n) *
+         unity_root k (- int (m * n)))"
+  proof(rule sum.cong,simp)
+    fix x
+    assume "x \<in> {1..k}"
+    have "\<tau> \<chi> k / sqrt (real k) = 1 / of_nat k  * gauss_sum \<chi> k 1"
+    proof -
+      have "\<tau> \<chi> k / sqrt (real k) = gauss_sum \<chi> k 1 div sqrt k div sqrt(k)"
+        using assms(4) by auto
+      also have "... = gauss_sum \<chi> k 1 div (sqrt k * sqrt(k))"
+        using divide_divide_eq_left by (metis of_real_mult)
+      also have "... = gauss_sum \<chi> k 1 div k" 
+        using real_sqrt_mult_self by simp
+      finally show ?thesis by simp
+    qed
+    then show 
+     "1 / of_nat k * cnj (\<chi> x) * gauss_sum \<chi> k 1 * unity_root k (- int (m * x)) =
+      (\<tau> \<chi> k / sqrt (real k)) * cnj (\<chi> x) * unity_root k (- int (m * x))" by simp
+  qed
+  also have "... = \<tau> \<chi> k / sqrt (real k) * 
+         (\<Sum>n = 1..k. cnj (\<chi> n) * unity_root k (- int (m * n)))"  
+  proof -
+    have "(\<Sum>n = 1..k. \<tau> \<chi> k / sqrt (real k) * cnj (\<chi> n) * unity_root k (- int (m * n))) = 
+          (\<Sum>n = 1..k. \<tau> \<chi> k / sqrt (real k) * (cnj (\<chi> n) *  unity_root k (- int (m * n))))" 
+      by(rule sum.cong,simp, simp add: algebra_simps)
+    also have "... = \<tau> \<chi> k / sqrt (real k) *  (\<Sum>n = 1..k. cnj (\<chi> n) * unity_root k (- int (m * n)))"  
+      by(rule sum_distrib_left[symmetric])
+    finally show ?thesis by blast
+  qed
+
+  finally show "\<chi> m =
+    complex_of_real (\<tau> \<chi> k / sqrt (real k)) *
+    (\<Sum>n = 1..k.
+        cnj (\<chi> n) * unity_root k (- int m * int n))" by simp
+
+  have 1: "cmod(gauss_sum \<chi> k 1) = sqrt(k)" 
+    using gauss_sum_1_mod_square_eq_k[OF is_char primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>] \<open>k > 0\<close>]
+    by (simp add: cmod_def)
+  from assms(4) have 2: "cmod(\<tau> \<chi> k) = cmod(gauss_sum \<chi> k 1) div \<bar>sqrt k\<bar>"
+    by (simp add: norm_divide)
+  show "cmod(\<tau> \<chi> k) = 1"
+    using 1 2 \<open>k > 0\<close> by simp
 qed
 
+subsection\<open>Polya's inequality\<close>
+
+theorem
+  fixes \<chi> :: "nat \<Rightarrow> complex" and k :: nat
+  assumes is_char: "\<chi> \<in> dcharacters k"
+  assumes is_prim: "primitive_character \<chi> k"
+  assumes "k > 0" 
+  assumes "x \<ge> 1" 
+  shows "cmod (\<Sum> m \<le> x. \<chi>(m)) < (sqrt(k) * ln(k))" 
+proof -
+  define \<tau> where "\<tau> = gauss_sum \<chi> k 1 div sqrt k" 
+  fix m
+  have "\<chi> m = (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
+    using fourier_primitive_character(1)[OF is_char is_prim \<open>k > 0\<close>]
+          \<tau>_def 
+
+
+qed
 
 end
 
