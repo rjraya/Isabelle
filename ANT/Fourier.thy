@@ -95,6 +95,15 @@ proof -
   finally show ?thesis by blast
 qed
 
+lemma "3 div (2::nat) = 1" 
+
+lemma
+  fixes f :: "nat \<Rightarrow> nat" 
+  assumes "\<And> n. f(k-n) = f(n)" "a > 0" "b > 0" "a \<le> b"
+  shows "(\<Sum> n = 1..k. f(n)) \<le> 2 * (\<Sum> n = 1..k div 2. f(n))"
+
+  oops
+
 section\<open>Periodic functions\<close>
 
 print_locale periodic_fun_simple
@@ -3871,6 +3880,7 @@ qed
 (* theorem 8.20 *)
 theorem fourier_primitive_character:
   fixes m  k :: nat and \<chi> :: "nat \<Rightarrow> complex"
+        and \<tau> :: "(nat \<Rightarrow> complex) \<Rightarrow> nat \<Rightarrow> complex"
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes is_prim: "primitive_character \<chi> k"
   assumes "k > 0" 
@@ -4101,7 +4111,7 @@ proof -
   qed
 
   finally show "\<chi> m =
-    complex_of_real (\<tau> \<chi> k / sqrt (real k)) *
+   (\<tau> \<chi> k / sqrt (real k)) *
     (\<Sum>n = 1..k.
         cnj (\<chi> n) * unity_root k (- int m * int n))" by simp
 
@@ -4117,20 +4127,140 @@ qed
 subsection\<open>Polya's inequality\<close>
 
 theorem
-  fixes \<chi> :: "nat \<Rightarrow> complex" and k :: nat
+  fixes \<chi> :: "nat \<Rightarrow> complex" and k x :: nat
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes is_prim: "primitive_character \<chi> k"
   assumes "k > 0" 
   assumes "x \<ge> 1" 
   shows "cmod (\<Sum> m \<le> x. \<chi>(m)) < (sqrt(k) * ln(k))" 
 proof -
-  define \<tau> where "\<tau> = gauss_sum \<chi> k 1 div sqrt k" 
-  fix m
+  define \<tau> :: complex where "\<tau> = gauss_sum \<chi> k 1 div sqrt k" 
+  have "dcharacter k \<chi>" 
+    using is_char dcharacters_def by simp
+  have "periodic \<chi> k" 
+    using dir_periodic[OF is_char] .
+  have "\<chi> 0 = 0"
+    using dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] .
+  have "\<chi> k  = 0"
+    using mod_periodic[OF \<open>periodic \<chi> k\<close>, of 0 k] \<open>\<chi> 0 = 0\<close> by auto
+  have \<tau>_mod: "cmod \<tau> = 1" 
+    using fourier_primitive_character(2)[OF is_char is_prim 
+             \<open>k > 0\<close> \<tau>_def] .
+  {fix m
   have "\<chi> m = (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
-    using fourier_primitive_character(1)[OF is_char is_prim \<open>k > 0\<close>]
-          \<tau>_def 
+    using fourier_primitive_character(1)[OF is_char is_prim 
+             \<open>k > 0\<close>, of "\<lambda> \<chi> k. \<tau>" m]
+          \<tau>_def by blast}
+  then have "(\<Sum> m \<le> x. \<chi>(m)) = (\<Sum> m \<le> x. (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n)))"
+    by metis
+  also have "... = (\<Sum> m \<le> x. (\<Sum> n = 1..k. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
+    by(rule sum.cong,simp,simp add: sum_distrib_left)
+  also have "... = (\<Sum> n = 1..k. (\<Sum> m \<le> x. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
+    by(rule sum.swap)
+  also have "... = (\<Sum> n = 1..k. (\<tau> div sqrt k) *  (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by(rule sum.cong,simp,simp add: sum_distrib_left)
+  also have "... = (\<Sum> n = 1..k-1. (\<tau> div sqrt k) * (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  proof -
+    have "cnj (\<chi> k) = 0" using \<open>\<chi> k = 0\<close> by blast
+    show ?thesis 
+      apply(rule sum.mono_neutral_right,simp,simp)   
+      using \<open>cnj (\<chi> k) = 0\<close> \<open>k > 0\<close> less_Suc_eq_le by force
+  qed
+  also have "... = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by(simp add: sum_distrib_left)
+  finally have "(\<Sum> m \<le> x. \<chi>(m)) = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by blast
+  hence "(sqrt k) * (\<Sum> m \<le> x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by auto
+  define f where "f = (\<lambda> n. (\<Sum> m \<le> x. unity_root k (-m*n)))"
 
+  hence "(sqrt k) * cmod(\<Sum> m \<le> x. \<chi>(m)) = cmod(\<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n)))))"
+  proof -
+    have "cmod((sqrt k) * (\<Sum> m \<le> x. \<chi>(m))) = cmod (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+      using norm_mult by blast
+    also have "... = (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+      by simp
+    finally have 1: "cmod((sqrt k) * (\<Sum> m \<le> x. \<chi>(m))) = (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+      by blast
+    then show ?thesis 
+      using \<open>(sqrt k) * (\<Sum> m \<le> x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))\<close>
+      by algebra
+  qed
+  also have "... = cmod (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by (simp add: norm_mult \<tau>_mod)
+  also have "... \<le> (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+    using norm_sum by blast
+  also have "... = (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n)) * cmod((\<Sum> m \<le> x. unity_root k (-m*n))))"
+    by(rule sum.cong,simp, simp add: norm_mult)
+  also have "... \<le> (\<Sum> n = 1..k-1. cmod((\<Sum> m \<le> x. unity_root k (-m*n))))"
+  proof -
+    {fix n :: nat
+    have "cmod (cnj (\<chi> n)) \<le> 1" 
+      using \<open>dcharacter k \<chi>\<close> dcharacter.norm_le_1 by auto}
+    note ineq = this
+    show ?thesis
+    proof(rule sum_mono)
+      fix n
+      assume "n \<in> {1..k - 1}" 
+      define sum_aux :: real where "sum_aux = cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))"
+      have "cmod (cnj (\<chi> n)) \<le> 1" using ineq .
+      then have "cmod (cnj (\<chi> n)) * sum_aux \<le> 1 * sum_aux"
+        by (metis mult.commute mult_left_mono norm_ge_zero sum_aux_def)
+      then show " cmod (cnj (\<chi> n)) *
+         cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))
+         \<le> cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))"
+        unfolding sum_aux_def by argo
+    qed
+  qed
+  also have "... = (\<Sum> n = 1..k-1. cmod(f n))"
+    using f_def by blast
+  finally have 24: "(sqrt k) * cmod(\<Sum> m \<le> x. \<chi>(m)) \<le> (\<Sum> n = 1..k-1. cmod(f n))"
+    by blast
 
+  fix n :: int
+  have "f(k-n) = cnj(f(n))"
+  proof -
+    have "f(k-n) = (\<Sum> m \<le> x. unity_root k (-m*(k-n)))"
+      unfolding f_def by blast
+    also have "... = (\<Sum> m \<le> x. unity_root k (m*n))"
+    proof(rule sum.cong,simp)
+      fix xa
+      assume "xa \<in> {..x}" 
+      have 1: "- int xa * (int k - n) = - int xa * k + int xa *n" 
+        by (simp add: right_diff_distrib')
+      have 2: "(- int xa * k + int xa *n) mod k = (int xa * n) mod k"
+        using mod_mult_self3 by blast
+      show "unity_root k (- int xa * (int k - n)) =
+            unity_root k (int xa * n)"
+        using unity_mod 1 2
+        by metis
+    qed
+    also have "... = cnj(f(n))"
+    proof -
+      have "cnj(f(n)) = cnj (\<Sum>m\<le>x. unity_root k (- int m * n))"
+        unfolding f_def by blast
+      also have "cnj (\<Sum>m\<le>x. unity_root k (- int m * n)) = 
+            (\<Sum>m\<le>x. cnj(unity_root k (- int m * n)))"
+        by(rule cnj_sum)
+      also have "... = (\<Sum>m\<le>x. unity_root k (int m * n))"
+        by(rule sum.cong,simp,subst unity_cnj,auto)
+      finally show ?thesis by auto
+    qed
+    finally show "f(k-n) = cnj(f(n))" by blast      
+  qed
+  hence "cmod(f(k-n)) = cmod(cnj(f(n)))" by simp
+
+  define y where "y = unity_root k (-n)"
+
+  have "f(n) = (\<Sum> m = 0..x . y^m)" 
+    unfolding f_def y_def 
+    by (metis (no_types, lifting) atMost_atLeast0 minus_mult_commute mult.commute sum.cong unity_pow y_def)
+
+  thm 24
+  have "(\<Sum>n = 1..k - 1. cmod (f (int n)))
+        \<le> 2 * (\<Sum>n \<le> k div 2. cmod (f (int n)))"
+    
+    sorry
 qed
 
 end
