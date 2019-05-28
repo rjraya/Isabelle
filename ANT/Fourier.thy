@@ -932,6 +932,13 @@ lemma unity_prod: "unity_root k m* unity_root k n = unity_root k (m+n)"
 lemma unity_minus: "unity_root k (-n) = inverse (unity_root k n)"
   unfolding unity_root_def by simp
 
+lemma unity_dvd_int:
+  fixes k :: nat and n :: int
+  assumes "k > 0" 
+  shows "(unity_root k n = 1) \<longleftrightarrow> (k dvd n)"
+  using unity_dvd[OF \<open>k > 0\<close>] unity_minus
+  by (metis dvd_minus_iff int_cases2 int_dvd_int_iff inverse_eq_1_iff)
+
 lemma unity_periodic:
   "periodic (unity_root k) k" 
   unfolding periodic_def 
@@ -1007,8 +1014,6 @@ lemma unity_div_num:
   assumes "k > 0" "d > 0" "d dvd k"
   shows "unity_root k (x * (k div d)) = unity_root d x"
   using assms dvd_div_mult_self unity_div by auto
-
-
 
 section\<open>Geometric sum\<close>
 
@@ -4126,73 +4131,74 @@ qed
 
 subsection\<open>Polya's inequality\<close>
 
-theorem
+lemma 
+  fixes x y :: real
+  assumes "x > 0" "y > 0" "x \<le> y"
+  shows "(1 div y) \<le> (1 div x)"
+  using assms apply(simp add: algebra_simps)
+  thm frac_le
+  by (simp add: frac_le)
+
+theorem polya_inequality:
   fixes \<chi> :: "nat \<Rightarrow> complex" and k x :: nat
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes is_prim: "primitive_character \<chi> k"
-  assumes "k > 0" 
+  assumes "k > 1" 
   assumes "x \<ge> 1" 
-  shows "cmod (\<Sum> m \<le> x. \<chi>(m)) < (sqrt(k) * ln(k))" 
+  shows "cmod (\<Sum> m = 1..x. \<chi>(m)) < (sqrt(k) * ln(k))" 
 proof -
   define \<tau> :: complex where "\<tau> = gauss_sum \<chi> k 1 div sqrt k" 
-  have "dcharacter k \<chi>" 
-    using is_char dcharacters_def by simp
-  have "periodic \<chi> k" 
-    using dir_periodic[OF is_char] .
-  have "\<chi> 0 = 0"
-    using dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] .
-  have "\<chi> k  = 0"
-    using mod_periodic[OF \<open>periodic \<chi> k\<close>, of 0 k] \<open>\<chi> 0 = 0\<close> by auto
-  have \<tau>_mod: "cmod \<tau> = 1" 
-    using fourier_primitive_character(2)[OF is_char is_prim 
-             \<open>k > 0\<close> \<tau>_def] .
+  have "dcharacter k \<chi>" using is_char dcharacters_def by simp
+  have "periodic \<chi> k" using dir_periodic[OF is_char] .
+  have "\<chi> 0 = 0" using dcharacter.zero_eq_0[OF \<open>dcharacter k \<chi>\<close>] .
+  have "\<chi> k  = 0" using mod_periodic[OF \<open>periodic \<chi> k\<close>, of 0 k] \<open>\<chi> 0 = 0\<close> by auto
+  have "k > 0" using \<open>k > 1\<close> by auto
+  have \<tau>_mod: "cmod \<tau> = 1" using fourier_primitive_character(2)[OF is_char is_prim \<open>k > 0\<close> \<tau>_def] .
   {fix m
   have "\<chi> m = (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
-    using fourier_primitive_character(1)[OF is_char is_prim 
-             \<open>k > 0\<close>, of "\<lambda> \<chi> k. \<tau>" m]
-          \<tau>_def by blast}
-  then have "(\<Sum> m \<le> x. \<chi>(m)) = (\<Sum> m \<le> x. (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n)))"
+    using fourier_primitive_character(1)[OF is_char is_prim \<open>k > 0\<close>, of "\<lambda> \<chi> k. \<tau>" m] \<tau>_def by blast}
+  then have "(\<Sum> m = 1..x. \<chi>(m)) = (\<Sum> m = 1..x. (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n)))"
     by metis
-  also have "... = (\<Sum> m \<le> x. (\<Sum> n = 1..k. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
+  also have "... = (\<Sum> m = 1..x. (\<Sum> n = 1..k. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
     by(rule sum.cong,simp,simp add: sum_distrib_left)
-  also have "... = (\<Sum> n = 1..k. (\<Sum> m \<le> x. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
+  also have "... = (\<Sum> n = 1..k. (\<Sum> m = 1..x. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
     by(rule sum.swap)
-  also have "... = (\<Sum> n = 1..k. (\<tau> div sqrt k) *  (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... = (\<Sum> n = 1..k. (\<tau> div sqrt k) *  (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
     by(rule sum.cong,simp,simp add: sum_distrib_left)
-  also have "... = (\<Sum> n = 1..k-1. (\<tau> div sqrt k) * (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... = (\<Sum> n = 1..k-1. (\<tau> div sqrt k) * (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
   proof -
     have "cnj (\<chi> k) = 0" using \<open>\<chi> k = 0\<close> by blast
     show ?thesis 
       apply(rule sum.mono_neutral_right,simp,simp)   
       using \<open>cnj (\<chi> k) = 0\<close> \<open>k > 0\<close> less_Suc_eq_le by force
   qed
-  also have "... = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
     by(simp add: sum_distrib_left)
-  finally have "(\<Sum> m \<le> x. \<chi>(m)) = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  finally have "(\<Sum> m = 1..x. \<chi>(m)) = (\<tau> div sqrt k) * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
     by blast
-  hence "(sqrt k) * (\<Sum> m \<le> x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  hence "(sqrt k) * (\<Sum> m = 1..x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
     by auto
-  define f where "f = (\<lambda> n. (\<Sum> m \<le> x. unity_root k (-m*n)))"
+  define f where "f = (\<lambda> n. (\<Sum> m = 1..x. unity_root k (-m*n)))"
 
-  hence "(sqrt k) * cmod(\<Sum> m \<le> x. \<chi>(m)) = cmod(\<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n)))))"
+  hence "(sqrt k) * cmod(\<Sum> m = 1..x. \<chi>(m)) = cmod(\<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n)))))"
   proof -
-    have "cmod((sqrt k) * (\<Sum> m \<le> x. \<chi>(m))) = cmod (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+    have "cmod((sqrt k) * (\<Sum> m = 1..x. \<chi>(m))) = cmod (sqrt k) * cmod((\<Sum> m = 1..x. \<chi>(m)))"
       using norm_mult by blast
-    also have "... = (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+    also have "... = (sqrt k) * cmod((\<Sum> m = 1..x. \<chi>(m)))"
       by simp
-    finally have 1: "cmod((sqrt k) * (\<Sum> m \<le> x. \<chi>(m))) = (sqrt k) * cmod((\<Sum> m \<le> x. \<chi>(m)))"
+    finally have 1: "cmod((sqrt k) * (\<Sum> m = 1..x. \<chi>(m))) = (sqrt k) * cmod((\<Sum> m = 1..x. \<chi>(m)))"
       by blast
     then show ?thesis 
-      using \<open>(sqrt k) * (\<Sum> m \<le> x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))\<close>
+      using \<open>(sqrt k) * (\<Sum> m = 1..x. \<chi>(m)) = \<tau> * (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))\<close>
       by algebra
   qed
-  also have "... = cmod (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... = cmod (\<Sum> n = 1..k-1. (cnj (\<chi> n) * (\<Sum> m = 1..x. unity_root k (-m*n))))"
     by (simp add: norm_mult \<tau>_mod)
-  also have "... \<le> (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n) * (\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... \<le> (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n) * (\<Sum>  m = 1..x. unity_root k (-m*n))))"
     using norm_sum by blast
-  also have "... = (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n)) * cmod((\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... = (\<Sum> n = 1..k-1. cmod (cnj (\<chi> n)) * cmod((\<Sum>  m = 1..x. unity_root k (-m*n))))"
     by(rule sum.cong,simp, simp add: norm_mult)
-  also have "... \<le> (\<Sum> n = 1..k-1. cmod((\<Sum> m \<le> x. unity_root k (-m*n))))"
+  also have "... \<le> (\<Sum> n = 1..k-1. cmod((\<Sum> m = 1..x. unity_root k (-m*n))))"
   proof -
     {fix n :: nat
     have "cmod (cnj (\<chi> n)) \<le> 1" 
@@ -4202,30 +4208,30 @@ proof -
     proof(rule sum_mono)
       fix n
       assume "n \<in> {1..k - 1}" 
-      define sum_aux :: real where "sum_aux = cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))"
+      define sum_aux :: real where "sum_aux = cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))"
       have "cmod (cnj (\<chi> n)) \<le> 1" using ineq .
       then have "cmod (cnj (\<chi> n)) * sum_aux \<le> 1 * sum_aux"
         by (metis mult.commute mult_left_mono norm_ge_zero sum_aux_def)
       then show " cmod (cnj (\<chi> n)) *
-         cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))
-         \<le> cmod (\<Sum>m\<le>x. unity_root k (- int m * int n))"
+         cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))
+         \<le> cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))"
         unfolding sum_aux_def by argo
     qed
   qed
   also have "... = (\<Sum> n = 1..k-1. cmod(f n))"
     using f_def by blast
-  finally have 24: "(sqrt k) * cmod(\<Sum> m \<le> x. \<chi>(m)) \<le> (\<Sum> n = 1..k-1. cmod(f n))"
+  finally have 24: "(sqrt k) * cmod(\<Sum> m = 1..x. \<chi>(m)) \<le> (\<Sum> n = 1..k-1. cmod(f n))"
     by blast
 
-  fix n :: int
+  {fix n :: int
   have "f(k-n) = cnj(f(n))"
   proof -
-    have "f(k-n) = (\<Sum> m \<le> x. unity_root k (-m*(k-n)))"
+    have "f(k-n) = (\<Sum> m = 1..x. unity_root k (-m*(k-n)))"
       unfolding f_def by blast
-    also have "... = (\<Sum> m \<le> x. unity_root k (m*n))"
+    also have "... = (\<Sum> m = 1..x. unity_root k (m*n))"
     proof(rule sum.cong,simp)
       fix xa
-      assume "xa \<in> {..x}" 
+      assume "xa \<in> {1..x}" 
       have 1: "- int xa * (int k - n) = - int xa * k + int xa *n" 
         by (simp add: right_diff_distrib')
       have 2: "(- int xa * k + int xa *n) mod k = (int xa * n) mod k"
@@ -4237,30 +4243,286 @@ proof -
     qed
     also have "... = cnj(f(n))"
     proof -
-      have "cnj(f(n)) = cnj (\<Sum>m\<le>x. unity_root k (- int m * n))"
+      have "cnj(f(n)) = cnj (\<Sum> m = 1..x. unity_root k (- int m * n))"
         unfolding f_def by blast
-      also have "cnj (\<Sum>m\<le>x. unity_root k (- int m * n)) = 
-            (\<Sum>m\<le>x. cnj(unity_root k (- int m * n)))"
+      also have "cnj (\<Sum>m = 1..x. unity_root k (- int m * n)) = 
+            (\<Sum>m = 1..x. cnj(unity_root k (- int m * n)))"
         by(rule cnj_sum)
-      also have "... = (\<Sum>m\<le>x. unity_root k (int m * n))"
+      also have "... = (\<Sum>m = 1..x. unity_root k (int m * n))"
         by(rule sum.cong,simp,subst unity_cnj,auto)
       finally show ?thesis by auto
     qed
     finally show "f(k-n) = cnj(f(n))" by blast      
   qed
   hence "cmod(f(k-n)) = cmod(cnj(f(n)))" by simp
+  hence "cmod(f(k-n)) = cmod(f(n))" by auto}
+  note eq = this
+  have 25: "(\<Sum>n = 1..k - 1. cmod (f (int n)))
+        \<le> 2 * (\<Sum> n = 1..k div 2. cmod (f (int n)))"
+  proof -
+    define g where "g = (\<lambda> n. cmod (f (n)))"
+    have "(\<Sum>i=1..k-1. g i) = (\<Sum>i\<in>{1..k div 2}\<union>{k div 2<..k-1}. g i)"
+      by (intro sum.cong) auto
+    also have "\<dots> = (\<Sum>i\<in>{1..k div 2}. g i) + (\<Sum>i\<in>{k div 2<..k-1}. g i)"
+      by (subst sum.union_disjoint) auto
+    also have "(\<Sum>i\<in>{k div 2<..k-1}. g i) = (\<Sum>i\<in>{1..<k - k div 2}. g (k - i))"
+      by (rule sum.reindex_bij_witness[of _ "\<lambda>i. k - i" "\<lambda>i. k - i"]) auto
+    also have "\<dots> \<le> (\<Sum>i\<in>{1..k div 2}. g (k - i))"
+      by(intro sum_mono2,simp,auto simp add: g_def)
+    finally have 1: "(\<Sum>i=1..k-1. g i) \<le> (\<Sum>i=1..k div 2. g i + g (k - i))"
+      by (simp add: sum.distrib)
+    have "(\<Sum>i=1..k div 2. g i + g (k - i)) = (\<Sum>i=1..k div 2. 2 * g i)"
+      unfolding g_def
+      apply(rule sum.cong,simp)
+      using eq int_ops(6) by force
+    also have "... = 2 * (\<Sum>i=1..k div 2. g i)"
+      by(rule sum_distrib_left[symmetric])
+    finally have 2: "(\<Sum>i=1..k div 2. g i + g (k - i)) = 2 * (\<Sum>i=1..k div 2. g i)"
+      by blast
+    from 1 2 have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..k div 2. g i)"
+      by metis
+    then show ?thesis unfolding g_def by blast
+  qed
 
+  {fix n :: int
+  assume "1 \<le> n" "n \<le> k div 2" 
+  have "n \<le> k - 1"
+    using \<open>n \<le> k div 2\<close> \<open>k > 1\<close> by linarith
   define y where "y = unity_root k (-n)"
+  define z where "z = exp (-(pi*n/k)* \<i>)"
+  have "z^2 = exp (2*(-(pi*n/k)* \<i>))"
+    unfolding z_def using exp_double[symmetric] by blast
+  also have "... = y"
+    unfolding y_def unity_exp
+    by(simp add: algebra_simps)
+  finally have z_eq: "y = z^2" by blast
+  have z_not_0: "z \<noteq> 0" 
+    using z_eq by (simp add: z_def)
+  
+  then have "y \<noteq> 1" 
+    using unity_dvd_int[OF \<open>k > 0\<close>, of n] 
+    using \<open>1 \<le> n\<close> \<open>n \<le> int (k - 1)\<close> not_less unity_dvd_int y_def zdvd_not_zless by auto
 
-  have "f(n) = (\<Sum> m = 0..x . y^m)" 
+  have "f(n) = (\<Sum> m = 1..x . y^m)" 
     unfolding f_def y_def 
-    by (metis (no_types, lifting) atMost_atLeast0 minus_mult_commute mult.commute sum.cong unity_pow y_def)
+    by (metis (no_types, lifting) minus_mult_commute mult.commute unity_pow y_def)
+  also have "... = (\<Sum> m = 1..<x+1 . y^m)"
+    by (metis add_diff_cancel_right' add_is_0 g_sum_eq_ineq neq0_conv zero_less_one)
+  also have "... = (\<Sum> m = 0..<x+1 . y^m) - 1"
+  proof -
+    have "y^0 = 1" 
+      unfolding y_def
+      using unity_pow[of k "-n" 0] unity_k_0 by simp
+    then show ?thesis 
+      by (metis One_nat_def \<open>sum ((^) y) {1..x} = sum ((^) y) {1..<x + 1}\<close> add.right_neutral add_Suc_right add_diff_cancel_left' atLeast0AtMost atLeast0LessThan le_add2 lessThan_Suc_atMost sum_head_Suc)
+  qed
+  also have "... = (y^(x+1) - 1) div (y - 1) - 1"
+    using Set_Interval.geometric_sum[OF \<open>y \<noteq> 1\<close>, of "x+1"]
+    by (simp add: atLeast0LessThan)   
+  also have "... = (y^(x+1) - 1 - (y-1)) div (y - 1)"
+  proof -
+    have "y - 1 \<noteq> 0" using \<open>y \<noteq> 1\<close> by simp
+    show ?thesis
+      using divide_diff_eq_iff[OF \<open>y - 1 \<noteq> 0\<close>, of "(y^(x+1) - 1)" 1]
+      by auto
+  qed
+  also have "... = (y^(x+1) - y) div (y - 1)"
+    by(simp add: algebra_simps)
+  also have "... = y * (y^x - 1) div (y - 1)"
+    by(simp add: algebra_simps)
+  also have "... = z^2 * ((z^2)^x - 1) div (z^2 - 1)"
+    unfolding z_eq by blast
+  also have "... = z^2 * (z^(2*x) - 1) div (z^2 - 1)"
+    by(subst power_mult[symmetric, of z 2 x],blast) 
+  also have "... = z^(x+1)*((z ^x -inverse(z^x))) / (z - inverse(z))"
+  proof -
+    have "z^x \<noteq> 0" using z_not_0 by auto
+    have 1: "z ^ (2 * x) - 1 = z^x*(z ^x -inverse(z^x))"
+      by (simp add: semiring_normalization_rules(36) right_inverse[OF \<open>z^x \<noteq> 0\<close>]  right_diff_distrib')
+    have 2: "z\<^sup>2 - 1 = z*(z - inverse(z))" 
+      by (simp add: right_diff_distrib' semiring_normalization_rules(29) right_inverse[OF \<open>z \<noteq> 0\<close>])
 
-  thm 24
-  have "(\<Sum>n = 1..k - 1. cmod (f (int n)))
-        \<le> 2 * (\<Sum>n \<le> k div 2. cmod (f (int n)))"
+    have 3: "z\<^sup>2 * (z^x / z) = z^(x+1)"
+    proof -
+      have "z\<^sup>2 * (z^x / z) = z\<^sup>2 * (z^x * inverse z)"
+        by(simp add: inverse_eq_divide)
+      also have "... = z^(x+1)"
+        by(simp add: algebra_simps power2_eq_square right_inverse[OF \<open>z \<noteq> 0\<close>])
+      finally show ?thesis by blast
+    qed
+    have "z\<^sup>2 * (z ^ (2 * x) - 1) / (z\<^sup>2 - 1) =
+          z\<^sup>2 * (z^x*(z ^x -inverse(z^x))) / (z*(z - inverse(z)))"
+      by(subst 1, subst 2,blast) 
+    also have "... =  (z\<^sup>2 * (z^x / z)) * ((z ^x -inverse(z^x))) / (z - inverse(z))"
+      by simp
+    also have "... = z^(x+1) *((z ^x -inverse(z^x))) / (z - inverse(z))"
+      by(subst 3,simp) 
+    finally show ?thesis by simp
+  qed
+  finally have "f(n) = z^(x+1) *((z ^x -inverse(z^x))) / (z - inverse(z))" by blast
+  then have "cmod(f(n)) = cmod(z^(x+1) * (((z ^x -inverse(z^x))) / (z - inverse(z))))" by auto
+  also have "... = cmod(z^(x+1)) * cmod(((z ^x -inverse(z^x))) / (z - inverse(z)))"
+    using norm_mult by blast
+  also have "... = cmod(((z ^x -inverse(z^x))) / (z - inverse(z)))"
+  proof -
+    have "cmod(z) = 1" 
+      unfolding z_def by auto
+    then have "cmod(z^(x+1)) = 1" 
+      by (metis norm_power power_one)
+    then show ?thesis by simp
+  qed
+  also have "... = cmod((exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) div 
+                   (exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>)))"
+  proof -
+    have 1: "z ^ x = exp (-(x*pi*n/k)* \<i>)"
+      unfolding z_def
+      by (metis (no_types, lifting) exp_of_nat_mult minus_divide_divide minus_divide_left mult.assoc of_real_mult of_real_of_nat_eq times_divide_eq_right)
+    have "inverse (z ^ x) = inverse (exp (-(x*pi*n/k)* \<i>))"
+      using \<open>z ^ x = exp (-(x*pi*n/k)* \<i>)\<close> by auto
+    also have "... = (exp ((x*pi*n/k)* \<i>))"
+      by (simp add: exp_minus)
+    finally have 2: "inverse(z^x) = exp ((x*pi*n/k)* \<i>)" by simp
+    have 3: "inverse z = exp ((pi*n/k)* \<i>)"
+      by (simp add: exp_minus z_def)
+    show ?thesis using 1 2 3 z_def by simp
+  qed
+  also have "... = cmod((sin (x*pi*n/k)) div (sin (pi*n/k)))"
+  proof -
+    have num: "(exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) =
+          (-2*\<i>* sin((x*pi*n/k)))" 
+    proof -
+      have 1: "exp (-(x*pi*n/k)* \<i>) = cos(-(x*pi*n/k)) + \<i> * sin(-(x*pi*n/k))"
+              "exp ((x*pi*n/k)* \<i>) = cos((x*pi*n/k)) + \<i> * sin((x*pi*n/k))"
+        using Euler Im_complex_of_real Im_divide_of_nat Im_i_times Re_complex_of_real complex_Re_of_int complex_i_mult_minus exp_zero mult.assoc mult.commute by force+
+      have "(exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) =
+            (cos(-(x*pi*n/k)) + \<i> * sin(-(x*pi*n/k))) -
+            (cos((x*pi*n/k)) + \<i> * sin((x*pi*n/k)))"
+        using 1 by argo
+      also have "... = -2*\<i>* sin((x*pi*n/k))" by simp
+      finally show ?thesis by blast  
+    qed
+
+    have den: "(exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>)) = 
+          -2*\<i>* sin((pi*n/k))"
+    proof -
+      have 1: "exp (-(pi*n/k)* \<i>) = cos(-(pi*n/k)) + \<i> * sin(-(pi*n/k))"
+              "exp ((pi*n/k)* \<i>) = cos((pi*n/k)) + \<i> * sin((pi*n/k))"
+        using Euler Im_complex_of_real Im_divide_of_nat Im_i_times Re_complex_of_real complex_Re_of_int complex_i_mult_minus exp_zero mult.assoc mult.commute by force+
+      have "(exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>)) =
+            (cos(-(pi*n/k)) + \<i> * sin(-(pi*n/k))) -
+            (cos((pi*n/k)) + \<i> * sin((pi*n/k)))"
+        using 1 by argo
+      also have "... = -2*\<i>* sin((pi*n/k))" by simp
+      finally show ?thesis by blast  
+    qed 
+  
+    have "cmod((exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) div 
+                   (exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>))) =
+          cmod((-2*\<i>* sin((x*pi*n/k))) div (-2*\<i>* sin((pi*n/k))))"
+      using num den by presburger
+    also have "... = cmod(sin((x*pi*n/k)) div sin((pi*n/k)))" by simp
+    finally show ?thesis by blast
+  qed
+  also have "... = cmod((sin (x*pi*n/k))) div cmod((sin (pi*n/k)))"
+    by (simp add: norm_divide)
+  also have "... \<le> 1 div cmod((sin (pi*n/k)))"
+  proof -
+    have "cmod((sin (pi*n/k))) \<ge> 0" by simp
+    have "cmod (sin (x*pi*n/k)) \<le> 1" by simp
+    then show ?thesis   
+      using divide_right_mono[OF \<open>cmod (sin (x*pi*n/k)) \<le> 1\<close> \<open>cmod((sin (pi*n/k))) \<ge> 0\<close>]
+      by blast
+  qed
+  finally have 26: "cmod(f(n)) \<le> 1 div cmod((sin (pi*n/k)))"
+    by blast
+
+  {fix t
+   assume "t \<ge> 0" "t \<le> pi div 2"
+   then have "t \<in> {0..pi div 2}" by auto 
+   have "convex_on {0..pi/2} (\<lambda>x. -sin x)"
+    by (rule convex_on_realI[where f' = "\<lambda>x. - cos x"])
+       (auto intro!: derivative_eq_intros simp: cos_monotone_0_pi_le)
+   from convex_onD_Icc'[OF this \<open>t \<in> {0..pi div 2}\<close>] have "sin(t) \<ge> (2 div pi)*t" by simp
+  }
+  note sin_ineq = this
+
+  have sin_ineq_inst: "sin((pi*n) div k) \<ge> (2*n) div real k"
+  proof -
+    have "pi div k \<ge> 0" by simp
+    have 1: "(pi*n) div k \<ge> 0" using \<open>1 \<le> n\<close> by auto
+    have "(pi*n)/k = (pi div k) * n" by simp
+    also have "... \<le> (pi div k) * (k div 2)" 
+      using mult_left_mono[of "n" "k div 2" "pi div k"] 
+            \<open>n \<le> k div 2\<close> \<open>0 \<le> pi / real k\<close> by linarith
+    also have "... \<le> pi div 2" 
+      by(simp add: divide_simps,safe,simp add: \<open>k > 0\<close>)     
+    finally have 2: "(pi*n)/k \<le> pi div 2" by auto
     
+    have "(2 div pi) * (pi * n div k) \<le> sin((pi * n) div k)"
+      using sin_ineq[OF 1 2] by blast
+    then show "sin((pi * n) div k) \<ge> ((2*n) div real k)" 
+      by auto
+  qed
+
+  from 26 have "cmod(f(n)) \<le> 1 div abs((sin (pi*n/k)))"
+    by simp
+  also have "... \<le> 1 div abs((2*n) div real k)" 
+  proof -
+    have "sin (pi*n/k) \<ge> (2*n) div real k" 
+      using sin_ineq_inst by simp
+    moreover have "(2*n) div real k > 0" 
+      using \<open>0 < k\<close> \<open>1 \<le> n\<close> by auto
+    ultimately have "abs((sin (pi*n/k))) \<ge> abs(((2*n) div real k))" by auto
+    have "abs(((2*n) div real k)) > 0" 
+      using \<open>(2*n) div real k > 0\<close> by argo
+    then show "1 div abs((sin (pi*n/k))) \<le> 1 div abs(((2*n) div real k))"
+      using frac_le[of 1 1,simplified,OF \<open>abs(((2*n) div real k)) > 0\<close> \<open>abs((sin (pi*n/k))) \<ge> abs(((2*n) div real k))\<close>]
+      by blast
+  qed
+  also have "... = real k div (2*n)" using \<open>n \<ge> 1\<close> by simp
+  finally have "cmod(f(n)) \<le> real k div (2*n)" by blast}
+  note ineq = this
+  from 24 have 
+    "sqrt (real k) * cmod (sum \<chi> {1..x})
+      \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))"
+    by blast
+  also have "...
+        \<le> 2 * (\<Sum>n = 1..k div 2. cmod (f (int n)))"
+    using 25 by blast
+  also have "... \<le>  real k * (\<Sum>n = 1..k div 2. real 1 div n)"
+  proof -
+    have "(\<Sum>n = 1..k div 2. cmod (f (int n))) \<le> (\<Sum>n = 1..k div 2. real k div (2*n))"
+    proof(rule sum_mono)
+      fix n
+      assume "n \<in> {1..k div 2}"
+      then have "1 \<le> int n" "int n \<le> k div 2" by auto
+      show "cmod (f (int n)) \<le> real k / (2*n)" 
+        using ineq[OF \<open>1 \<le> int n\<close> \<open>int n \<le> k div 2\<close>] by auto
+    qed
+    also have "... = (\<Sum>n = 1..k div 2. (real k div 2) * (real 1 div n))"
+      by(rule sum.cong,auto)
+    also have "... = (real k div 2) * (\<Sum>n = 1..k div 2. real 1 div n)"
+      using sum_distrib_left[symmetric] by fast
+    finally have "(\<Sum>n = 1..k div 2. cmod (f (int n))) \<le> 
+                  (real k div 2) * (\<Sum>n = 1..k div 2. real 1 div n)"
+      by blast
+    then show ?thesis by argo
+  qed
+  also have "... < k * ln(k)"
     sorry
+  finally have 1: "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"
+    by blast
+  show  "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln(k)"
+  proof -
+    have 2: "cmod (sum \<chi> {1..x}) * sqrt (real k) < k * ln(k)"
+      using 1 by argo
+    have "sqrt (real k) > 0" using \<open>k > 0\<close> by simp
+    have 3: "(real k * ln (real k)) div sqrt (real k) = sqrt (real k) * ln (real k)"
+      by(simp add: field_simps \<open>k > 0\<close>)
+    show "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln (real k)"
+      using mult_imp_less_div_pos[OF \<open>sqrt (real k) > 0\<close> 2] 
+            3 by argo
+  qed
 qed
 
 end
