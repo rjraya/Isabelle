@@ -4131,13 +4131,184 @@ qed
 
 subsection\<open>Polya's inequality\<close>
 
-lemma 
-  fixes x y :: real
-  assumes "x > 0" "y > 0" "x \<le> y"
-  shows "(1 div y) \<le> (1 div x)"
-  using assms apply(simp add: algebra_simps)
-  thm frac_le
-  by (simp add: frac_le)
+lemma ineq_1:
+  fixes k :: real
+  assumes "k > 1"
+  shows "(1 / k) < ln(1+1/(k-1))" 
+proof -   
+  define f :: "real \<Rightarrow> real" where "f = (\<lambda> k. k*ln(1+1/(k-1)) - 1)"
+  have "continuous_on {(1::real)<..} (\<lambda> k. 1/(k-1))"
+    by(rule continuous_on_divide,simp,simp add: continuous_intros,simp)
+  have c_ln: "continuous_on {(1::real)<..} (\<lambda> k. ln(1+1/(k-1)))"
+    apply(rule continuous_on_ln,simp add: continuous_intros)
+    by (metis (no_types, hide_lams) diff_minus_eq_add diff_numeral_special(9) div_by_1 divide_divide_eq_right eq_diff_eq' greaterThan_iff less_add_same_cancel1 less_numeral_extra(2) linordered_semidom_class.add_diff_inverse mult.left_neutral nonzero_minus_divide_right times_divide_eq_right zero_neq_one)
+  then have cont: "continuous_on {(1::real)<..} f"
+    unfolding f_def
+    by(auto intro!: continuous_intros)
+  
+  have two_gr: "f(2) > 0"
+    unfolding f_def 
+  proof(simp add: algebra_simps)
+    show "(1::real) < 2*ln 2" 
+      using ln2_ge_two_thirds by simp
+  qed
+  find_theorems "ln _ < _"
+  have f_not_zero: "\<forall> i > 1. f(i) \<noteq> 0"
+    unfolding f_def 
+  proof(rule allI, rule impI)
+    fix i :: real
+    assume "1 < i"
+    have "i * ln (1 + 1 / (i - 1)) - 1 \<noteq> 0"
+    proof - 
+      have "1 + 1 / (i-1) > 0" 
+        using \<open>i > 1\<close> by (simp add: add_pos_pos)
+      then have "ln (1 + 1 / (i - 1)) > 0" 
+        
+        sorry
+      then show ?thesis sorry
+    qed
+    show "\<And>i. 1 < i \<Longrightarrow> i * ln (1 + 1 / (i - 1)) - 1 \<noteq> 0"
+         sorry
+  qed
+                   
+  term "positive"
+    from cont two_gr f_not_zero
+    have "positive_on f {1<..}"
+  have "k*ln(1+1/(k-1)) - 1 > 0"
+    using \<open>k > 1\<close> 
+  proof -
+    have "1+1/(k-1) > 1" using \<open>k > 1\<close> by simp
+    thm ln_gt_zero[OF \<open>1+1/(k-1) > 1\<close>]
+  
+    let ?A = "(1 / k) < ln(1+1/(k-1))"
+    let ?B = "k*ln(1+1/(k-1)) - 1 > 0" 
+    have "?A \<longleftrightarrow> ?B"
+      sorry
+    show ?thesis sorry
+  qed
+  show ?thesis sorry
+qed
+
+lemma ineq_2:
+  fixes k :: real
+  assumes "k \<ge> 1"
+  shows "(1 / (k+1)) < ln(1+2/(2*k+1))" 
+  sorry
+
+lemma nat_0_1_induct [case_names 0 1 step]:
+  assumes "P 0" "P 1" "\<And>n. n \<ge> 1 \<Longrightarrow> P n \<Longrightarrow> P (Suc n)"
+  shows   "P n"
+proof (induction n rule: less_induct)
+  case (less n)
+  show ?case 
+    using assms(3)[OF _ less.IH[of "n - 1"]]
+    by(cases "n \<le> 1")
+      (insert assms(1-2),auto simp: eval_nat_numeral le_Suc_eq)
+qed
+
+lemma harm_log_ineq:
+  fixes m :: nat
+  assumes "m > 0"
+  shows "harm m < ln(2*m+1)" 
+  using assms
+proof(induct m rule: nat_0_1_induct)
+  case 0
+  then show ?case by blast
+next
+  case 1
+  have "harm 1 = (1::real)" unfolding harm_def by simp
+  have "harm 1 < ln (3::real)" 
+    by(subst \<open>harm 1 = 1\<close>,subst ln3_gt_1,simp)
+  then show ?case by simp
+next
+  case (step n)
+  have "harm (n+1) = harm n + 1/(n+1)"
+    by (metis Suc_eq_plus1 harm_Suc inverse_eq_divide)
+  also have "... < ln (real (2 * n + 1)) + 1/(n+1)"
+    using step(1-2) by auto
+  also have "... < ln (real (2 * n + 1)) + ln(1+2/(2*n+1))"
+  proof -
+    from step(1) have "real n \<ge> 1" by simp
+    have "1 / real (n + 1) < ln (1 + 2 / real (2 * n + 1))"
+      using ineq_2[OF \<open>1 \<le> (real n)\<close>]  by (simp add: add.commute)
+    then show ?thesis by auto
+  qed
+  also have "... = ln ((2 * n + 1) * (1+2/(2*n+1)))"
+    apply(rule ln_mult[symmetric],simp,simp)
+    using \<open>n \<ge> 1\<close> by (metis add_pos_pos divide_pos_pos less_numeral_extra(1) mult_2 of_nat_0_less_iff of_nat_Suc of_nat_add one_add_one zero_less_Suc)
+  also have "... = ln(2*(n+1)+1)"
+  proof -
+    have "(2 * n + 1) * (1+2/(2*n+1)) = 2*(n+1)+1"
+      by(simp add: field_simps)
+    then show ?thesis by presburger
+  qed
+  finally show ?case by simp
+qed
+  
+corollary polya_inequalities_lemma:
+  assumes "k \<ge> 2"
+  shows "odd k \<Longrightarrow> harm (k div 2) < ln(real k)" 
+        "even k \<Longrightarrow> harm (k div 2 - 1) + (1 / real k) < ln(real k)"
+proof -
+  {
+    fix l :: nat
+    assume "l \<ge> 2" 
+    then have "l div 2 > 0" by auto
+    assume "odd l"
+    then have "real (2 * (l div 2) + 1) = l" by auto
+    then have "harm (l div 2) < ln(real l)" 
+      using harm_log_ineq[OF \<open>l div 2 > 0\<close>] by auto
+  }
+  note odd_case = this
+  show "odd k \<Longrightarrow> harm (k div 2) < ln (real k)"
+    using odd_case[OF assms] by blast
+  {
+    fix l :: nat
+    assume "l \<ge> 2" 
+    then have "l div 2  > 0" by auto
+    assume "even l"
+    have "harm (l div 2 - 1) + (1 / real l) < ln(real l)"
+    proof(cases "l = 2")
+      case True
+      show ?thesis 
+        using True ln2_ge_two_thirds unfolding harm_def by simp 
+    next
+      case False
+      then have "l div 2 - 1 > 0" using \<open>l \<ge> 2\<close> \<open>even l\<close> by auto
+      have "harm (l div 2 - 1) < ln(2*(l div 2 - 1) + 1)"
+        using harm_log_ineq[OF \<open>l div 2 - 1 > 0\<close>] by blast
+
+      then have "harm (l div 2 - 1) + (1 / real l) <
+            ln(2*(l div 2 - 1) + 1) + (1 / real l)" by argo
+      also have "... < ln(2*(l div 2 - 1) + 1) + ln (1 + 1 / (real l - 1))"
+      proof -
+        have "(l::real) > 1" using \<open>l \<ge> 2\<close> by auto
+        show ?thesis
+          using ineq_1[OF \<open>(l::real) > 1\<close>] by simp
+      qed
+      also have "... = ln(l-1) + ln (1 + 1 / (real l - 1))"
+      proof -
+        have "2*(l div 2 - 1) + 1 = l - 1" 
+          using \<open>even l\<close> \<open>l \<ge> 2\<close> by(simp add: algebra_simps)
+        show ?thesis
+          by(subst \<open>2*(l div 2 - 1) + 1 = l - 1\<close>,blast) 
+      qed
+      also have "... = ln((l-1) *  (1 + 1 / (real l - 1)))"
+        apply(rule ln_mult[symmetric])
+        using \<open>l \<ge> 2\<close> by(auto simp add: add_pos_pos)
+      also have "... = ln(l)"
+      proof -
+        have "(l-1) *  (1 + 1 / (real l - 1)) = l"        
+          using \<open>l \<ge> 2\<close> by(simp add: divide_simps)
+        then show ?thesis by simp          
+      qed
+      finally show ?thesis by blast
+    qed
+  }
+  note even_case = this
+  show "even k \<Longrightarrow> harm (k div 2 - 1) + (1 / real k) < ln(real k)"
+    using even_case[OF assms] by blast
+qed
 
 theorem polya_inequality:
   fixes \<chi> :: "nat \<Rightarrow> complex" and k x :: nat
@@ -4508,6 +4679,7 @@ proof -
       by blast
     then show ?thesis by argo
   qed
+  have "3 div 2 = (1::nat)" by auto
   also have "... < k * ln(k)"
     sorry
   finally have 1: "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"

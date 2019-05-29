@@ -4131,21 +4131,13 @@ qed
 
 subsection\<open>Polya's inequality\<close>
 
-lemma 
-  fixes x y :: real
-  assumes "x > 0" "y > 0" "x \<le> y"
-  shows "(1 div y) \<le> (1 div x)"
-  using assms apply(simp add: algebra_simps)
-  thm frac_le
-  by (simp add: frac_le)
-
-theorem
+theorem polya_inequality:
   fixes \<chi> :: "nat \<Rightarrow> complex" and k x :: nat
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes is_prim: "primitive_character \<chi> k"
   assumes "k > 1" 
   assumes "x \<ge> 1" 
-  shows "cmod (\<Sum> m \<le> x. \<chi>(m)) < (sqrt(k) * ln(k))" 
+  shows "cmod (\<Sum> m = 1..x. \<chi>(m)) < (sqrt(k) * ln(k))" 
 proof -
   define \<tau> :: complex where "\<tau> = gauss_sum \<chi> k 1 div sqrt k" 
   have "dcharacter k \<chi>" using is_char dcharacters_def by simp
@@ -4510,10 +4502,19 @@ proof -
   qed
   also have "... < k * ln(k)"
     sorry
-  finally have "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"
+  finally have 1: "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"
     by blast
-  then have "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln(k)"
-    apply(simp add: algebra_simps)
+  show  "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln(k)"
+  proof -
+    have 2: "cmod (sum \<chi> {1..x}) * sqrt (real k) < k * ln(k)"
+      using 1 by argo
+    have "sqrt (real k) > 0" using \<open>k > 0\<close> by simp
+    have 3: "(real k * ln (real k)) div sqrt (real k) = sqrt (real k) * ln (real k)"
+      by(simp add: field_simps \<open>k > 0\<close>)
+    show "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln (real k)"
+      using mult_imp_less_div_pos[OF \<open>sqrt (real k) > 0\<close> 2] 
+            3 by argo
+  qed
 qed
 
 end
