@@ -4218,7 +4218,7 @@ proof -
   note cm_deriv = this      
   have "1 < (x + 1) * ln(1+2/(2*x+1))" (is "_ < ?f x")
   proof (rule DERIV_neg_imp_decreasing_at_top[where ?f = ?f])
-    fix t assume t: "x \<le> t"
+    fix t assume t: "x \<le> t" 
     have "(?f has_field_derivative ln (1 + 2 / (2 * t + 1)) + - 4 / (4 * t\<^sup>2 + 8 * t + 3) * (t + 1)) (at t)"
       using t assms cm_deriv by simp  
     moreover have "ln (1 + 2 / (2 * t + 1)) + - 4 / (4 * t\<^sup>2 + 8 * t + 3) * (t + 1) < 0"
