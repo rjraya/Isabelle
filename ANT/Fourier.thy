@@ -4199,35 +4199,31 @@ proof -
 qed
 
 lemma ineq_2_lemma:
-  assumes "x > (0::real)"
+  assumes "x \<ge> (0::real)"
   shows "1 < (x + 1) * ln(1+2/(2*x+1))"
 proof -
-  {fix t :: real
-  assume "t > 0" 
-  have pol_mul: "(3 + 2 * t) * (2 * t + 1) = 4 * t\<^sup>2 + 8 * t + 3"
-    by(simp add: algebra_simps power2_eq_square)
-  define l :: "real \<Rightarrow> real" where "l = (\<lambda> x. ln(1+2/(2*x+1)))"
-  have ln_deriv: "(l has_real_derivative (-4 / (4*t^2+8*t+3))) (at t)" 
-    unfolding l_def
-    apply(auto intro!: derivative_eq_intros \<open>t > 0\<close>)
-    using \<open>0 < t\<close> apply(simp add: algebra_simps,metis add_pos_pos divide_pos_pos mult_2_right one_add_one zero_less_one)
-    using \<open>0 < t\<close> by(auto simp add: divide_simps pol_mul)
-  have cm_deriv: "((\<lambda> x. (x+1)*l x) has_real_derivative (l t + - 4 / (4 * t\<^sup>2 + 8 * t + 3) * (t+1))) (at t)" 
-    using DERIV_mult[OF DERIV_add[OF DERIV_ident DERIV_const[of 1],simplified]  ln_deriv] 
-    by simp}
-  note cm_deriv = this      
-  have "1 < (x + 1) * ln(1+2/(2*x+1))" (is "_ < ?f x")
+  have "0 < ln(1+2/(2*x+1)) - 1 / (x + 1)" (is "_ < ?f x")
   proof (rule DERIV_neg_imp_decreasing_at_top[where ?f = ?f])
     fix t assume t: "x \<le> t"
-    have "(?f has_field_derivative ln (1 + 2 / (2 * t + 1)) + - 4 / (4 * t\<^sup>2 + 8 * t + 3) * (t + 1)) (at t)"
-      using t assms cm_deriv by simp  
-    moreover have "ln (1 + 2 / (2 * t + 1)) + - 4 / (4 * t\<^sup>2 + 8 * t + 3) * (t + 1) < 0"
-      apply(simp add: algebra_simps)
-      sorry
+    from assms t have "3 + 8 * t + 4 * t^2 > 0"
+      by (intro add_pos_nonneg) auto
+    hence *: "3 + 8 * t + 4 * t^2 \<noteq> 0"
+      by auto
+    have "(?f has_field_derivative (-1 / ((1 + t)^2 * (3 + 8 * t + 4 *
+t^2)))) (at t)"
+      apply (insert assms t *, (rule derivative_eq_intros refl | simp
+add: add_pos_pos)+)
+      apply (auto simp: divide_simps)
+      apply (auto simp: algebra_simps power2_eq_square)
+      done
+    moreover have "-1 / ((1 + t)^2 * (3 + 8 * t + 4 * t^2)) < 0"
+      using t assms by (intro divide_neg_pos mult_pos_pos
+add_pos_nonneg) auto
     ultimately show "\<exists>y. (?f has_real_derivative y) (at t) \<and> y < 0"
       by blast
   qed real_asymp
-  thus "1 < (x + 1) * ln(1+2/(2*x+1))" by simp
+  thus "1 < (x + 1) * ln(1+2/(2*x+1))"
+    using assms by (simp add: field_simps)
 qed
 
 lemma ineq_2:
@@ -4237,7 +4233,7 @@ lemma ineq_2:
 proof -
   have "k > 0" using assms by auto
   have "1 < (k + 1) * ln (1 + 2 / (2 * k + 1))"
-    using ineq_2_lemma[OF \<open>k > 0\<close>] by blast
+    using ineq_2_lemma assms by simp
   then show ?thesis 
     by (simp add: \<open>0 < k\<close> add_pos_pos mult.commute mult_imp_div_pos_less)
 qed
@@ -4477,16 +4473,20 @@ proof -
   hence "cmod(f(k-n)) = cmod(cnj(f(n)))" by simp
   hence "cmod(f(k-n)) = cmod(f(n))" by auto}
   note eq = this
-  have 25: "(\<Sum>n = 1..k - 1. cmod (f (int n)))
-        \<le> 2 * (\<Sum> n = 1..k div 2. cmod (f (int n)))"
+  have 25: 
+    "odd k \<Longrightarrow> (\<Sum>n = 1..k - 1. cmod (f (int n))) \<le> 2 * (\<Sum> n = 1..(k-1) div 2. cmod (f (int n)))" 
+    "even k \<Longrightarrow> (\<Sum>n = 1..k - 1. cmod (f (int n))) \<le> 2 * (\<Sum> n = 1..(k-2) div 2. cmod (f (int n))) + cmod(f(k div 2))"
   proof -
+    assume "odd k" 
     define g where "g = (\<lambda> n. cmod (f (n)))"
+    have "(k-1) div 2  = k div 2" using \<open>odd k\<close> \<open>k > 1\<close> 
+      by (metis div_mult_self1_is_m odd_two_times_div_two_nat pos2)
     have "(\<Sum>i=1..k-1. g i) = (\<Sum>i\<in>{1..k div 2}\<union>{k div 2<..k-1}. g i)"
-      by (intro sum.cong) auto
+      using \<open>k > 1\<close> by(intro sum.cong,auto) 
     also have "\<dots> = (\<Sum>i\<in>{1..k div 2}. g i) + (\<Sum>i\<in>{k div 2<..k-1}. g i)"
-      by (subst sum.union_disjoint) auto
-    also have "(\<Sum>i\<in>{k div 2<..k-1}. g i) = (\<Sum>i\<in>{1..<k - k div 2}. g (k - i))"
-      by (rule sum.reindex_bij_witness[of _ "\<lambda>i. k - i" "\<lambda>i. k - i"]) auto
+      by(subst sum.union_disjoint,auto)
+    also have "(\<Sum>i\<in>{k div 2<..k-1}. g i) = (\<Sum>i\<in>{1..k - (k div 2 + 1)}. g (k - i))"
+      by(rule sum.reindex_bij_witness[of _ "\<lambda>i. k - i" "\<lambda>i. k - i"],auto) 
     also have "\<dots> \<le> (\<Sum>i\<in>{1..k div 2}. g (k - i))"
       by(intro sum_mono2,simp,auto simp add: g_def)
     finally have 1: "(\<Sum>i=1..k-1. g i) \<le> (\<Sum>i=1..k div 2. g i + g (k - i))"
@@ -4501,9 +4501,49 @@ proof -
       by blast
     from 1 2 have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..k div 2. g i)"
       by metis
-    then show ?thesis unfolding g_def by blast
+    then show "(\<Sum>n = 1..k - 1. cmod (f (int n))) \<le> 2 * (\<Sum> n = 1..(k-1) div 2. cmod (f (int n)))" 
+      unfolding g_def \<open>(k-1) div 2 = k div 2\<close> by blast
+  next
+    assume "even k" 
+    define g where "g = (\<lambda> n. cmod (f (n)))"
+    have "(k-2) div 2  = k div 2 - 1" using \<open>even k\<close> \<open>k > 1\<close> by simp
+    have "(\<Sum>i=1..k-1. g i) = (\<Sum>i\<in>{1..<k div 2}\<union> {k div 2} \<union> {k div 2<..k-1}. g i)"
+      using \<open>k > 1\<close> by(intro sum.cong,auto) 
+    also have "\<dots> = (\<Sum>i\<in>{1..<k div 2}. g i) + (\<Sum>i\<in>{k div 2<..k-1}. g i) + g(k div 2)"
+      by(subst sum.union_disjoint,auto)
+    also have "(\<Sum>i\<in>{k div 2<..k-1}. g i) = (\<Sum>i\<in>{1..k - (k div 2+1)}. g (k - i))"
+      by(rule sum.reindex_bij_witness[of _ "\<lambda>i. k - i" "\<lambda>i. k - i"],auto) 
+    also have "\<dots> \<le> (\<Sum>i\<in>{1..<k div 2}. g (k - i))"
+    proof(intro sum_mono2,simp)
+      have "k - k div 2 = k div 2" using \<open>even k\<close> \<open>k > 1\<close> by auto
+      then have "k - (k div 2 + 1) < k div 2" 
+        using \<open>k > 1\<close> by(simp add: divide_simps)
+      then show "{1..k - (k div 2 + 1)} \<subseteq> {1..<k div 2}" by fastforce
+    qed auto
+    finally have 1: "(\<Sum>i=1..k-1. g i) \<le> (\<Sum>i=1..<k div 2. g i + g (k - i)) + g(k div 2)"
+      by(simp add: sum.distrib)
+    have "(\<Sum>i=1..<k div 2. g i + g (k - i)) = (\<Sum>i=1..<k div 2. 2 * g i)"
+      unfolding g_def
+      apply(rule sum.cong,simp)
+      using eq int_ops(6) by force
+    also have "... = 2 * (\<Sum>i=1..<k div 2. g i)"
+      by(rule sum_distrib_left[symmetric])
+    finally have 2: "(\<Sum>i=1..<k div 2. g i + g (k - i)) = 2 * (\<Sum>i=1..<k div 2. g i)"
+      by blast
+    from 1 2 have 3: "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..<k div 2. g i) + g(k div 2)"
+      by metis
+    then have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..(k-2) div 2. g i) + g(k div 2)" 
+    proof -
+      have "{1..<k div 2} = {1..(k-2) div 2}" by auto
+      then have "(\<Sum>i=1..<k div 2. g i) = (\<Sum>i=1..(k-2) div 2. g i)" 
+        by(rule sum.cong,simp)
+      then show ?thesis using 3 by presburger
+    qed
+    then show "(\<Sum>n = 1..k - 1. cmod (f (int n))) \<le> 2 * (\<Sum> n = 1..(k-2) div 2. cmod (f (int n))) + g(k div 2)" 
+      unfolding g_def by blast
   qed
-
+  
+  (* expression for each f(n) *)
   {fix n :: int
   assume "1 \<le> n" "n \<le> k div 2" 
   have "n \<le> k - 1"
@@ -4580,6 +4620,8 @@ proof -
     finally show ?thesis by simp
   qed
   finally have "f(n) = z^(x+1) *((z ^x -inverse(z^x))) / (z - inverse(z))" by blast
+
+  (* inequality for each f(n) *)
   then have "cmod(f(n)) = cmod(z^(x+1) * (((z ^x -inverse(z^x))) / (z - inverse(z))))" by auto
   also have "... = cmod(z^(x+1)) * cmod(((z ^x -inverse(z^x))) / (z - inverse(z)))"
     using norm_mult by blast
@@ -4608,8 +4650,7 @@ proof -
   qed
   also have "... = cmod((sin (x*pi*n/k)) div (sin (pi*n/k)))"
   proof -
-    have num: "(exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) =
-          (-2*\<i>* sin((x*pi*n/k)))" 
+    have num: "(exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) = (-2*\<i>* sin((x*pi*n/k)))" 
     proof -
       have 1: "exp (-(x*pi*n/k)* \<i>) = cos(-(x*pi*n/k)) + \<i> * sin(-(x*pi*n/k))"
               "exp ((x*pi*n/k)* \<i>) = cos((x*pi*n/k)) + \<i> * sin((x*pi*n/k))"
@@ -4622,8 +4663,7 @@ proof -
       finally show ?thesis by blast  
     qed
 
-    have den: "(exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>)) = 
-          -2*\<i>* sin((pi*n/k))"
+    have den: "(exp (-(pi*n/k)* \<i>) - exp ((pi*n/k)* \<i>)) = -2*\<i>* sin((pi*n/k))"
     proof -
       have 1: "exp (-(pi*n/k)* \<i>) = cos(-(pi*n/k)) + \<i> * sin(-(pi*n/k))"
               "exp ((pi*n/k)* \<i>) = cos((pi*n/k)) + \<i> * sin((pi*n/k))"
@@ -4656,6 +4696,7 @@ proof -
   finally have 26: "cmod(f(n)) \<le> 1 div cmod((sin (pi*n/k)))"
     by blast
 
+  (* inequality with sin *)
   {fix t
    assume "t \<ge> 0" "t \<le> pi div 2"
    then have "t \<in> {0..pi div 2}" by auto 
@@ -4702,36 +4743,134 @@ proof -
   also have "... = real k div (2*n)" using \<open>n \<ge> 1\<close> by simp
   finally have "cmod(f(n)) \<le> real k div (2*n)" by blast}
   note ineq = this
-  from 24 have 
-    "sqrt (real k) * cmod (sum \<chi> {1..x})
-      \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))"
-    by blast
-  also have "...
-        \<le> 2 * (\<Sum>n = 1..k div 2. cmod (f (int n)))"
-    using 25 by blast
-  also have "... \<le>  real k * (\<Sum>n = 1..k div 2. real 1 div n)"
-  proof -
-    have "(\<Sum>n = 1..k div 2. cmod (f (int n))) \<le> (\<Sum>n = 1..k div 2. real k div (2*n))"
-    proof(rule sum_mono)
-      fix n
-      assume "n \<in> {1..k div 2}"
-      then have "1 \<le> int n" "int n \<le> k div 2" by auto
-      show "cmod (f (int n)) \<le> real k / (2*n)" 
-        using ineq[OF \<open>1 \<le> int n\<close> \<open>int n \<le> k div 2\<close>] by auto
+
+  (* inequality for the odd and even case*)
+  have "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln k"
+  proof(cases "even k")
+    case True
+    have "cmod (f(k div 2)) \<le> 1" 
+    proof -
+      have "int (k div 2) \<ge> 1" using \<open>k > 1\<close> \<open>even k\<close> by auto
+      show ?thesis
+        using ineq[OF \<open> int (k div 2) \<ge> 1\<close>,simplified] True \<open>0 < k\<close> by force
     qed
-    also have "... = (\<Sum>n = 1..k div 2. (real k div 2) * (real 1 div n))"
-      by(rule sum.cong,auto)
-    also have "... = (real k div 2) * (\<Sum>n = 1..k div 2. real 1 div n)"
-      using sum_distrib_left[symmetric] by fast
-    finally have "(\<Sum>n = 1..k div 2. cmod (f (int n))) \<le> 
-                  (real k div 2) * (\<Sum>n = 1..k div 2. real 1 div n)"
+    from 24 have "sqrt (real k) * cmod (sum \<chi> {1..x}) 
+               \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))"
       by blast
-    then show ?thesis by argo
+    also have "... \<le> 2 * (\<Sum>n = 1..(k - 2) div 2. cmod (f (int n))) + cmod(f(k div 2))"
+      using 25(2)[OF True] by blast
+    also have "... \<le>  real k * (\<Sum>n = 1..(k - 2) div 2. real 1 div n) + cmod(f(k div 2))"
+    proof -
+      have "(\<Sum>n = 1..(k - 2) div 2. cmod (f (int n))) \<le> (\<Sum>n = 1..(k - 2) div 2. real k div (2*n))"
+      proof(rule sum_mono)
+        fix n
+        assume "n \<in> {1..(k - 2) div 2}"
+        then have "1 \<le> int n" "int n \<le> k div 2" by auto
+        show "cmod (f (int n)) \<le> real k / (2*n)" 
+          using ineq[OF \<open>1 \<le> int n\<close> \<open>int n \<le> k div 2\<close>] by auto
+      qed
+      also have "... = (\<Sum>n = 1..(k - 2) div 2. (real k div 2) * (real 1 div n))"
+        by(rule sum.cong,auto)
+      also have "... = (real k div 2) * (\<Sum>n = 1..(k - 2) div 2. real 1 div n)"
+        using sum_distrib_left[symmetric] by fast
+      finally have "(\<Sum>n = 1..(k - 2) div 2. cmod (f (int n))) \<le> 
+                  (real k div 2) * (\<Sum>n = 1..(k - 2) div 2. real 1 div n)"
+        by blast
+      then show ?thesis by argo
+    qed
+    also have "... = real k * harm ((k - 2) div 2) + cmod(f(k div 2))"
+      unfolding harm_def inverse_eq_divide by simp
+    also have "... < k * ln(k)"
+    proof(cases "k = 2")   
+      case True 
+      have "real k * harm ((k - 2) div 2) + cmod (f (int (k div 2))) \<le> 1" 
+        using \<open>k = 2\<close> \<open>cmod (f (int (k div 2))) \<le> 1\<close>
+        unfolding harm_def by(simp)
+      moreover have "real k * ln (real k) \<ge> 4 div 3" 
+        using \<open>k = 2\<close> ln2_ge_two_thirds by auto
+      ultimately show ?thesis by argo                
+    next
+      case False
+      have "k > 3" using \<open>k > 1\<close> \<open>k \<noteq> 2\<close> \<open>even k\<close> by auto
+      then have "(k-2) div 2 > 0" by simp
+      then have "harm ((k - 2) div 2) < ln (real (2 * ((k - 2) div 2) + 1))"
+        using harm_log_ineq by blast
+      also have "... = ln (real (k - 1))" 
+        using \<open>even k\<close> \<open>k > 3\<close> by simp      
+      finally have 1: "harm ((k - 2) div 2) < ln (real (k - 1))"
+        by blast
+      then have "real k * harm ((k - 2) div 2) < real k * ln (real (k - 1))"
+        using \<open>k > 1\<close> by simp
+      then have "real k * harm ((k - 2) div 2) + cmod (f (int (k div 2)))
+            < real k * ln (real (k - 1)) + 1"
+        using \<open>cmod (f (int (k div 2))) \<le> 1\<close> by argo
+      also have "... = real k * ln (real (k - 1)) + real k * 1 / real k"
+        using \<open>k > 0\<close> by auto
+      also have "... < real k * ln (real (k - 1)) + real k * ln (1 + 1 / (real k - 1))"
+      proof -
+        have "real k > 1" "real k > 0" using \<open>k > 1\<close> by simp+
+        then have "real k * (1 / real k) < real k * ln (1 + 1 / (real k - 1))"
+          using mult_strict_left_mono[OF ineq_1[OF \<open>real k > 1\<close>], of "real k", OF \<open>real k > 0\<close>]
+          by simp
+        then show ?thesis using ineq_1[OF \<open>real k > 1\<close>] 
+          using add_strict_left_mono[OF ineq_1[OF \<open>real k > 1\<close>]]
+          by auto         
+      qed
+      also have "... = real k * ( ln (real (k - 1)) + ln (1 + 1 / (real k - 1)))"
+        by argo
+      also have "... = real k * ( ln (real (k - 1) * (1 + 1 / (real k - 1))))"
+      proof -
+        have "real (k - 1) > 0" "1 / real (k - 1) > 0"  using \<open>k > 1\<close> by auto
+        show ?thesis 
+          using ln_mult [OF \<open>real (k - 1) > 0\<close> \<open>1 / real (k - 1) > 0\<close>,symmetric]
+          by (metis \<open>0 < real (k - 1)\<close> add_pos_pos assms(3) diff_gt_0_iff_gt divide_pos_pos linorder_not_le ln_mult of_nat_1 of_nat_le_iff zero_less_one)
+      qed
+      also have "... = real k * ln k"   
+        using \<open>k > 1\<close> by(auto simp add: divide_simps)
+      finally show ?thesis by blast
+    qed
+    finally show ?thesis by blast
+  next
+    case False
+    from 24 have "sqrt (real k) * cmod (sum \<chi> {1..x}) 
+               \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))"
+      by blast
+    also have "... \<le> 2 * (\<Sum>n = 1..(k - 1) div 2. cmod (f (int n)))"
+      using 25(1)[OF False] by blast
+    also have "... \<le>  real k * (\<Sum>n = 1..(k - 1) div 2. real 1 div n)"
+    proof -
+      have "(\<Sum>n = 1..(k - 1) div 2. cmod (f (int n))) \<le> (\<Sum>n = 1..(k - 1) div 2. real k div (2*n))"
+      proof(rule sum_mono)
+        fix n
+        assume "n \<in> {1..(k - 1) div 2}"
+        then have "1 \<le> int n" "int n \<le> k div 2" by auto
+        show "cmod (f (int n)) \<le> real k / (2*n)" 
+          using ineq[OF \<open>1 \<le> int n\<close> \<open>int n \<le> k div 2\<close>] by auto
+      qed
+      also have "... = (\<Sum>n = 1..(k - 1) div 2. (real k div 2) * (real 1 div n))"
+        by(rule sum.cong,auto)
+      also have "... = (real k div 2) * (\<Sum>n = 1..(k - 1) div 2. real 1 div n)"
+        using sum_distrib_left[symmetric] by fast
+      finally have "(\<Sum>n = 1..(k - 1) div 2. cmod (f (int n))) \<le> 
+                  (real k div 2) * (\<Sum>n = 1..(k - 1) div 2. real 1 div n)"
+        by blast
+      then show ?thesis by argo
+    qed
+    also have "... = real k * harm ((k - 1) div 2)"
+      unfolding harm_def inverse_eq_divide by simp
+    also have "... < k * ln(k)"
+    proof -
+      have "k > 2" using \<open>k > 1\<close> \<open>odd k\<close> by presburger
+      then have "(k-1) div 2 > 0" by auto
+      then have "harm ((k - 1) div 2) < ln (real (2 * ((k - 1) div 2) + 1))"
+        using harm_log_ineq by blast
+      also have "... = ln (real k)" using \<open>odd k\<close> by simp
+      finally show ?thesis by (simp add: \<open>0 < k\<close>) 
+    qed
+    finally show ?thesis by blast
   qed
-  have "3 div 2 = (1::nat)" by auto
-  also have "... < k * ln(k)"
-    sorry
-  finally have 1: "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"
+  
+  then have 1: "sqrt (real k) * cmod (sum \<chi> {1..x}) < k * ln(k)"
     by blast
   show  "cmod (sum \<chi> {1..x}) < sqrt (real k) * ln(k)"
   proof -
