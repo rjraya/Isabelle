@@ -42,7 +42,7 @@ plus[{x1_, y1_}, {x2_, y2_}] :=
 (*group closure*)
 
 groupclosure = 
-  e[x3p, y3p] delta[x1, x2, y1, y2]^2 // Together // Factor
+  e[x3p, y3p] delta[x1, x2, y1, y2]^2 // Together // Factor;
 polyclosure = 
   PolynomialReduce[groupclosure, {e1, e2}, {x1, y1, x2, y2}] // Expand;
 
@@ -54,14 +54,14 @@ deltaY = delta12*delta23*deltad[d, x3p, y3p, x3, y3]*
 deltaX = deltaY /. {d -> (-d)};
 
 {gx, gy} = (plus[{x3p, y3p}, {x3, y3}] - plus[{x1, y1}, {x1p, y1p}]) //
-     Together // Factor;
+     Together // Factor
 
 gxpoly = gx*deltaX // Factor;
 gypoly = gy*deltaY // Factor;
 
 polyassoc = 
   PolynomialReduce[{gxpoly, gypoly}, {e1, e2, e3}, {x1, y1, x2, y2, 
-      x3, y3}] // Simplify // Expand;
+      x3, y3}] // Simplify // Expand
 
 (*completeness identity*)
 
@@ -111,7 +111,7 @@ join[ToHOL[groupclosure]," = ",
      ToHOL[e1]," * ",
      ToHOL[polyclosure[[1,1]]]," + ",
      ToHOL[e2]," * ",
-     ToHOL[polyclosure[[1,2]]]]
+     ToHOL[polyclosure[[1,2]]]];
 
 (* associativity *)
 join[ToHOL[gxpoly], " = ",
@@ -129,6 +129,9 @@ join[ToHOL[gypoly], " = ",
      ToHOL[polyassoc[[2,1,2]]], " + ",
      ToHOL[e3], "  * ",
      ToHOL[polyassoc[[2,1,3]]]];
+
+
+
 
 
 

@@ -128,7 +128,32 @@ proof -
   then show "e x3 y3 == 0" using prod_eq_2 by simp
 qed
 
+lemma associativity: 
+  assumes "z1 = (x1,y1)" "z2 = (x2,y2)" "z3 = (x3,y3)"
+          "z1' = (x1',y1')" "z3' = (x3',y3')"
+  assumes "z1' = add z1 z2" "z3' = add z2 z3"
+  assumes "e x1 y1 == 0" "e x2 y2 == 0" "e x3 y3 == 0" 
+  shows "add (add z1 z2) z3 = add z1 (add z2 z3)" 
+proof -
+ define e1 where "e1 = e x1 y1"
+ define e2 where "e2 = e x2 y2"
+ define e3 where "e3 = e x3 y3"
+ define Delta\<^sub>x where "Delta\<^sub>x = 
+   (delta_minus x3' y3' x3 y3)*(delta_minus x1 y1 x1' y1')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+ (* review definition of Delta\<^sub>y with code *)
+ define Delta\<^sub>y where "Delta\<^sub>y =
+   (delta_plus x3' y3' x3 y3)*(delta_plus x1 y1 x1' y1')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+ define g\<^sub>x where "g\<^sub>x = fst(add z1' z3) - fst(add z1 z3')"
+ define g\<^sub>y where "g\<^sub>y = snd(add z1' z3) - snd(add z1 z3')"
+  
 
+
+
+ define r1 where
+  
+qed
     
 end
 
