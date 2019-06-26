@@ -39,20 +39,7 @@ theorem commutativity: "add z1 z2 = add z2 z1"
 lemma e_squared: 
   assumes "x = r1 div a" "y = r2 div b"
   shows "\<exists> r. e x y = r div (a*b)^2"
-proof -
-  have "e x y = 
-        (r1 div a)\<^sup>2 + c * (r2 div b)\<^sup>2 - 1 -
-        d * (r1 div a)\<^sup>2 * (r2 div b)\<^sup>2"
-    by(simp add: assms)
-  also have "... = 
-        (r1^2 div a^2) + c * (r2 div b)\<^sup>2 - 1 -
-        d * (r1 div a)\<^sup>2 * (r2 div b)\<^sup>2"
-    
-    apply(simp add: field_simps )
-qed
-  apply(simp add: assms)
-  apply(simp add: field_simps)
-  find_theorems "(_ div _)^_"
+  oops
 
 lemma closure: 
   assumes "z1 = (x1,y1)" "z2 = (x2,y2)" "z3 = (x3,y3)" "z3 = add z1 z2"
@@ -63,26 +50,13 @@ proof -
     using assms add_with_deltas by auto
   have y3_expr: "y3 = (x1*y2+y1*x2) div (delta_plus x1 y1 x2 y2)"
     using assms add_with_deltas by auto
-  have "\<exists> r. e x3 y3 = r div (delta x1 y1 x2 y2)^2" 
-    apply(simp)
-    apply(simp add: x3_expr y3_expr) 
-    apply(simp add: divide_simps)
-qed
+  obtain r where "(e x3 y3) * (delta x1 y1 x2 y2)^2 = r" by(simp)
+  let ?e1 = "e x1 y1"
+  let ?e2 = "e x2 y2"
+  have "\<exists> r1 r2. r = r1 * ?e1 + r2 * ?e2"
+    
+    oops
 
 end
-
-{e1, e2, e3} = {e[x1, y1], e[x2, y2], e[x3, y3]};
-
-z0 = {x0,y0};
-z1 = {x1,y1};
-z2 = {x2,y2};
-z3 = {x3,y3};
-
-ez[{x_,y_}]:= e[x,y];
-{e0,e1,e2,e3} = {ez[z0],ez[z1],ez[z2],ez[z3]};
-
-fun delta where
- "delta x1 y1 x2 y2 = 1 - d^2*x1^2*x2^2*y1^2*y2^2"
-
 
 end
