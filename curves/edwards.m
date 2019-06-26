@@ -44,7 +44,7 @@ plus[{x1_, y1_}, {x2_, y2_}] :=
 groupclosure = 
   e[x3p, y3p] delta[x1, x2, y1, y2]^2 // Together // Factor
 polyclosure = 
-  PolynomialReduce[groupclosure, {e1, e2}, {x1, y1, x2, y2}] // Expand
+  PolynomialReduce[groupclosure, {e1, e2}, {x1, y1, x2, y2}] // Expand;
 
 (*associativity*)
 
@@ -111,7 +111,7 @@ join[ToHOL[groupclosure]," = ",
      ToHOL[e1]," * ",
      ToHOL[polyclosure[[1,1]]]," + ",
      ToHOL[e2]," * ",
-     ToHOL[polyclosure[[1,2]]]];
+     ToHOL[polyclosure[[1,2]]]]
 
 (* associativity *)
 join[ToHOL[gxpoly], " = ",
@@ -129,6 +129,9 @@ join[ToHOL[gypoly], " = ",
      ToHOL[polyassoc[[2,1,2]]], " + ",
      ToHOL[e3], "  * ",
      ToHOL[polyassoc[[2,1,3]]]];
+
+
+
 
 
 
