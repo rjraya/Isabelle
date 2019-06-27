@@ -141,7 +141,7 @@ proof -
  define e2 where "e2 = e x2 y2"
  define e3 where "e3 = e x3 y3"
  define Delta\<^sub>x where "Delta\<^sub>x = 
-   (delta_minus x1' y1' x3 y3)*(delta_minus x1 y1 x3' y3')*
+   (delta_minus x3' y3' x3 y3)*(delta_minus x1 y1 x1' y1')*
    (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
  (* review definition of Delta\<^sub>y with code *)
  define Delta\<^sub>y where "Delta\<^sub>y =
@@ -230,93 +230,35 @@ proof -
     unfolding gxpoly_expr_def r1x_def e1_def r2x_def e2_def r3x_def e3_def e_def             
     by algebra
 
-  have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * x2 * y1 * y2)"
-    using assms(1,2,4,6) by(simp)
-  have y1'_expr: "y1' = (x1 * y2 + y1 * x2) / (1 + d * x1 * x2 * y1 * y2)"
-    using assms(1,2,4,6) by(simp)
-  have x3'_expr: "x3' = (x2 * x3 - c * y2 * y3) / (1 - d * x2 * x3 * y2 * y3)"
-    using assms(2,3,5,7) by(simp)
-  have y3'_expr: "y3' = (x2 * y3 + y2 * x3) / (1 + d * x2 * x3 * y2 * y3)"
-    using assms(2,3,5,7) by(simp)
-
   have unfolded_adds:
-       "1 - d * x1 * y1 * x2 * y2 \<noteq> 0"
-       "1 + d * x1 * y1 * x2 * y2 \<noteq> 0"
-       "1 - d * x2 * y2 * x3 * y3 \<noteq> 0"
-       "1 + d * x2 * y2 * x3 * y3 \<noteq> 0"
-       "1 - d * x1' * y1' * x3 * y3 \<noteq> 0"
-       "1 + d * x1' * y1' * x3 * y3 \<noteq> 0"
-       "1 - d * x1 * y1 * x3' * y3' \<noteq> 0"
-       "1 + d * x1 * y1 * x3' * y3' \<noteq> 0"
-    using assms(8-15)
-    unfolding delta_plus_def delta_minus_def by blast+
+   "1 - d * x1 * y1 * x2 * y2 \<noteq> 0"
+   "1 + d * x1 * y1 * x2 * y2 \<noteq> 0"
+   "1 - d * x2 * y2 * x3 * y3 \<noteq> 0"
+   "1 + d * x2 * y2 * x3 * y3 \<noteq> 0"
+   "1 - d * x1' * y1' * x3 * y3 \<noteq> 0"
+   "1 + d * x1' * y1' * x3 * y3 \<noteq> 0"
+   "1 - d * x1 * y1 * x3' * y3' \<noteq> 0"
+   "1 + d * x1 * y1 * x3' * y3' \<noteq> 0"
+    using assms(8-15) unfolding delta_minus_def delta_plus_def by blast+
 
-  have "gxpoly = 
-        ((x1' * x3 - c * y1' * y3) / delta_minus x1' y1' x3 y3 -
-         (x1 * x3' - c * y1 * y3') / delta_minus x1 y1 x3' y3') *
-        (delta_minus x1' y1' x3 y3 * delta_minus x1 y1 x3' y3' *
-         delta x1 y1 x2 y2 * delta x2 y2 x3 y3)" 
+  have "gxpoly = gxpoly_expr" 
     unfolding gxpoly_def gxpoly_expr_def g\<^sub>x_def Delta\<^sub>x_def
+    thm assms(1-5)
     apply(subst assms(4))
     apply(subst assms(1))
     apply(subst assms(5))
     apply(subst assms(3))
     apply(subst add_with_deltas)+
-    by(simp)
-  also have "... = 
-     (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' *
-     delta x1 y1 x2 y2 * delta x2 y2 x3 y3 -
-     (x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 *
-     delta x1 y1 x2 y2 * delta x2 y2 x3 y3"
-    by(simp add: divide_simps assms(8-15),argo)
-  also have "... =   ((x1 * x2 - c * y1 * y2) / local.delta_minus x1 x2 y1 y2 *
-     x3 -
-     c *
-     ((x1 * y2 + y1 * x2) / local.delta_plus x1 x2 y1 y2) *
-     y3) *
-    local.delta_minus x1 y1
-     ((x2 * x3 - c * y2 * y3) / local.delta_minus x2 x3 y2 y3)
-     ((x2 * y3 + y2 * x3) / local.delta_plus x2 x3 y2 y3) *
-    (local.delta_plus x1 y1 x2 y2 *
-     local.delta_minus x1 y1 x2 y2) *
-    (local.delta_plus x2 y2 x3 y3 *
-     local.delta_minus x2 y2 x3 y3) -
-    (x1 *
-     ((x2 * x3 - c * y2 * y3) /
-      local.delta_minus x2 x3 y2 y3) -
-     c * y1 *
-     ((x2 * y3 + y2 * x3) / local.delta_plus x2 x3 y2 y3)) *
-    local.delta_minus
-     ((x1 * x2 - c * y1 * y2) / local.delta_minus x1 x2 y1 y2)
-     ((x1 * y2 + y1 * x2) / local.delta_plus x1 x2 y1 y2) x3
-     y3 *
-    (local.delta_plus x1 y1 x2 y2 *
-     local.delta_minus x1 y1 x2 y2) *
-    (local.delta_plus x2 y2 x3 y3 *
-     local.delta_minus x2 y2 x3 y3)"
-    unfolding gxpoly_expr_def
-    apply(subst x1'_expr)+
-    apply(subst y1'_expr)+
-    apply(subst x3'_expr)+
-    apply(subst y3'_expr)+
-    apply(subst delta_plus_def[symmetric])+
-    apply(subst delta_minus_def[symmetric])+
-    unfolding delta_def
-    by simp
-  also have "... = 
-    ((x1 * x2 - c * y1 * y2) * local.delta_plus x1 y1 x2 y2 * x3 - c * ((x1 * y2 + y1 * x2) * local.delta_minus x1 y1 x2 y2) * y3) *
-    local.delta_minus x1 y1 ((x2 * x3 - c * y2 * y3) / local.delta_minus x2 x3 y2 y3) ((x2 * y3 + y2 * x3) / local.delta_plus x2 x3 y2 y3) *
-    (local.delta_plus x2 y2 x3 y3 * local.delta_minus x2 y2 x3 y3) 
-   -
-    (x1 * ((x2 * x3 - c * y2 * y3) * local.delta_plus x2 y2 x3 y3) - c * y1 * ((x2 * y3 + y2 * x3) * local.delta_minus x2 y2 x3 y3)) *
-    local.delta_minus ((x1 * x2 - c * y1 * y2) / local.delta_minus x1 x2 y1 y2) ((x1 * y2 + y1 * x2) / local.delta_plus x1 x2 y1 y2) x3 y3 *
-    (local.delta_plus x1 y1 x2 y2 * local.delta_minus x1 y1 x2 y2)"
-    using delta_minus_def delta_plus_def
-    apply(simp add: divide_simps assms(8-15))
+    apply(simp)
+    unfolding delta_minus_def delta_def delta_plus_def
+    using unfolded_adds
+    
+    apply(simp add: divide_simps  )
+    
+    apply(simp add: field_simps)
+    apply(algebra)
 
-  
-  have "... = gxpoly_expr"
-        
+    
 qed
     
 end
