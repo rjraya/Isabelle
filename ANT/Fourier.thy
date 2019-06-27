@@ -106,16 +106,13 @@ lemma
   oops
 
 section\<open>Periodic functions\<close>
-
-print_locale periodic_fun_simple
+(* cleared until *)
 
 definition 
   "periodic f k = (\<forall> n. f(n+k) = f(n))" 
   for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
 
-lemma const_periodic:
-  "periodic (\<lambda> x. y) k" 
-  unfolding periodic_def by blast
+lemma const_periodic: "periodic (\<lambda> x. y) k" unfolding periodic_def by blast
 
 lemma add_periodic:
   fixes f g :: "nat \<Rightarrow> complex"
@@ -163,16 +160,26 @@ lemma mult_period:
   assumes "periodic g k"
   shows "periodic g (k*q)"
   using assms
-proof(induction q arbitrary: k)
-  case 0
-then show ?case unfolding periodic_def by simp
+proof(induction q)
+  case 0 then show ?case unfolding periodic_def by simp
 next
   case (Suc m)
   then show ?case 
-    unfolding periodic_def
-    by (simp,metis add.assoc add.commute)
+    unfolding periodic_def 
+  proof -
+   { fix n 
+     have "g (n + k * Suc m) = g (n + k +  k * m)"
+       by(simp add: algebra_simps)
+     also have "... = g(n)" 
+       using Suc.IH[OF Suc.prems] assms
+       unfolding periodic_def by simp
+     finally have "g (n + k * Suc m) = g(n)" by blast
+   }
+    then show "\<forall>n. g (n + k * Suc m) = g n" by auto
+  qed   
 qed
-  
+
+(* cleared until *)
 lemma unique_periodic_extension:
   assumes "k > 0"
   assumes "\<forall> j<k. g j = h j"
@@ -876,7 +883,7 @@ proof -
 qed
 
 section\<open>Roots of unity\<close>
-(* cleared until *)
+(* cleared *)
 definition 
   "unity_root k n = cis (2 * pi * of_int n / of_nat k)"
 
@@ -917,16 +924,22 @@ next
     using unity_root_def unity_exp by simp
 qed
 
-(*cleared until*)
-lemma unity_mod_nat: "unity_root k n = unity_root k (nat (n mod k))"
-  using unity_mod
-  thm Euclidean_Division.pos_mod_sign
-  by (metis Euclidean_Division.pos_mod_sign add_0_left add_divide_eq_if_simps(1) int_nat_eq linorder_neqE_linordered_idom linorder_not_le nat_int of_nat_eq_0_iff unity_root_def) 
-
+lemma unity_mod_nat: 
+  "unity_root k n = unity_root k (nat (n mod k))"
+proof(cases k)
+  case 0 then show ?thesis by(simp add: unity_0_n) 
+next
+  case (Suc l)
+  then have "n mod int k \<ge> 0" by auto
+  show ?thesis 
+    unfolding int_nat_eq 
+    by(simp add: \<open>n mod int k \<ge> 0\<close> unity_mod[of k n])
+qed
+  
 lemma unity_dvd:
   fixes k n :: nat
   assumes "k > 0" 
-  shows "(unity_root k n = 1) \<longleftrightarrow> (k dvd n)"
+  shows "unity_root k n = 1 \<longleftrightarrow> k dvd n"
 proof -
   have "unity_root k n = exp ((2*pi*n/k)* \<i>)"
     using unity_exp by simp
@@ -950,9 +963,25 @@ lemma unity_minus: "unity_root k (-n) = inverse (unity_root k n)"
 lemma unity_dvd_int:
   fixes k :: nat and n :: int
   assumes "k > 0" 
-  shows "(unity_root k n = 1) \<longleftrightarrow> (k dvd n)"
-  using unity_dvd[OF \<open>k > 0\<close>] unity_minus
-  by (metis dvd_minus_iff int_cases2 int_dvd_int_iff inverse_eq_1_iff)
+  shows "unity_root k n = 1 \<longleftrightarrow> k dvd n"
+proof(cases "n \<ge> 0")
+  case True
+  obtain n' where "n = int n'" 
+    using zero_le_imp_eq_int[OF True] by blast
+  then show ?thesis 
+    using unity_dvd[OF \<open>k > 0\<close>, of n'] of_nat_dvd_iff by blast
+next
+  case False
+  then have "-n \<ge> 0" by auto
+  have "unity_root k n = inverse (unity_root k (-n))"
+    using unity_minus by simp
+  then have "(unity_root k n = 1) = (unity_root k (-n) = 1)" 
+    by simp
+  also have "(unity_root k (-n) = 1) = (k dvd (-n))"
+    using unity_dvd[of k "nat (-n)",OF \<open>k > 0\<close>] False 
+          int_dvd_int_iff[of k "nat (-n)"] nat_0_le[OF \<open>-n \<ge> 0\<close>] by auto
+  finally show ?thesis by simp
+qed
 
 lemma unity_periodic:
   "periodic (unity_root k) k" 
@@ -975,8 +1004,8 @@ proof
         unity_root k (m*n + m*k)"
     by(simp add: algebra_simps)
   also have "... = unity_root k (m*n)"
-    using mult_period unfolding periodic_def
-    by (metis add.commute calculation mod_mult_self3 unity_mod unity_pow)
+    using unity_mod[of k "m * int n"] unity_mod[of k "m * int n + m * int k"] 
+          mod_mult_self3 by presburger
   finally show "unity_root k (m * int (n + k)) =
              unity_root k (m * int n)" by simp
 qed
@@ -986,10 +1015,10 @@ lemma unity_periodic_mult_minus:
   unfolding periodic_def
 proof 
   fix n 
-   have "unity_root k (-(n + k) * m) = 
+  have "unity_root k (-(n + k) * m) = 
         inverse(unity_root k ((n + k) * m))" 
-     using unity_minus[of k "(n + k) * m"] 
-     by (metis mult_minus_left of_nat_mult)
+     using unity_minus[of k "(n + k) * m"] of_nat_mult 
+           mult_minus_left[of "n+k" m] by auto      
   also have "... = inverse(unity_root k (n*m+k*m))"
     by(simp add: algebra_simps)
   also have "... = inverse(unity_root k (n*m))"
@@ -1017,11 +1046,6 @@ proof -
   finally show ?thesis by simp
 qed
 
-find_theorems "cnj (exp _)"
-find_theorems "cnj  \<i> "
-lemma "cnj (a*\<i>) = -a*\<i>" for a :: real
-  by simp
-
 lemma unity_cnj: "cnj (unity_root k m) = unity_root k (-m)" 
   unfolding unity_exp exp_cnj by simp  
 
@@ -1031,66 +1055,16 @@ lemma unity_div_num:
   using assms dvd_div_mult_self unity_div by auto
 
 section\<open>Geometric sum\<close>
-
+(* cleared *)
 text\<open>
  First example of periodic modulo k arithmetical function
 \<close>
 
-
-lemma exp_dvd_nat:
-  fixes n k :: nat
-  assumes "k > 0"
-  shows "exp ((2*pi*n/k) * \<i>) = 1 \<longleftrightarrow> k dvd n"
-proof(rule iffI)
-  assume 1: "exp ((2*pi*n/k)*\<i>) = 1"
-  from this cis.sel cis_conv_exp have "cos (2*pi*n/k) = 1" 
-    by (metis complex_Re_numeral mult.commute numeral_One)
-  then obtain l::int where "2*pi*n/k = 2*pi*l"
-    using cos_one_2pi_int by auto
-  then have "n = k * l" 
-    apply(auto simp add: field_simps assms) 
-    using of_int_eq_iff by fastforce
-  then show "k dvd n"
-    using int_dvd_int_iff by fastforce
-next
-  assume "k dvd n"
-  then obtain l :: nat where "exp ((2*pi*n/k)*\<i>) = exp (2*pi*l*\<i>)" 
-    by (metis real_of_nat_div times_divide_eq_right)
-  then show "exp ((2*pi*n/k)*\<i>) = 1"
-    by (auto simp add: field_simps,
-        metis exp_of_nat_mult exp_two_pi_i' exp_zero mult_eq_0_iff semiring_normalization_rules(19))
-qed
-
-(* 
- An example of a theorem deduced from the version for nats
- taking advantage of exponential's periodicity.
-*)
-lemma exp_dvd_int:
-  fixes n :: int and  k :: nat
-  assumes "k > 0"
-  shows "unity_root k n = 1 \<longleftrightarrow> k dvd n"
-proof - 
-  have "unity_root k n = unity_root k (nat (n mod k))"
-    using unity_mod_nat by blast
-  also have "unity_root k (nat (n mod k)) = 1 \<longleftrightarrow> k dvd (nat (n mod k))"
-    using assms exp_dvd_nat
-    by (metis of_int_of_nat_eq unity_exp)
-  also have "k dvd (nat (n mod k)) \<longleftrightarrow> k dvd n"
-    using assms
-    by (metis Euclidean_Division.pos_mod_sign dvd_mod_iff dvd_refl int_dvd_int_iff int_nat_eq of_nat_0_less_iff)
-  finally show ?thesis by simp
-qed
-
 definition "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n* of_nat m))"
 
-lemma geo_0_n: "geometric_sum 0 n = 1"
-  unfolding geometric_sum_def
-  using unity_0_n by simp
-
-lemma geo_k_0: "k > 0 \<Longrightarrow> geometric_sum k 0 = k"  
-  unfolding geometric_sum_def
-  by(simp add: unity_k_0)
-  
+lemma geo_0_n: "geometric_sum 0 n = 1" and
+      geo_k_0: "k > 0 \<Longrightarrow> geometric_sum k 0 = k" 
+  unfolding geometric_sum_def by(simp add: unity_0_n unity_k_0)+
 
 lemma gs_case_1:
   fixes k :: nat and n :: int
@@ -1099,17 +1073,13 @@ lemma gs_case_1:
   shows "geometric_sum k n = k"
 proof -
   let ?x = "unity_root k n"
-  have unit: "?x = 1" using dvd gr exp_dvd_int by auto
-  have exp: "?x^m = unity_root k (n*m)" for m
-    using unity_pow by simp
+  have unit: "?x = 1" using dvd gr unity_dvd_int by auto
+  have exp: "?x^m = unity_root k (n*m)" for m using unity_pow by simp
   have "geometric_sum k n = (\<Sum>m\<le>k-1. unity_root k (n*m))" 
     using geometric_sum_def by simp 
-  also have "... = (\<Sum>m\<le>k-1. ?x^m)"
-    using exp  by auto
-  also have "... = (\<Sum>m\<le>k-1. 1)" 
-    using unit by simp
-  also have "... = k" 
-    using gr by(induction k, auto)
+  also have "... = (\<Sum>m\<le>k-1. ?x^m)" using exp by auto
+  also have "... = (\<Sum>m\<le>k-1. 1)" using unit by simp
+  also have "... = k" using gr by(induction k, auto)
   finally show "geometric_sum k n = k" by simp
 qed                       
 
@@ -1120,15 +1090,19 @@ lemma gs_case_2:
   shows "geometric_sum k n = 0"
 proof -
   let ?x = "unity_root k n"
-  have "?x \<noteq> 1" using dvd gr exp_dvd_int by auto
-  then have "(?x^k - 1)/(?x - 1) = (\<Sum> m\<le>k-1. ?x^m)"
-      using geometric_sum[of ?x k] gr
-      by(auto simp add: divide_simps,
-         metis Suc_le_lessD Suc_pred lessThan_Suc_atMost)
+  have "?x \<noteq> 1" using dvd gr unity_dvd_int by auto
+  have "(?x^k - 1)/(?x - 1) = (\<Sum> m\<le>k-1. ?x^m)"
+  proof -
+    have "(?x^k - 1)/(?x - 1) = (\<Sum> m<k. ?x^m)"
+      using geometric_sum[of ?x k, OF \<open>?x \<noteq> 1\<close>] by auto
+    also have "... = (\<Sum> m\<le>k-1. ?x^m)"
+      apply(rule sum.cong) using gr by(auto)
+    finally show ?thesis by blast
+  qed             
   then have sum: "geometric_sum k n = (?x^k - 1)/(?x - 1)"
     using geometric_sum_def unity_pow by simp
   have "?x^k = 1" 
-    using gr exp_dvd_int unity_pow by simp
+    using gr unity_dvd_int unity_pow by simp
   then show ?thesis using sum by auto
 qed
 
@@ -1516,10 +1490,6 @@ proof -
   from assms degree interp interp_p l3
   show "p = (fourier_poly ws)" using l by blast  
 qed
-
-lemma 
- "periodic (poly (fourier_poly ws)) (length ws)"
-  oops
 
 subsection\<open>Functional version\<close>
 

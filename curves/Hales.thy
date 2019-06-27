@@ -256,7 +256,7 @@ proof -
          (x1 * x3' - c * y1 * y3') / delta_minus x1 y1 x3' y3') *
         (delta_minus x1' y1' x3 y3 * delta_minus x1 y1 x3' y3' *
          delta x1 y1 x2 y2 * delta x2 y2 x3 y3)" 
-    unfolding gxpoly_def gxpoly_expr_def g\<^sub>x_def Delta\<^sub>x_def
+    unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def
     apply(subst assms(4))
     apply(subst assms(1))
     apply(subst assms(5))
