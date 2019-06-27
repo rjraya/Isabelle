@@ -54,21 +54,21 @@ deltaY = delta12*delta23*deltad[d, x3p, y3p, x3, y3]*
 deltaX = deltaY /. {d -> (-d)};
 
 {gx, gy} = (plus[{x3p, y3p}, {x3, y3}] - plus[{x1, y1}, {x1p, y1p}]) //
-     Together // Factor
+     Together // Factor;
 
 gxpoly = gx*deltaX // Factor;
 gypoly = gy*deltaY // Factor;
 
 polyassoc = 
   PolynomialReduce[{gxpoly, gypoly}, {e1, e2, e3}, {x1, y1, x2, y2, 
-      x3, y3}] // Simplify // Expand
+      x3, y3}] // Simplify // Expand;
 
 (*completeness identity*)
 
 complete = {d^2 y1^2 y2^2 x2^2 e1 + (1 - d y1^2) delta[x1, y1, x2, 
-      y2] - d y1^2 e2, (1 - c d y1^2 y2^2) (1 - d y1^2 x2^2)};
+      y2] - d y1^2 e2, (1 - c d y1^2 y2^2) (1 - d y1^2 x2^2)}
 
-completereduce = complete // Factor;
+completereduce = complete // Factor
 
 (*group addition and family of hyperbolas*)
 
@@ -95,11 +95,11 @@ list[x_]:= Apply[List,x];
 join[x__] := StringJoin[x];
 pjoin[x__] := join["(", x, ")"];
 rjoin[x_, t_] := pjoin[Riffle[x, t]];
-ToHOL[Power[x_, n_]] := pjoin[ ToHOL[x], " pow ", ts[n]];
+ToHOL[Power[x_, n_]] := pjoin[ ToHOL[x], "^", ts[n]];
 ToHOL[x_Times] := rjoin[Map[ToHOL,list[x]], "*"];
 ToHOL[x_Plus] := rjoin[Map[ToHOL, list[x]], "+"];
 ToHOL[x_Integer /; x >= 0] := join["&", ts[x]];
-ToHOL[x_Integer /; x < 0] := pjoin["-- &", ts[-x]];
+ToHOL[x_Integer /; x < 0] := pjoin["-", ts[-x]];
 ToHOL[x_Symbol] := ts[x];
 
 (* HOL Light material *)
@@ -114,6 +114,7 @@ join[ToHOL[groupclosure]," = ",
      ToHOL[polyclosure[[1,2]]]];
 
 (* associativity *)
+ToHOL[gx];
 join[ToHOL[gxpoly], " = ",
      ToHOL[e1]," * ",
      ToHOL[polyassoc[[1,1,1]]], " + ",

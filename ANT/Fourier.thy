@@ -860,47 +860,53 @@ proof -
 qed
 
 section \<open>Moebius\<close>
-
-thm moebius_mu_def mult_dvd_mono power2_eq_square
-thm squarefree_def coprime_def
+(* cleared *)
 lemma moebius_not_c:
   assumes "\<not> coprime N d"
   shows "moebius_mu (N*d) = 0"
 proof -
-  from assms have "\<not> squarefree (N*d)" 
-    unfolding squarefree_def coprime_def 
-    by (metis mult_dvd_mono semiring_normalization_rules(29))
+  from assms obtain l where l_form: "l dvd N \<and> l dvd d \<and> \<not> is_unit l" 
+    unfolding coprime_def by blast
+  then have "l * l dvd N * d" using mult_dvd_mono by auto
+  then have "l\<^sup>2 dvd N*d" by(subst power2_eq_square,blast) 
+  then have "\<not> squarefree (N*d)" 
+    unfolding squarefree_def coprime_def using l_form by blast
   then show "moebius_mu (N*d) = 0" 
     using moebius_mu_def by auto 
 qed
 
 section\<open>Roots of unity\<close>
+(* cleared until *)
+definition 
+  "unity_root k n = cis (2 * pi * of_int n / of_nat k)"
 
-definition "unity_root k n = 
-            cis (2 * pi * of_int n / of_nat k)"
+lemma 
+  unity_k_0: "unity_root k 0 = 1" and
+  unity_0_n: "unity_root 0 n = 1"
+  unfolding unity_root_def by simp+
 
-lemma unity_k_0: "unity_root k 0 = 1"
-  unfolding unity_root_def
-  by simp
+lemma unity_exp: 
+  "unity_root k n = exp ((2*pi*n/k)* \<i>)"
+  unfolding unity_root_def 
+  by(subst cis_conv_exp,subst mult.commute,blast) 
 
-lemma unity_0_n: "unity_root 0 n = 1"
- unfolding unity_root_def
-  by simp
-
-lemma unity_exp: "unity_root k n = exp ((2*pi*n/k)* \<i>)"
-  using unity_root_def cis_conv_exp mult.commute by metis
-
-lemma unity_mod: "unity_root k n = unity_root k (n mod k)"
+lemma unity_mod: 
+  "unity_root k n = unity_root k (n mod k)"
 proof(cases "k = 0")
   case True then show ?thesis by simp
 next
   case False
-  obtain q :: int  where "n = q*k + (n mod k)" 
-    using div_mult_mod_eq by metis
-  then have "n/k = q + (n mod k)/k"
-    using False
-    by(auto simp add: divide_simps,
-       metis of_int_add of_int_mult of_int_of_nat_eq)
+  obtain q :: int where q_def: "n = q*k + (n mod k)" 
+    using div_mult_mod_eq[symmetric] by blast
+  have "n / k = q + (n mod k) / k"
+  proof(auto simp add: divide_simps False)
+    have "real_of_int n = real_of_int (q*k + (n mod k))"
+      using q_def by simp
+    also have "... = real_of_int q * real k + real_of_int (n mod k)"
+      using of_int_add of_int_mult by simp
+    finally show "real_of_int n = real_of_int q * real k + real_of_int (n mod k)" 
+      by blast
+  qed
   then have "(2*pi*n/k) = 2*pi*q + (2*pi*(n mod k)/k)"
     using False by(auto simp add: field_simps)
   then have "(2*pi*n/k)*\<i> = 2*pi*q*\<i> + (2*pi*(n mod k)/k)*\<i>" (is "?l = ?r1 + ?r2")
@@ -911,8 +917,10 @@ next
     using unity_root_def unity_exp by simp
 qed
 
+(*cleared until*)
 lemma unity_mod_nat: "unity_root k n = unity_root k (nat (n mod k))"
-  using unity_mod 
+  using unity_mod
+  thm Euclidean_Division.pos_mod_sign
   by (metis Euclidean_Division.pos_mod_sign add_0_left add_divide_eq_if_simps(1) int_nat_eq linorder_neqE_linordered_idom linorder_not_le nat_int of_nat_eq_0_iff unity_root_def) 
 
 lemma unity_dvd:

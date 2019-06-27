@@ -861,12 +861,18 @@ qed
 
 section \<open>Moebius\<close>
 
+thm moebius_mu_def mult_dvd_mono power2_eq_square
+thm squarefree_def coprime_def
 lemma moebius_not_c:
   assumes "\<not> coprime N d"
   shows "moebius_mu (N*d) = 0"
-  using assms
-  unfolding moebius_mu_def squarefree_def coprime_def
-  by (metis mult_dvd_mono power2_eq_square)
+proof -
+  from assms have "\<not> squarefree (N*d)" 
+    unfolding squarefree_def coprime_def 
+    by (metis mult_dvd_mono semiring_normalization_rules(29))
+  then show "moebius_mu (N*d) = 0" 
+    using moebius_mu_def by auto 
+qed
 
 section\<open>Roots of unity\<close>
 
