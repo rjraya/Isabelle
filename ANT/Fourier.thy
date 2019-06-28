@@ -96,18 +96,8 @@ proof -
   finally show ?thesis by blast
 qed
 
-lemma "3 div (2::nat) = 1" 
-
-lemma
-  fixes f :: "nat \<Rightarrow> nat" 
-  assumes "\<And> n. f(k-n) = f(n)" "a > 0" "b > 0" "a \<le> b"
-  shows "(\<Sum> n = 1..k. f(n)) \<le> 2 * (\<Sum> n = 1..k div 2. f(n))"
-
-  oops
-
 section\<open>Periodic functions\<close>
-(* cleared until *)
-
+(* cleared *)
 definition 
   "periodic f k = (\<forall> n. f(n+k) = f(n))" 
   for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
@@ -127,6 +117,12 @@ lemma mult_periodic:
   assumes "periodic g k"
   shows "periodic (\<lambda> n. f n * g n) k"
   using assms unfolding periodic_def  by simp
+
+lemma scalar_mult_periodic:
+  fixes f :: "nat \<Rightarrow> complex" and a :: complex
+  assumes "periodic f k"
+  shows "periodic (\<lambda> n. a * f n) k"
+  using mult_periodic[OF const_periodic[of a k] assms(1)] by simp
 
 lemma fin_sum_periodic:
   fixes f g :: "nat \<Rightarrow> complex" and l :: nat
@@ -179,7 +175,6 @@ next
   qed   
 qed
 
-(* cleared until *)
 lemma unique_periodic_extension:
   assumes "k > 0"
   assumes "\<forall> j<k. g j = h j"
@@ -190,19 +185,21 @@ proof(cases "i < k")
 next
   case False then show ?thesis 
   proof -
-    have "(i div k)*k + (i mod k) = i \<and> (i mod k) < k" 
+    have "k * (i div k) + (i mod k) = i \<and> (i mod k) < k" 
       by(simp add: assms(1) algebra_simps)
     then obtain q r where euclid_div: "k*q + r = i \<and> r < k"
-      using mult.commute by metis
+      using mult.commute by blast
     from assms(3) assms(4) 
-    have period: "periodic g (k*q) \<and> periodic h (k*q)" 
-      using mult_period by simp
-    then have "g(k*q+r) = g(r)" 
-      unfolding periodic_def using add.commute by metis
+    have  "periodic g (k*q)" "periodic h (k*q)" 
+      using mult_period by simp+
+    have "g(k*q+r) = g(r)" 
+      using \<open>periodic g (k*q)\<close> unfolding periodic_def 
+      using add.commute[of "k*q" r] by presburger
     also have "... = h(r)" 
       using euclid_div assms(2) by simp
     also have "... = h(k*q+r)"
-      using period add.commute unfolding periodic_def by metis
+      using \<open>periodic h (k*q)\<close> add.commute[of "k*q" r]
+      unfolding periodic_def by presburger
     also have "... = h(i)" using euclid_div by simp
     finally show "g(i) = h(i)" using euclid_div by simp
   qed
@@ -222,26 +219,27 @@ lemma mod_periodic:
   assumes "n mod k = m mod k"
   shows "f n = f m"
 proof -
-  obtain q  where 1: "n = q*k+(n mod k)" 
-     using div_mult_mod_eq[of n k] by metis
+  obtain q where 1: "n = q*k+(n mod k)"   
+     using div_mult_mod_eq[of n k,symmetric] by blast 
   obtain q' where 2: "m = q'*k+(m mod k)"
-     using div_mult_mod_eq[of m k] by metis
+     using div_mult_mod_eq[of m k,symmetric] by blast
   from 1 have "f n = f (q*k+(n mod k))" by auto
   also have "... = f (n mod k)"
     using mult_period[of f k q] assms(1) periodic_def[of f "k*q"]
-    by(simp add: algebra_simps, metis add.commute) 
+    by(simp add: algebra_simps,subst add.commute,blast)
   also have "... = f (m mod k)" using assms(2) by auto
   also have "... = f (q'*k+(m mod k))"
     using mult_period[of f k q'] assms(1) periodic_def[of f "k*q'"]
-    by(simp add: algebra_simps, metis add.commute) 
+    by(simp add: algebra_simps,subst add.commute,presburger)
   also have "... = f m" using 2 by auto
   finally show "f n = f m" by simp
 qed
 
+text\<open>Some lemmas to prove periodic_sum_periodic_shift\<close>
+
 lemma cong_nat_imp_eq:
   fixes m :: nat
-  assumes "m > 0"
-  assumes "x \<in> {a..<a+m}" "y \<in> {a..<a+m}" "[x = y] (mod m)"
+  assumes "m > 0" "x \<in> {a..<a+m}" "y \<in> {a..<a+m}" "[x = y] (mod m)"
   shows   "x = y"
   using assms
 proof (induction x y rule: linorder_wlog)
@@ -299,11 +297,8 @@ qed
 
 lemma periodic_sum_periodic_shift:
   fixes k d :: nat
-  assumes "periodic f k" 
-  assumes "k > 0" 
-  assumes "d > 0"
-  shows "(\<Sum>l \<in> {0..k-1}. f l) = 
-         (\<Sum>l \<in> {d..d+k-1}. f l)"
+  assumes "periodic f k" "k > 0" "d > 0"
+  shows "(\<Sum>l \<in> {0..k-1}. f l) = (\<Sum>l \<in> {d..d+k-1}. f l)"
 proof -
   have "(\<Sum>l \<in> {0..k-1}. f l) = (\<Sum>l \<in> {0..<k}. f l)"
     using g_sum_eq_ineq assms(2) by blast
@@ -315,18 +310,9 @@ proof -
     using mod_periodic[of f k] assms(1) sum.cong
     by (meson mod_mod_trivial)
   also have "... = (\<Sum>l \<in> {d..d+k-1}. f l)"
-    using g_sum_eq_ineq[of "d+k" f d] assms(2-3) by fastforce
+    using g_sum_eq_ineq[of "d+k" f d] assms(2,3) by fastforce
   finally show ?thesis by auto
 qed
-
-(*
-lemma periodic_sum_periodic_shift:
-  fixes k d d' :: nat
-  assumes "periodic f k" 
-  assumes "k > 0" 
-  shows "(\<Sum>l \<in> {d..d+k-1}. f l) = 
-         (\<Sum>l \<in> {d'..d'+k-1}. f l)"
-*)
 
 lemma self_bij_0_k:
   fixes a k :: nat
@@ -365,10 +351,14 @@ proof
     qed
     show "{0..k - 1} \<subseteq> {y. \<exists>x\<in>{0..k - 1}. y = f x}"
     proof -
-      {fix x 
+      { fix x 
         assume ass: "x \<in> {0..k-1}"
         then have "x * i mod k \<in> {0..k-1}"
-          by (metis One_nat_def Suc_pred assms(3) atMost_atLeast0 atMost_iff less_Suc_eq_le mod_less_divisor)
+        proof -
+          have "x * i mod k \<in> {0..<k}" by (simp add: assms(3))
+          have "{0..<k} = {0..k-1}" using Suc_diff_1 assms(3) by auto
+          show ?thesis using \<open>x * i mod k \<in> {0..<k}\<close> \<open>{0..<k} = {0..k-1}\<close> by blast
+        qed          
         then have "f (x * i mod k) = x"
         proof -
           have "f (x * i mod k) = (x * i mod k) * a mod k"
@@ -376,13 +366,16 @@ proof
           also have "... = (x*i*a) mod k" 
             by (simp add: mod_mult_left_eq) 
           also have "... = (x*1) mod k" 
-            using assms(2) unfolding cong_def 
-            by (metis mod_mult_right_eq mult.assoc mult.commute)
+            using assms(2) 
+            unfolding cong_def 
+            by(subst mult.assoc, subst (2) mult.commute,
+               subst mod_mult_right_eq[symmetric],simp) 
           also have "... = x" using ass assms(3) by auto
           finally show ?thesis .
         qed
         then have "x \<in> {y. \<exists>x\<in>{0..k - 1}. y = f x}" 
-          using \<open>x * i mod k \<in> {0..k - 1}\<close> by force}
+          using \<open>x * i mod k \<in> {0..k-1}\<close> by force
+      }
       then show ?thesis by blast 
     qed
   qed
@@ -412,7 +405,7 @@ proof -
   have "(\<Sum> l = 1..k. f(l)) = (\<Sum> l = 0..k-1. f(l))"
     using periodic_sum_periodic_shift[of f k 1] assms by simp
   also have "... = (\<Sum> l = 0..k-1. f(l*a mod k))"
-    using sum.reindex_bij_betw[OF bij] by metis
+    using sum.reindex_bij_betw[OF bij,symmetric] by blast
   also have "... = (\<Sum> l = 0..k-1. f(l*a))"
     apply(rule sum.cong,simp)
     using mod_periodic[OF assms(2)] mod_mod_trivial by blast
@@ -422,20 +415,10 @@ proof -
   finally show ?thesis by blast     
 qed
 
-lemma scalar_mult_periodic:
-  fixes f :: "nat \<Rightarrow> complex" and a :: complex
-  assumes "periodic f k"
-  shows "periodic (\<lambda> n. a * f n) k"
-  using mult_periodic[OF const_periodic[of a k] assms(1)] by simp
+
 
 section\<open>Gcd and prime factorizations\<close>
-
-lemma sub:
-  fixes a b c d :: nat
-  assumes "coprime a c" "coprime a d" "coprime b c" "coprime b d"
-  shows "coprime (a*b) (c*d)"
-  by (simp add: assms)
-
+(* cleared *)
 lemma linear_gcd:
   fixes a b c d :: nat
   assumes "a > 0" "b > 0" "c > 0" "d > 0"
@@ -447,20 +430,32 @@ proof -
   define q3 :: nat where "q3 = b div gcd b c"
   define q4 :: nat where "q4 = d div gcd a d"
   
-  from this assms
   have "coprime q1 q2" "coprime q3 q4" 
     unfolding q1_def q2_def q3_def q4_def
-    by (metis coprime_commute coprime_mult_left_iff 
-              dvd_div_mult_self gcd_dvd1 gcd_dvd2)+
+  proof -
+    have "coprime (a div gcd a d) c" 
+      using \<open>coprime a c\<close> coprime_mult_left_iff[of "a div gcd a d" "gcd a d" c]
+            dvd_mult_div_cancel[OF gcd_dvd1, of a b] by simp
+    then show "coprime (a div gcd a d) (c div gcd b c)"
+      using coprime_mult_right_iff[of "a div gcd a d" "gcd b c" "c div gcd b c"]
+          dvd_div_mult_self[OF gcd_dvd2[of b c]] by auto    
+    have "coprime (b div gcd b c) d" 
+      using \<open>coprime b d\<close> coprime_mult_left_iff[of "b div gcd b c" "gcd b c" d]
+            dvd_mult_div_cancel[OF gcd_dvd1, of a b] by simp
+    then show "coprime (b div gcd b c) (d div gcd a d)"
+      using coprime_mult_right_iff[of "b div gcd b c" "gcd a d" "d div gcd a d"]
+          dvd_div_mult_self[OF gcd_dvd2[of b c]] by auto 
+  qed
   moreover have "coprime q1 q4" "coprime q3 q2"
     unfolding q1_def q2_def q3_def q4_def 
     using assms div_gcd_coprime by blast+
-  ultimately have 1: "coprime (q1*q3) (q2*q4)"
-    using  sub[of q1 q2 q4 q3] by simp    
+  ultimately have 1: "coprime (q1*q3) (q2*q4)" 
+    by simp 
   have "gcd (a*b) (c*d) = (gcd a d) * (gcd b c) * gcd (q1*q3) (q2*q4)"
     unfolding q1_def q2_def q3_def q4_def
-    using gcd_mult_distrib_nat dvd_div_mult_self gcd_dvd1 gcd_dvd2
-    by (smt mult.assoc mult.commute) (* fix this *)
+    by(subst gcd_mult_distrib_nat[of "gcd a d * gcd b c"],
+       simp add: field_simps,
+       simp add: mult.left_commute semiring_normalization_rules(18))
   from this 1 show "gcd (a*b) (c*d) = (gcd a d) * (gcd b c)" by auto
 qed  
 
@@ -487,8 +482,7 @@ proof
     from eq dvd have eq1: "d1 = d1'" 
       by (simp,meson assms coprime_crossproduct_nat coprime_divisors)
     from eq dvd have eq2: "d2 = d2'"
-      by (metis assms(4) coprime_commute coprime_divisors coprime_dvd_mult_right_iff  
-           dvd_triv_right gcd_nat.antisym gcd_nat.boundedE)
+      using assms(4) eq1 by auto
     from eq1 eq2 have "d1 = d1' \<and> d2 = d2'" by simp} 
    then show "inj_on (\<lambda>(d1, d2). d1 * d2) S" 
     using S_def f_def by(intro inj_onI,blast)
@@ -507,85 +501,121 @@ qed
 
 lemma p_div_set:
   shows "{p. p \<in>prime_factors a \<and> \<not> p dvd N} = 
-          ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
-     (is "?A = ?B") 
+         ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
+  (is "?A = ?B") 
 proof 
-   show "?A \<subseteq> ?B" 
-   proof(simp)
-     {fix p 
-     assume as: "p \<in># prime_factorization a \<and> \<not> p dvd N"
-     then have 1: "p \<in> prime_factors (a * N)" 
-       by (metis divisors_zero dvdI dvd_trans in_prime_factors_iff)
-     from as have 2: "p \<notin> prime_factors N" by blast
-     from 1 2 have "p \<in> prime_factors (a * N) - prime_factors N"
-       by blast}
-     then show "{p. p \<in># prime_factorization a \<and> \<not> p dvd N}
-    \<subseteq> prime_factors (a * N) - prime_factors N" by blast
-   qed
+  show "?A \<subseteq> ?B" 
+  proof(simp)
+    { fix p 
+      assume as: "p \<in># prime_factorization a" "\<not> p dvd N"
+      then have 1: "p \<in> prime_factors (a * N)" 
+      proof -
+        from in_prime_factors_iff[of p a] as
+        have "a \<noteq> 0" "p dvd a" "prime p" by simp+
+        have "N \<noteq> 0" using \<open>\<not> p dvd N\<close> by blast
+        have "a * N \<noteq> 0" using \<open>a \<noteq> 0\<close> \<open>N \<noteq> 0\<close> by auto
+        have "p dvd a*N" using \<open>p dvd a\<close> by simp
+        show ?thesis 
+          using \<open>a*N \<noteq> 0\<close> \<open>p dvd a*N\<close> \<open>prime p\<close> in_prime_factors_iff by blast
+      qed
+      from as have 2: "p \<notin> prime_factors N" by blast
+      from 1 2 have "p \<in> prime_factors (a * N) - prime_factors N"
+       by blast 
+    }
+    then show "{p. p \<in># prime_factorization a \<and> \<not> p dvd N}
+               \<subseteq> prime_factors (a * N) - prime_factors N" by blast
+  qed
 
-   show "?B \<subseteq> ?A"
-   proof(simp)
-     {fix p 
-     assume as: "p \<in> prime_factors (a * N) - prime_factors N"
-     then have 1: "\<not> p dvd N" 
-       by (metis DiffE in_prime_factors_imp_prime mult.commute mult_eq_0_iff prime_factorization_empty_iff prime_factorsI  set_mset_empty)
-     from as have 2: "p \<in># prime_factorization a" 
-       by (metis DiffD1 \<open>\<not> p dvd N\<close> in_prime_factors_iff mult_eq_0_iff prime_dvd_multD)
-     from 1 2 have "p \<in> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast}
-   then show " prime_factors (a * N) - prime_factors N
-    \<subseteq> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast
-   qed
- qed
-
+  show "?B \<subseteq> ?A"
+  proof(simp)
+    { fix p 
+      assume as: "p \<in> prime_factors (a * N) - prime_factors N"
+      then have 1: "\<not> p dvd N" 
+      proof -
+        from as have "p \<in> prime_factors (a * N)" "p \<notin> prime_factors N"
+          using DiffD1 DiffD2 by blast+
+        then show ?thesis by (simp add: in_prime_factors_iff)        
+      qed
+      have 2: "p \<in># prime_factorization a" 
+      proof -
+        have "p dvd (a*N)" "prime p" "a*N \<noteq> 0" using in_prime_factors_iff as by blast+
+        have "p dvd a" using \<open>\<not> p dvd N\<close> prime_dvd_multD[OF \<open>prime p\<close> \<open>p dvd (a*N)\<close>] by blast
+        have "a \<noteq> 0" using \<open>a*N \<noteq> 0\<close> by simp
+        show ?thesis using in_prime_factors_iff \<open>a \<noteq> 0\<close> \<open>p dvd a\<close> \<open>prime p\<close> by blast
+      qed
+      from 1 2 have "p \<in> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast
+    }
+    then show "prime_factors (a * N) - prime_factors N
+               \<subseteq> {p. p \<in># prime_factorization a \<and> \<not> p dvd N}" by blast
+  qed
+qed
 
 (*exercise 8.4*)
 lemma technical_m:
   fixes n a d :: nat
-  assumes 0: "n > 0" 
-  assumes 1: "coprime a d"
-  assumes 2: "m = a + q*d" 
-  assumes 3: "q \<equiv> (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)"
+  assumes "n > 0" "coprime a d" "m = a + q*d" 
+          "q \<equiv> (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)"
   shows "[m = a] (mod d)" "coprime m n"
-proof(simp add: 2 cong_add_lcancel_0_nat cong_mult_self_right)
-  have fin: "finite {p. prime p \<and> p dvd n \<and> \<not> (p dvd a)}" by (simp add: "0")
-  {fix p
-  assume 4: "prime p" "p dvd m" "p dvd n"
-  have "p = 1"
-  proof(cases "p dvd a")
-    case True
-    from this 2 4(2) have "p dvd q*d" 
-      by (simp add: dvd_add_right_iff)
-    then have a1: "p dvd q \<or> p dvd d"
-      using 4(1) prime_dvd_mult_iff by blast
+proof(simp add: assms(3) cong_add_lcancel_0_nat cong_mult_self_right)
+  have fin: "finite {p. prime p \<and> p dvd n \<and> \<not> (p dvd a)}" by (simp add: assms(1))
+  { fix p
+    assume 4: "prime p" "p dvd m" "p dvd n"
+    have "p = 1"
+    proof(cases "p dvd a")
+      case True
+      from this assms(3) 4(2) have "p dvd q*d" 
+       by (simp add: dvd_add_right_iff)
+      then have a1: "p dvd q \<or> p dvd d"
+       using 4(1) prime_dvd_mult_iff by blast
     
-    have a2: "\<not> (p dvd q)" 
-    proof(rule ccontr,simp)  
-      assume "p dvd q"
-      then have "p dvd (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)" unfolding 3 by simp
-      then have "\<exists>x\<in>{p. prime p \<and> p dvd n \<and> \<not> p dvd a}. p dvd x"
+      have a2: "\<not> (p dvd q)" 
+      proof(rule ccontr,simp)  
+       assume "p dvd q"
+       then have "p dvd (\<Prod> p | prime p \<and> p dvd n \<and> \<not> (p dvd a). p)" 
+         unfolding assms(4) by simp
+       then have "\<exists>x\<in>{p. prime p \<and> p dvd n \<and> \<not> p dvd a}. p dvd x"
         using prime_dvd_prod_iff[OF fin 4(1)] by simp
-      then obtain x where c: "p dvd x \<and> prime x \<and> \<not> x dvd a" by blast
-      then have "p = x" using 4(1) by (simp add: primes_dvd_imp_eq)
-      then show "False" using True c by auto
-    qed
-    have a3: "\<not> (p dvd d)" using True "1" "4"(1) coprime_def not_prime_unit by auto
+       then obtain x where c: "p dvd x \<and> prime x \<and> \<not> x dvd a" by blast
+       then have "p = x" using 4(1) by (simp add: primes_dvd_imp_eq)
+       then show "False" using True c by auto
+      qed
+      have a3: "\<not> (p dvd d)" 
+        using True assms(2) "4"(1) coprime_def not_prime_unit by auto
   
-    from a1 a2 a3 show ?thesis by simp
-  next
-    case False
-    then have "p dvd q" 
-    proof -
-      have in_s: "p \<in> {p. prime p \<and> p dvd n \<and> \<not> p dvd a}"
+      from a1 a2 a3 show ?thesis by simp
+    next
+      case False
+      then have "p dvd q" 
+      proof -
+       have in_s: "p \<in> {p. prime p \<and> p dvd n \<and> \<not> p dvd a}"
         using False 4(3) 4(1) by simp
-      show "p dvd q" 
-        unfolding 3 using dvd_prodI[OF fin in_s ] by fast
+       show "p dvd q" 
+        unfolding assms(4) using dvd_prodI[OF fin in_s ] by fast
+      qed
+      then have "p dvd q*d" by simp
+      then have "p dvd a" using 4(2) assms(3) 
+        by (simp add: dvd_add_left_iff)
+      then show ?thesis using False by auto
     qed
-    then have "p dvd q*d" by simp
-    then have "p dvd a" using 4(2) 2 by (simp add: dvd_add_left_iff)
-    then show ?thesis using False by auto
-  qed}
-  then show "coprime m n" 
-    by (metis coprime_iff_gcd_eq_1 gcd_nat.bounded_iff not_prime_1 prime_factor_nat)
+  }
+  note lem = this
+  show "coprime m n" 
+  proof(subst coprime_iff_gcd_eq_1)
+    {fix a 
+     assume "a dvd m" "a dvd n" "a \<noteq> 1"
+     {fix p
+      assume "prime p" "p dvd a"
+      then have "p dvd m" "p dvd n" 
+       using \<open>a dvd m\<close> \<open>a dvd n\<close> by auto
+      from lem have "p = a" 
+       using not_prime_1 \<open>prime p\<close> \<open>p dvd m\<close> \<open>p dvd n\<close> by blast}
+      then have "prime a" 
+       using prime_prime_factor[of a] \<open>a \<noteq> 1\<close> by blast
+      then have "a = 1" using lem \<open>a dvd m\<close> \<open>a dvd n\<close> by blast
+      then have "False" using \<open>a = 1\<close> \<open>a \<noteq> 1\<close> by blast
+    }
+    then show "gcd m n = 1" by blast
+  qed
 qed
 
 lemma coprime_iff_prime_factors_disjoint:
@@ -741,8 +771,6 @@ proof -
     show "\<And>b. b \<in> rcosets\<^bsub>G\<^esub> kernel G H f \<Longrightarrow> b \<subseteq> carrier G"
       using n.rcosets_part_G f.subgroup_kernel by auto
   qed
-
-  
    
   (* sizes *)
   have lagr: "card (carrier G) = card (rcosets\<^bsub>G\<^esub> kernel G H f) * card (kernel G H f)" 
@@ -768,8 +796,25 @@ proof -
     using G_size by argo
   finally have eq: "totient m = totient n div card (kernel G H f)" by simp
   show "card (kernel G H f) = totient n div totient m"
-    using lagr G_size 
-    by (metis assms(4) div_mult_self_is_m eq k_size nonzero_mult_div_cancel_left not_one_less_zero totient_0_iff)
+  proof -
+    have "totient m \<noteq> 0" 
+      using totient_0_iff[of m] assms(4) by blast
+    have "card (kernel G H f) dvd totient n" 
+      using lagr \<open>card (carrier G) = totient n\<close> by auto
+    have "totient m * card (kernel G H f) = totient n" 
+      apply(simp add: divide_simps eq,subst mult.commute)
+      apply(subst dvd_imp_mult_div_cancel_left[OF \<open>card (kernel G H f) dvd totient n\<close>])
+      by blast
+    then show ?thesis
+    proof -
+      have "totient n div totient m = totient m * card (kernel G H f) div totient m"
+        using \<open>totient m * card (kernel G H f) = totient n\<close> by auto
+      also have "... = card (kernel G H f)"
+        using nonzero_mult_div_cancel_left[OF \<open>totient m \<noteq> 0\<close>] by blast
+      finally show ?thesis by auto
+    qed
+  qed
+
   show "card (rcosets\<^bsub>G\<^esub> kernel G H f) = totient m"
   proof -
     have H_size: " totient m = card (carrier H)"
@@ -816,8 +861,7 @@ proof -
   obtain a :: nat where cos_expr: "b = (kernel G H f) #>\<^bsub>G\<^esub> a \<and> a \<in> carrier G" 
     using RCOSETS_def[of G "kernel G H f"] by blast
   then have cop: "coprime a n" 
-    using assms(1) unfolding residue_mult_group_def totatives_def
-    by auto
+    using assms(1) unfolding residue_mult_group_def totatives_def by auto
   
   obtain a' where "[a * a' = 1] (mod n)"
     using cong_solve_coprime_nat[OF cop] by auto
@@ -826,12 +870,10 @@ proof -
 
   have "m1 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
        "m2 \<in> (\<Union>h\<in>kernel G H f. {h \<otimes>\<^bsub>G\<^esub> a})"
-    using r_coset_def[of G "kernel G H f" a] cos_expr assms(5,6)
-    by blast+
+    using r_coset_def[of G "kernel G H f" a] cos_expr assms(5,6) by blast+
   then have "m1 \<in> (\<Union>h\<in>kernel G H f. {(h * a) mod n})"
             "m2 \<in> (\<Union>h\<in>kernel G H f. {(h * a) mod n})"
-    using assms(1) unfolding residue_mult_group_def[of n] 
-    by auto
+    using assms(1) unfolding residue_mult_group_def[of n] by auto
   then obtain m1' m2' where 
     m_expr: "m1 = (m1'* a) mod n \<and> m1' \<in> kernel G H f" 
             "m2 = (m2'* a) mod n \<and> m2' \<in> kernel G H f" 

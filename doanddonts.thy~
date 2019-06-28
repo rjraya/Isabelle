@@ -27,4 +27,10 @@ text\<open>
  Take a look at the GCD theory, keyword consider and atomize
 \<close>
 
+section\<open>Searching theorems\<close>
+
+text\<open>We can use ? to refine our queries to find_theorems\<close>
+
+find_theorems "sum _ ?A = sum _ (?f ` ?A)"
+
 end

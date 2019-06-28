@@ -1,5 +1,5 @@
 theory Hales
-  imports Complex_Main
+  imports Complex_Main "HOL-Algebra.Coset"
 begin
 
 context
@@ -370,7 +370,55 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+lemma neutral: "add z (1,0) = z" by(cases "z",simp)
 
+lemma inverse:
+  assumes "e a b == 0" "delta a b a b \<noteq> 0" 
+  shows "add (a,b) (a,-b) = (1,0)" 
+  using assms
+  apply(simp,subst delta_plus_def[symmetric])+
+  apply(rule conjI)
+  using delta_def apply simp
+  unfolding e_def delta_plus_def
+  by (smt mult.assoc power2_eq_square semiring_normalization_rules(16))
+
+lemma affine_closure:
+  assumes "delta x1 y1 x2 y2 == 0" "e x1 y1 == 0" "e x2 y2 == 0"
+  shows "\<exists> b. (1/d = b^2 \<and> 1/d \<noteq> 0) \<or> (1/(c*d) = b^2 \<and> 1/(c*d) \<noteq> 0)" 
+proof -
+  define r where "r = (1 - c*d*y1^2*y2^2) * (1 - d*y1^2*x2^2)" 
+  define e1 where "e1 = e x1 y1"
+  define e2 where "e2 = e x2 y2"
+  have "r = d^2 * y1^2 * y2^2 * x2^2 * e1 + (1 - d * y1^2) * delta x1 y1 x2 y2 - d * y1^2 * e2"
+    unfolding r_def e1_def e2_def delta_def delta_plus_def delta_minus_def e_def
+    by algebra
+  then have "r = 0" 
+    using assms e1_def e2_def by simp
+  then have cases: "(1 - c*d*y1^2*y2^2) = 0 \<or> (1 - d*y1^2*x2^2) = 0" 
+    using r_def by auto
+  have "d \<noteq> 0" using \<open>r = 0\<close> r_def by auto
+  {assume "(1 - d*y1^2*x2^2) = 0"
+  then have "1/d = y1^2*x2^2" "1/d \<noteq> 0"
+    by(auto simp add: divide_simps \<open>d \<noteq> 0\<close>,argo)}
+  note case1 = this
+  {assume "(1 - c*d*y1^2*y2^2) = 0" "(1 - d*y1^2*x2^2) \<noteq> 0"
+    then have "c \<noteq> 0" by auto
+    then have "1/(c*d) = y1^2*y2^2" "1/(c*d) \<noteq> 0" 
+      apply(simp add: divide_simps \<open>d \<noteq> 0\<close> \<open>c \<noteq> 0\<close>) 
+      using \<open>(1 - c*d*y1^2*y2^2) = 0\<close> apply argo
+      using \<open>c \<noteq> 0\<close> \<open>d \<noteq> 0\<close> by auto
+  }
+  note case2 = this
+  
+  show "\<exists> b. (1/d = b^2 \<and> 1/d \<noteq> 0) \<or> (1/(c*d) = b^2 \<and> 1/(c*d) \<noteq> 0)" 
+    using cases case1 case2 by (metis power_mult_distrib)
+qed
+
+lemma 
+  assumes "\<exists> b. 1/c = b^2" "\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)"
+  shows "group add  {(x,y). e x y = 0}"
+
+  
     
 end
 

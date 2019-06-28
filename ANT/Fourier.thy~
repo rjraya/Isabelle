@@ -106,16 +106,13 @@ lemma
   oops
 
 section\<open>Periodic functions\<close>
-
-print_locale periodic_fun_simple
+(* cleared until *)
 
 definition 
   "periodic f k = (\<forall> n. f(n+k) = f(n))" 
   for n :: int and k :: nat and f :: "nat \<Rightarrow> complex"
 
-lemma const_periodic:
-  "periodic (\<lambda> x. y) k" 
-  unfolding periodic_def by blast
+lemma const_periodic: "periodic (\<lambda> x. y) k" unfolding periodic_def by blast
 
 lemma add_periodic:
   fixes f g :: "nat \<Rightarrow> complex"
@@ -163,16 +160,26 @@ lemma mult_period:
   assumes "periodic g k"
   shows "periodic g (k*q)"
   using assms
-proof(induction q arbitrary: k)
-  case 0
-then show ?case unfolding periodic_def by simp
+proof(induction q)
+  case 0 then show ?case unfolding periodic_def by simp
 next
   case (Suc m)
   then show ?case 
-    unfolding periodic_def
-    by (simp,metis add.assoc add.commute)
+    unfolding periodic_def 
+  proof -
+   { fix n 
+     have "g (n + k * Suc m) = g (n + k +  k * m)"
+       by(simp add: algebra_simps)
+     also have "... = g(n)" 
+       using Suc.IH[OF Suc.prems] assms
+       unfolding periodic_def by simp
+     finally have "g (n + k * Suc m) = g(n)" by blast
+   }
+    then show "\<forall>n. g (n + k * Suc m) = g n" by auto
+  qed   
 qed
-  
+
+(* cleared until *)
 lemma unique_periodic_extension:
   assumes "k > 0"
   assumes "\<forall> j<k. g j = h j"
