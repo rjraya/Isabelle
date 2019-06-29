@@ -66,7 +66,7 @@ polyassoc =
 (*completeness identity*)
 
 complete = {d^2 y1^2 y2^2 x2^2 e1 + (1 - d y1^2) delta[x1, y1, x2, 
-      y2] - d y1^2 e2, (1 - c d y1^2 y2^2) (1 - d y1^2 x2^2)}
+      y2] - d y1^2 e2, (1 - c d y1^2 y2^2) (1 - d y1^2 x2^2)};
 
 completereduce = complete // Factor
 
@@ -130,6 +130,9 @@ join[ToHOL[gypoly], " = ",
      ToHOL[polyassoc[[2,1,2]]], " + ",
      ToHOL[e3], "  * ",
      ToHOL[polyassoc[[2,1,3]]]];
+
+
+
 
 
 
