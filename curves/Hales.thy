@@ -4,7 +4,7 @@ begin
 
 section\<open>Edwards curves\<close>
 
-context
+locale curve_addition =
   fixes c d :: real
 begin      
 
@@ -314,7 +314,7 @@ proof -
   then have "gxpoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>x \<noteq> 0" 
-    using Delta\<^sub>x_def Hales.delta_def assms(10-14) non_unfolded_adds by auto
+    using Delta\<^sub>x_def delta_def assms(10-14) non_unfolded_adds by auto
   then have "g\<^sub>x = 0" 
     using \<open>gxpoly = 0\<close> gxpoly_def by auto
 
@@ -362,7 +362,7 @@ proof -
   then have "gypoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>y \<noteq> 0" 
-    using Delta\<^sub>y_def Hales.delta_def assms(10-15) non_unfolded_adds by auto
+    using Delta\<^sub>y_def delta_def assms(10-15) non_unfolded_adds by auto
   then have "g\<^sub>y = 0" 
     using \<open>gypoly = 0\<close> gypoly_def by auto
 
@@ -542,8 +542,130 @@ qed
 end
 
 section\<open>Projective curves\<close>
+(* Generalize for c \<noteq> 1 *)
+locale ext_curve_addition = curve_addition +
+  assumes c_eq_1: "c = 1" 
+  assumes t_intro: "\<exists> b'. d = (b')^2"
+  assumes t_ineq: "sqrt(d)^2 \<noteq> 1" "sqrt(d) \<noteq> 0"
+begin
+
+definition t where "t = sqrt(d)"
+definition e' where "e' x y = x^2 + y^2 - 1 - t^2 * x^2 * y^2"
 
 
+lemma c_d_pos: "d \<ge> 0" using t_intro by auto
+
+lemma t_nz: "t \<noteq> 0" using t_def t_ineq(2) by auto
+
+lemma d_nz: "d \<noteq> 0" using t_def t_nz by simp
+
+lemma t_expr: "t^2 = d" using t_def t_intro by auto
+ 
+text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
+     which cannot be a group\<close>
+
+lemma t_2_1_lines:
+  "t^2 = 1 \<Longrightarrow> e' x y = - (1 - x^2) * (1 - y^2)" 
+  unfolding e'_def by algebra
+
+text\<open>The case t = 0 corresponds to a circle which has been treated before\<close>
+
+lemma t_0_circle:
+  "t = 0 \<Longrightarrow> e' x y = x^2 + y^2 - 1" 
+  unfolding e'_def by auto
+
+fun \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where 
+  "\<rho> (x,y) = (-y,x)"
+fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where 
+  "\<tau> (x,y) = (1/(t*x),1/(t*y))"
+
+fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
+ "ext_add (x1,y1) (x2,y2) =
+    ((x1*y1-x2*y2) div (y1*x2-x1*y2),
+     (x1*y1+x2*y2) div (x1*x2+y1*y2))"
+
+lemma inversion_invariance_1:
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  shows "add (\<tau> (x1,y1)) (x2,y2) = add (x1,y1) (\<tau> (x2,y2))"
+  apply(simp)
+  apply(subst c_eq_1)+
+  apply(simp add: algebra_simps)
+  apply(subst power2_eq_square[symmetric])+
+  apply(subst t_expr)+
+  apply(rule conjI)
+  apply(simp add: divide_simps assms t_nz d_nz)
+  apply(simp add: algebra_simps)
+  apply(simp add: divide_simps assms t_nz d_nz)
+  by(simp add: algebra_simps)
+
+lemma inversion_invariance_2:
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  shows "ext_add (\<tau> (x1,y1)) (x2,y2) = ext_add (x1,y1) (\<tau> (x2,y2))"
+  apply(simp add: algebra_simps)
+  apply(subst power2_eq_square[symmetric])+
+  apply(subst t_expr)+
+  apply(rule conjI)
+  apply(simp add: divide_simps assms t_nz d_nz)
+  apply(simp add: algebra_simps)
+  apply(simp add: divide_simps assms t_nz d_nz)
+  by(simp add: algebra_simps)
+
+lemma rotation_invariance_1: 
+  "add (\<rho> (x1,y1)) (x2,y2) = 
+   \<rho> (fst (add (x1,y1) (x2,y2)),snd (add (x1,y1) (x2,y2)))"
+  apply(simp)
+  apply(subst c_eq_1)+
+  by(simp add: algebra_simps divide_simps)
+
+lemma rotation_invariance_2: 
+  "ext_add (\<rho> (x1,y1)) (x2,y2) = 
+   \<rho> (fst (ext_add (x1,y1) (x2,y2)),snd (ext_add (x1,y1) (x2,y2)))"
+  by(simp add: algebra_simps divide_simps)
+
+definition delta_x :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "delta_x x1 y1 x2 y2 = x2*y1 - x1*y2"
+definition delta_y :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "delta_y x1 y1 x2 y2 = x1*x2 + y1*y2"
+definition delta' :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "delta' x1 y1 x2 y2 = delta_x x1 y1 x2 y2 * delta_y x1 y1 x2 y2"
+
+lemma rotation_invariance_3: 
+  "delta x1 y1 (fst (\<rho> (x2,y2))) (snd (\<rho> (x2,y2))) = 
+   delta x1 y1 x2 y2"
+  by(simp add: delta_def delta_plus_def delta_minus_def,argo)
+
+lemma rotation_invariance_4: 
+  "delta' x1 y1 (fst (\<rho> (x2,y2))) (snd (\<rho> (x2,y2))) = 
+   - delta' x1 y1 x2 y2"
+  by(simp add: delta'_def delta_x_def delta_y_def,argo)
+
+fun i :: "real \<times> real \<Rightarrow> real \<times> real" where 
+  "i (a,b) = (a,-b)" 
+
+
+lemma inverse_rule_1:
+  "(\<tau> \<circ> i \<circ> \<tau>) (x,y) = i (x,y)" by (simp add: t_nz)
+lemma inverse_rule_2:
+  "(\<rho> \<circ> i \<circ> \<rho>) (x,y) = i (x,y)" by simp
+lemma inverse_rule_3:
+  "i (add (x1,y1) (x2,y2)) = add (i (x1,y1)) (i (x2,y2))"
+  by(simp add: divide_simps)
+lemma inverse_rule_4:
+  "i (ext_add (x1,y1) (x2,y2)) = ext_add (i (x1,y1)) (i (x2,y2))"
+  by(simp add: algebra_simps divide_simps)
+
+(* Coherence and closure *)
+
+lemma rotation_invariance_4:
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0"
+  shows "fst (ext_add (x1,y1) (x2,y2)) - fst (add (x1,y1) (x2,y2)) = 0"
+  apply(simp)
+  apply(subst c_nz)
+  apply(simp)
+  using assms unfolding e'_def
+  apply(simp)
+  apply(simp add: divide_simps)
+end
 
 
 end

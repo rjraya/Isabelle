@@ -1,8 +1,10 @@
 theory Hales
-  imports Complex_Main "HOL-Algebra.Coset"
+  imports Complex_Main "HOL-Algebra.Group" 
 begin
 
-context
+section\<open>Edwards curves\<close>
+
+locale curve_addition =
   fixes c d :: real
 begin      
 
@@ -312,7 +314,7 @@ proof -
   then have "gxpoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>x \<noteq> 0" 
-    using Delta\<^sub>x_def Hales.delta_def assms(10-14) non_unfolded_adds by auto
+    using Delta\<^sub>x_def delta_def assms(10-14) non_unfolded_adds by auto
   then have "g\<^sub>x = 0" 
     using \<open>gxpoly = 0\<close> gxpoly_def by auto
 
@@ -360,7 +362,7 @@ proof -
   then have "gypoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>y \<noteq> 0" 
-    using Delta\<^sub>y_def Hales.delta_def assms(10-15) non_unfolded_adds by auto
+    using Delta\<^sub>y_def delta_def assms(10-15) non_unfolded_adds by auto
   then have "g\<^sub>y = 0" 
     using \<open>gypoly = 0\<close> gypoly_def by auto
 
@@ -383,7 +385,7 @@ lemma inverse:
   by (smt mult.assoc power2_eq_square semiring_normalization_rules(16))
 
 lemma affine_closure:
-  assumes "delta x1 y1 x2 y2 == 0" "e x1 y1 == 0" "e x2 y2 == 0"
+  assumes "delta x1 y1 x2 y2 = 0" "e x1 y1 = 0" "e x2 y2 = 0"
   shows "\<exists> b. (1/d = b^2 \<and> 1/d \<noteq> 0) \<or> (1/(c*d) = b^2 \<and> 1/(c*d) \<noteq> 0)" 
 proof -
   define r where "r = (1 - c*d*y1^2*y2^2) * (1 - d*y1^2*x2^2)" 
@@ -414,12 +416,236 @@ proof -
     using cases case1 case2 by (metis power_mult_distrib)
 qed
 
-lemma 
+lemma delta_non_zero:
+  fixes x1 y1 x2 y2
+  assumes "e x1 y1 = 0" "e x2 y2 = 0"
   assumes "\<exists> b. 1/c = b^2" "\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)"
-  shows "group add  {(x,y). e x y = 0}"
+  shows "delta x1 y1 x2 y2 \<noteq> 0"
+proof(rule ccontr)
+  assume "\<not> delta x1 y1 x2 y2 \<noteq> 0"
+  then have "delta x1 y1 x2 y2 = 0" by blast
+  then have "\<exists> b. (1/d = b^2 \<and> 1/d \<noteq> 0) \<or> (1/(c*d) = b^2 \<and> 1/(c*d) \<noteq> 0)" 
+   using affine_closure[OF \<open>delta x1 y1 x2 y2 = 0\<close> 
+                            \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close>] by blast
+  then obtain b where "(1/(c*d) = b^2 \<and> 1/(c*d) \<noteq> 0)"
+   using \<open>\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)\<close> by fastforce
+  then have "1/c \<noteq> 0" "c \<noteq> 0" "d \<noteq> 0" "1/d \<noteq> 0" by simp+
+  then have "1/d = b^2 / (1/c)"
+   apply(simp add: divide_simps)
+   by (metis \<open>1 / (c * d) = b\<^sup>2 \<and> 1 / (c * d) \<noteq> 0\<close> eq_divide_eq semiring_normalization_rules(18))
+  then have "\<exists> b. b \<noteq> 0 \<and> 1/d = b^2"
+   using assms(3) 
+   by (metis \<open>1 / d \<noteq> 0\<close> power_divide zero_power2)
+  then show "False"
+   using \<open>\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)\<close> by blast
+qed
 
-  
-    
+lemma group_law:
+  assumes "\<exists> b. 1/c = b^2" "\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)"
+  shows "comm_group \<lparr>carrier = {(x,y). e x y = 0}, mult = add, one = (1,0)\<rparr>" 
+proof(unfold_locales)
+  {fix x1 y1 x2 y2
+  assume "e x1 y1 = 0" "e x2 y2 = 0"
+  have "e (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) = 0"
+    apply(simp)
+    using closure delta_non_zero[OF \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close> assms(1) assms(2)] 
+          delta_def \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close> by auto}
+  then show "
+      \<And>x y. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+             y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+           x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> y
+           \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>" by auto
+next
+  {fix x1 y1 x2 y2 x3 y3 
+   assume "e x1 y1 = 0" "e x2 y2 = 0" "e x3 y3 = 0" 
+   then have "delta x1 y1 x2 y2 \<noteq> 0" "delta x2 y2 x3 y3 \<noteq> 0"
+     using assms delta_non_zero by blast+
+   fix x1' y1' x3' y3'
+   assume "(x1',y1') = add (x1,y1) (x2,y2)"
+          "(x3',y3') = add (x2,y2) (x3,y3)"
+   then have "e x1' y1' = 0" "e x3' y3' = 0"
+     using closure \<open>delta x1 y1 x2 y2 \<noteq> 0\<close> \<open>delta x2 y2 x3 y3 \<noteq> 0\<close> 
+           \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close> \<open>e x3 y3 = 0\<close> delta_def by fastforce+
+   then have "delta x1' y1' x3 y3 \<noteq> 0" "delta x1 y1 x3' y3' \<noteq> 0"
+     using assms delta_non_zero \<open>e x3 y3 = 0\<close> apply blast
+    by (simp add: \<open>e x1 y1 = 0\<close> \<open>e x3' y3' = 0\<close> assms delta_non_zero)
+
+  have "add (add (x1,y1) (x2,y2)) (x3,y3) =
+        add (x1,y1) (local.add (x2,y2) (x3,y3))"
+    using associativity 
+    by (metis \<open>(x1', y1') = add (x1, y1) (x2, y2)\<close> \<open>(x3', y3') = add (x2, y2) (x3, y3)\<close> \<open>delta x1 y1 x2 y2 \<noteq> 0\<close> 
+              \<open>delta x1 y1 x3' y3' \<noteq> 0\<close> \<open>delta x1' y1' x3 y3 \<noteq> 0\<close> \<open>delta x2 y2 x3 y3 \<noteq> 0\<close> \<open>e x1 y1 = 0\<close> 
+              \<open>e x2 y2 = 0\<close> \<open>e x3 y3 = 0\<close> delta_def mult_eq_0_iff)}
+
+  then show "
+    \<And>x y z.
+       x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+       y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+       z \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+       x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+       y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+       z =
+       x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+      (y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+       z)" by auto
+next
+  show "
+   \<one>\<^bsub>\<lparr>carrier = {(x, y). e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+    \<in> carrier \<lparr>carrier = {(x, y). e x y = 0}, mult = local.add, one = (1, 0)\<rparr>"
+    by (simp add: e_def)
+next
+  show "
+   \<And>x. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+        \<one>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> x = x"
+    by (simp add: commutativity neutral)
+next
+  show "\<And>x. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+             x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
+         \<one>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> = x"
+    by (simp add: neutral)
+next
+  show "\<And>x y. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+              y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
+           x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> y =
+           y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> x"
+    using commutativity by auto
+next
+  show "
+   carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>
+   \<subseteq> Units \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>"
+  proof(simp,standard)
+    fix z
+    assume "z \<in> {(x, y). local.e x y = 0}"
+    show "z \<in> Units
+        \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add,
+           one = (1, 0)\<rparr>" 
+      unfolding Units_def 
+    proof(simp, cases "z", rule conjI) 
+      fix x y
+      assume "z = (x,y)" 
+      from this \<open>z \<in> {(x, y). local.e x y = 0}\<close>
+      show "case z of (x, y) \<Rightarrow> local.e x y = 0" by blast  
+      then obtain x y where "z = (x,y)" "e x y = 0" by blast
+      have "e x (-y) = 0" 
+        using \<open>e x y = 0\<close> unfolding e_def by simp
+      have "add (x,y) (x,-y) = (1,0)" 
+        using inverse delta_non_zero assms \<open>e x y = 0\<close> by blast 
+      then have "add (x,-y) (x,y) = (1,0)" by simp
+      show "\<exists>a b. e a b = 0 \<and>
+                  add (a, b) z = (1, 0) \<and> 
+                  add z (a, b) = (1, 0)" 
+        using \<open>add (x, y) (x, - y) = (1, 0)\<close> 
+              \<open>e x (- y) = 0\<close> \<open>z = (x, y)\<close> by fastforce
+    qed
+  qed
+qed
 end
+
+section\<open>Projective curves\<close>
+
+locale ext_curve_addition =
+  curve_addition +
+  assumes c_nz: "c = 1" 
+  (* assumes c_sq: "\<exists> b. c = b^2" *)
+  assumes d_sq: "\<exists> b'. d = b'^2"
+begin
+  definition t where "t = sqrt(d)"
+  definition e' where "e' x y = x^2 + y^2 - 1 - t^2 * x^2 * y^2"
+ 
+text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
+     which cannot be a group\<close>
+
+lemma t_2_1_lines:
+  assumes "t^2 = 1"
+  shows "e' x y = - (1 - x^2) * (1 - y^2)"
+  unfolding e'_def using assms by algebra
+
+text\<open>The case t = 0 corresponds to a circle which has been treated before\<close>
+lemma t_0_circle:
+  assumes "t = 0"
+  shows "e' x y = x^2 + y^2 - 1" 
+  unfolding e'_def using assms by auto
+
+definition \<rho> where "\<rho> x y = (-y,x)"
+definition \<tau> where "\<tau> x y = (1/(t*x),1/(t*y))"
+
+fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
+ "ext_add (x1,y1) (x2,y2) =
+    ((x1*y1-x2*y2) div (y1*x2-x1*y2),
+     (x1*y1+x2*y2) div (x1*x2+y1*y2))"
+
+lemma c_d_pos: "d \<ge> 0" using d_sq c_nz by auto
+
+lemma t_sq_expr: "t^2 = d "
+  unfolding t_def using real_sqrt_pow2_iff c_d_pos by auto
+
+lemma t_nz_d: "t \<noteq> 0 \<Longrightarrow> d \<noteq> 0" unfolding t_def by simp
+
+lemma inv_inv_1:
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" "t \<noteq> 0"
+  shows "add (\<tau> x1 y1) (x2,y2) = add (x1,y1) (\<tau> x2 y2)"
+  apply(subst \<tau>_def)+
+  apply(subst add.simps)+
+  apply(subst c_nz)+
+  apply(simp)
+  apply(simp add: algebra_simps \<tau>_def)
+  apply(subst power2_eq_square[symmetric])+
+  apply(subst t_sq_expr)+
+  apply(rule conjI)
+  apply(simp add: divide_simps assms t_nz_d)
+  apply(simp add: algebra_simps)
+  apply(simp add: divide_simps assms t_nz_d)
+  by(simp add: algebra_simps)
+
+lemma inv_inv_2:
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" "t \<noteq> 0"
+  shows "ext_add (\<tau> x1 y1) (x2,y2) = ext_add (x1,y1) (\<tau> x2 y2)"
+  apply(subst \<tau>_def)+
+  apply(simp)
+  apply(simp add: algebra_simps \<tau>_def)
+  apply(subst power2_eq_square[symmetric])+
+  apply(subst t_sq_expr)+
+  apply(rule conjI)
+  apply(simp add: divide_simps assms t_nz_d)
+  apply(simp add: algebra_simps)
+  apply(simp add: divide_simps assms t_nz_d)
+  by(simp add: algebra_simps)
+
+lemma rho_inv_1: 
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" "t \<noteq> 0"
+  shows "add (\<rho> x1 y1) (x2,y2) = 
+         \<rho> (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2)))"
+  apply(subst \<rho>_def)+
+  apply(subst add.simps)+
+  apply(subst c_nz)+
+  apply(simp)
+  apply(simp add: divide_simps assms t_nz_d)
+  by(simp add: algebra_simps)
+
+lemma rho_inv_2: 
+  assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" "t \<noteq> 0"
+  shows "ext_add (\<rho> x1 y1) (x2,y2) = 
+         \<rho> (fst (ext_add (x1,y1) (x2,y2))) (snd (ext_add (x1,y1) (x2,y2)))"
+  apply(subst \<rho>_def)+
+  apply(subst ext_add.simps)+
+  apply(simp)
+  apply(simp add: divide_simps assms t_nz_d)
+  by(simp add: algebra_simps)
+
+definition "delta_x x1 y1 x2 y2 = x2*y1 - x1*y2"
+definition "delta_y x1 y1 x2 y2 = x1*x2 + y1*y2"
+definition "delta' x1 y1 x2 y2 = delta_x x1 y1 x2 y2 * delta_y x1 y1 x2 y2"
+
+lemma 
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0"
+  shows "fst (ext_add (x1,y1) (x2,y2)) - fst (add (x1,y1) (x2,y2)) = 0"
+  apply(simp)
+  apply(subst c_nz)
+  apply(simp)
+  using assms unfolding e'_def
+  apply(simp)
+  apply(simp add: divide_simps)
+end
+
 
 end
