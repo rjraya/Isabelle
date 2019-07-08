@@ -22,9 +22,10 @@ z12 = plus[z1, z2];
 
 (* coherence *)
 
-Remainder[zB12 - z12, {e1, e2}, {x1, y1, x2, y2}] // Expand
+Remainder[zB12 - z12, {e1, e2}, {x1, y1, x2, y2}] // Expand;
 
 (* group closure *)
+ 
 Module[{closureB },
  closureB = 
   ez[zB12] t^4 deltaBx[z1, z2]^2 deltaBy[z1, z2]^2 // Together // 
@@ -33,9 +34,6 @@ Module[{closureB },
 
 (* easy identities *)
 
-plus[z1,z2]
-plus[tau[z1], z2]
-plus[tau[z1], z2] - plus[z1, tau[z2]]
 plus[tau[z1], z2] - plus[z1, tau[z2]] // Together;
 plusB[tau[z1], z2] - plusB[z1, tau[z2]] // Together;
 rho[plus[z1, z2]] - plus[rho[z1], z2] // Together;
@@ -111,6 +109,9 @@ prassoc[i1_, i2_, i3_, i4_] := Module[{},
 
 Table[prassoc[i1, i2, i3, i4], {i1, 0, 1}, {i2, 0, 1}, {i3, 0, 
   1}, {i4, 0, 1}];
+
+
+
 
 
 

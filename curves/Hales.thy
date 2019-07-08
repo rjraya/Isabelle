@@ -120,7 +120,6 @@ proof -
   then have prod_eq_2: "(e x3 y3) = prod div (delta x1 y1 x2 y2)\<^sup>2"
     using assms(5,6) delta_def by auto
 
-  thm prod_eq_1 prod_eq_2
   have "e1 == 0" unfolding e1_def using assms(7) by simp
   moreover have "e2 == 0" unfolding e2_def using assms(8) by simp
   ultimately have "prod == 0" 
@@ -559,7 +558,9 @@ lemma t_nz: "t \<noteq> 0" using t_def t_ineq(2) by auto
 
 lemma d_nz: "d \<noteq> 0" using t_def t_nz by simp
 
-lemma t_expr: "t^2 = d" using t_def t_intro by auto
+lemma t_expr: "t^2 = d" "t^4 = d^2" using t_def t_intro by auto
+
+
  
 text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
      which cannot be a group\<close>
@@ -581,7 +582,7 @@ fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where
 
 fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
  "ext_add (x1,y1) (x2,y2) =
-    ((x1*y1-x2*y2) div (y1*x2-x1*y2),
+    ((x1*y1-x2*y2) div (x2*y1-x1*y2),
      (x1*y1+x2*y2) div (x1*x2+y1*y2))"
 
 lemma inversion_invariance_1:
@@ -656,16 +657,97 @@ lemma inverse_rule_4:
 
 (* Coherence and closure *)
 
-lemma rotation_invariance_4:
+lemma coherence_1:
+  assumes "delta_x x1 y1 x2 y2 \<noteq> 0" "delta_minus x1 y1 x2 y2 \<noteq> 0" 
   assumes "e' x1 y1 = 0" "e' x2 y2 = 0"
-  shows "fst (ext_add (x1,y1) (x2,y2)) - fst (add (x1,y1) (x2,y2)) = 0"
-  apply(simp)
-  apply(subst c_nz)
-  apply(simp)
-  using assms unfolding e'_def
-  apply(simp)
-  apply(simp add: divide_simps)
+  shows "delta_x x1 y1 x2 y2 * delta_minus x1 y1 x2 y2 *
+         (fst (ext_add (x1,y1) (x2,y2)) - fst (add (x1,y1) (x2,y2)))
+         = x2 * y2 * e' x1 y1 - x1 * y1 * e' x2 y2"
+  apply(simp)  
+  apply(subst (2) delta_x_def[symmetric])
+  apply(subst delta_minus_def[symmetric])
+  apply(simp add: c_eq_1 assms(1,2) divide_simps)
+  unfolding delta_minus_def delta_x_def e'_def
+  apply(subst t_expr)+
+  by(simp add: power2_eq_square field_simps)  
+  
+lemma coherence_2:
+  assumes "delta_y x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0" 
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0"
+  shows "delta_y x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 *
+         (snd (ext_add (x1,y1) (x2,y2)) - snd (add (x1,y1) (x2,y2)))
+         = - x2 * y2 * e' x1 y1 - x1 * y1 * e' x2 y2"
+  apply(simp)  
+  apply(subst (2) delta_y_def[symmetric])
+  apply(subst delta_plus_def[symmetric])
+  apply(simp add: c_eq_1 assms(1,2) divide_simps)
+  unfolding delta_plus_def delta_y_def e'_def
+  apply(subst t_expr)+
+  by(simp add: power2_eq_square  field_simps)
+  
+lemma coherence:
+  assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta' x1 y1 x2 y2 \<noteq> 0" 
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0"
+  shows "ext_add (x1,y1) (x2,y2) = add (x1,y1) (x2,y2)"
+  using coherence_1 coherence_2 delta_def delta'_def assms by auto
+
+lemma closure:
+  assumes "delta' x1 y1 x2 y2 \<noteq> 0"
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0" 
+  assumes "(x3,y3) = ext_add (x1,y1) (x2,y2)"
+  shows "e' x3 y3 = 0"
+proof -
+  have deltas_nz: "delta_x x1 y1 x2 y2 \<noteq> 0"
+                  "delta_y x1 y1 x2 y2 \<noteq> 0"
+    using assms(1) delta'_def by auto
+
+  define closure1 where "closure1 =
+    2 - t^2 + t^2 * x1^2 - 2 * x2^2 - t^2 * x1^2 * x2^2 + 
+    t^2 * x2^4 + t^2 * y1^2 + t^4 * x1^2 * y1^2 - 
+    t^2 * x2^2 * y1^2 - 2 * y2^2 - t^2 * x1^2 * y2^2 + 
+    (4 * t^2 - 2 * t^4) * x2^2 * y2^2 - t^2 * y1^2 * y2^2 + 
+    t^2 * y2^4"
+
+  define closure2 where "closure2 = 
+    -2 + t^2 + (2 - 2 * t^2) * x1^2 + t^2 * x1^4 + t^2 * x2^2 -
+    t^2 * x1^2 * x2^2 + (2 - 2 * t^2) * y1^2 - t^2 * x2^2 * y1^2 + 
+    t^2 * y1^4 + t^2 * y2^2 - t^2 * x1^2 * y2^2 + t^4 * x2^2 * y2^2 - 
+    t^2 * y1^2 * y2^2"
+
+  define p where "p = 
+    -1 * t^4 * (x1^2 * x2^4 * y1^2 -x1^4 * x2^2 * y1^2 + 
+    t^2 * x1^4 * y1^4 - x1^2 * x2^2 * y1^4 + x1^4 * x2^2 * y2^2 - 
+    x1^2 * x2^4 * y2^2 - x1^4 * y1^2 * y2^2 + 4 * x1^2 * x2^2 * y1^2 * y2^2 - 
+    2 * t^2 * x1^2 * x2^2 * y1^2 * y2^2 - x2^4 * y1^2 * y2^2 - x1^2 * y1^4 * y2^2 + 
+    x2^2 * y1^4 * y2^2 - x1^2 * x2^2 * y2^4 + t^2 * x2^4 * y2^4 + x1^2 * y1^2 * y2^4 - 
+    x2^2 * y1^2 * y2^4)"
+
+  have v3: "x3 = fst (ext_add (x1,y1) (x2,y2))"
+           "y3 = snd (ext_add (x1,y1) (x2,y2))"
+    using assms(4) by simp+
+
+  have "t^4 * (delta_x x1 y1 x2 y2)^2 * (delta_y x1 y1 x2 y2)^2 * e' x3 y3 = p"
+    unfolding e'_def v3
+    apply(simp)
+    apply(subst (2) delta_x_def[symmetric])+
+    apply(subst (2) delta_y_def[symmetric])+
+    apply(subst power_divide)+
+    apply(simp add: divide_simps deltas_nz)
+    unfolding p_def delta_x_def delta_y_def
+    by algebra    
+  also have "... = closure1 * e' x1 y1 +  closure2 * e' x2 y2"
+    unfolding p_def e'_def closure1_def closure2_def by algebra
+  finally have "t^4 * (delta_x x1 y1 x2 y2)^2 * (delta_y x1 y1 x2 y2)^2 * e' x3 y3 =
+                closure1 * e' x1 y1 +  closure2 * e' x2 y2" 
+    by blast
+
+  then show "e' x3 y3 = 0"
+    using assms(2,3) deltas_nz t_nz by auto  
+qed
+
+
+
+
+
 end
-
-
 end
