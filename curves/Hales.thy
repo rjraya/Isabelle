@@ -560,7 +560,7 @@ lemma d_nz: "d \<noteq> 0" using t_def t_nz by simp
 
 lemma t_expr: "t^2 = d" "t^4 = d^2" using t_def t_intro by auto
 
-
+lemma t_sq_n1: "t^2 \<noteq> 1" using t_ineq(1) t_def by simp
  
 text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
      which cannot be a group\<close>
@@ -812,7 +812,70 @@ lemma "\<rho> \<in> carrier (BijGroup
     apply(safe) 
        apply (metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
     apply (metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+    sorry
+
+definition G where
+  "G \<equiv> {id,\<rho>,\<rho> \<circ> \<rho>,\<rho> \<circ> \<rho> \<circ> \<rho>,\<tau>,\<tau> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>}"
+
+lemma 
+  assumes "g \<in> G" "p \<in> e_circ" "g p = p" 
+  shows "g = id"
+proof -
+  obtain x y where p_def: "p = (x,y)" by fastforce
+  {assume "g = \<rho> \<or> g = \<rho> \<circ> \<rho> \<or> g = \<rho> \<circ> \<rho> \<circ> \<rho>"
+  then consider (1) "g = \<rho>" | (2) "g = \<rho> \<circ> \<rho>" | (3) "g = \<rho> \<circ> \<rho> \<circ> \<rho>" by blast    
+  note cases = this
+  from cases have "x = 0" 
+    apply(cases)
+    using assms(3) p_def by(simp)+
+  from cases have "y = 0" 
+    apply(cases)
+    using assms(3) p_def by(simp)+
+  have "p \<notin> e_circ" using e_circ_def \<open>x = 0\<close> \<open>y = 0\<close> p_def by blast}
+  note rotations = this
+  {assume "g = \<tau> \<or> g = \<tau> \<circ> \<rho> \<or> g = \<tau> \<circ> \<rho> \<circ> \<rho> \<or> g = \<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>"
+  then consider (1) "g = \<tau>" | (2) "g = \<tau> \<circ> \<rho>" | (3) "g = \<tau> \<circ> \<rho> \<circ> \<rho>" | (4) "g = \<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>" by blast
+  note cases = this
+  from cases have "2*t*x*y = 0 \<or> (t*x^2 \<in> {-1,1} \<and> t*y^2 \<in> {-1,1})"
+    apply(cases)
+    using assms(3) p_def 
+    apply(simp,metis eq_divide_eq mult.left_commute power2_eq_square)
+    using assms(3) p_def apply auto[1]
+    using assms(3) p_def apply(simp)
+    apply (smt c_d_pos real_sqrt_ge_0_iff t_def zero_le_divide_1_iff zero_le_mult_iff)
+    using assms(3) p_def by auto[1]
+  then have "t = 0 \<or> x = 0 \<or> y = 0 \<or>
+    (t * x\<^sup>2 = - 1 \<or> t * x\<^sup>2 = 1) \<and> (t * y\<^sup>2 = - 1 \<or> t * y\<^sup>2 = 1)" 
+    unfolding e'_def by(simp)
+  then consider (1) "t = 0" | (2) "x = 0" | (3) "y = 0" |
+             (4) "t * x\<^sup>2 = - 1 \<and> t * y\<^sup>2 = - 1" |
+             (5) "t * x\<^sup>2 = - 1 \<and> t * y\<^sup>2 = 1" |
+             (6) "t * x\<^sup>2 = 1 \<and> t * y\<^sup>2 = - 1" |
+             (7) "t * x\<^sup>2 = 1 \<and> t * y\<^sup>2 = 1" by blast
+  then have "e' x y = 2 * (1 - t) / t \<or> e' x y = 2 * (-1 - t) / t"
+    unfolding e'_def
+    apply(cases)
+    apply(simp add: t_nz)
+    apply(simp add: t_nz divide_simps)
+         defer 1
+         apply(simp)
+         defer 1
+    apply (metis abs_of_nonneg c_d_pos c_eq_1 nonzero_mult_div_cancel_left one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro t_nz zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
+    apply (metis abs_of_nonneg c_d_pos c_eq_1 one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
+    apply (metis abs_of_nonneg c_d_pos c_eq_1 one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
+      apply(simp add: power2_eq_square)
+    apply(simp add: algebra_simps)
     
+    sorry
+  then have "e' x y \<noteq> 0" 
+    using t_sq_n1 t_nz by auto
+  then have "p \<notin> e_circ" 
+    unfolding e_circ_def e_aff_def p_def by blast}
+  note symmetries = this
+  from rotations symmetries 
+  show ?thesis using G_def assms(1,2) by blast
+qed
+
 end
 
 end

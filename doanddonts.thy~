@@ -33,4 +33,10 @@ text\<open>We can use ? to refine our queries to find_theorems\<close>
 
 find_theorems "sum _ ?A = sum _ (?f ` ?A)"
 
+section\<open>Modifiers for introduction and elimination rules\<close>
+
+text\<open>http://www21.in.tum.de/~ballarin/fomus/part1/part1.pdf\<close> 
+
+section\<open>The opposite of safe command\<close>
+
 end

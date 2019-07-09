@@ -39,4 +39,8 @@ text\<open>http://www21.in.tum.de/~ballarin/fomus/part1/part1.pdf\<close>
 
 section\<open>The opposite of safe command\<close>
 
+section\<open>A proof with cases with personalized cases\<close>
+
+https://stackoverflow.com/questions/48461013/custom-case-distinctions-in-proofs/48461368#48461368
+
 end
