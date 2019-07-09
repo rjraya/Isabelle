@@ -1,5 +1,5 @@
 theory Hales
-  imports Complex_Main "HOL-Algebra.Group" 
+  imports Complex_Main "HOL-Algebra.Group" "HOL-Algebra.Bij"
 begin
 
 section\<open>Edwards curves\<close>
@@ -746,8 +746,73 @@ proof -
 qed
 
 
-
-
-
 end
+
+locale projective_curve =
+ ext_curve_addition
+begin
+  definition "e_aff = {(x,y). e' x y = 0}" 
+  definition "e_circ = {(x,y). x \<noteq> 0 \<and> y \<noteq> 0 \<and> (x,y) \<in> e_aff}"
+
+  lemma "group (BijGroup (Reals \<times> Reals))"
+    using group_BijGroup by blast
+
+  lemma bij_\<rho>: "bij_betw \<rho> ((Reals - {0}) \<times> (Reals - {0})) 
+                           ((Reals - {0}) \<times> (Reals - {0}))"
+    unfolding bij_betw_def inj_on_def image_def
+    apply(rule conjI,safe,auto)
+    by (metis Reals_minus_iff add.inverse_neutral equation_minus_iff member_remove remove_def)
+
+lemma bij_\<tau>: "bij_betw \<tau> ((Reals - {0}) \<times> (Reals - {0})) 
+                         ((Reals - {0}) \<times> (Reals - {0}))"
+    unfolding bij_betw_def inj_on_def image_def
+    apply(rule conjI,safe)
+    apply(simp add: t_nz)+
+    apply(metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+       apply (simp add: t_nz)
+    apply (metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+     apply (simp add: t_nz)
+    apply(simp add: t_nz)
+  proof -
+    fix a :: real and b :: real
+    assume a1: "a \<noteq> 0"
+    assume a2: "(\<forall>x\<in>\<real> - {0}. a \<noteq> 1 / (t * x)) \<or> (\<forall>y\<in>\<real> - {0}. b \<noteq> 1 / (t * y))"
+    obtain bb :: bool where
+      f3: "(\<not> bb) = (\<forall>A_x. A_x \<notin> \<real> - {0} \<or> 1 / (t * A_x) \<noteq> a)"
+      by (metis (full_types))
+    have f4: "\<forall>R r ra. ((ra::real) = r \<or> ra \<in> R - {r}) \<or> ra \<notin> R"
+      by blast
+    have f5: "\<forall>r. (r::real) \<in> \<real>"
+      by (metis (no_types) Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+then have f6: "\<forall>r. (r = 0 \<or> bb) \<or> 1 / t / r \<noteq> a"
+  using f4 f3 by (metis (no_types) divide_divide_eq_left)
+  have f7: "\<forall>r ra. (ra::real) / (ra / r) = r \<or> ra = 0"
+    by auto
+  obtain bba :: bool where
+    f8: "(\<not> bba) = (\<forall>X1. X1 \<notin> \<real> - {0} \<or> 1 / (t * X1) \<noteq> b)"
+    by moura
+  then have f9: "\<forall>r. (r = 0 \<or> bba) \<or> 1 / t / r \<noteq> b"
+    using f5 f4 by (metis (no_types) divide_divide_eq_left)
+  have "\<forall>r. (r::real) * 0 = 0 \<or> r = 0"
+    by linarith
+  then have bb
+    using f7 f6 a1 by (metis divide_eq_0_iff mult.right_neutral t_nz)
+  then show "b = 0"
+    using f9 f8 f7 f3 a2 a1 by (metis divide_eq_0_iff t_nz)
+qed
+  
+lemma "\<rho> \<in> carrier (BijGroup 
+            ((Reals - {0}) \<times> (Reals - {0})))"
+    unfolding BijGroup_def
+    apply(simp)
+    unfolding Bij_def extensional_def
+    apply(simp, rule conjI)
+    defer 1
+    using bij_\<rho> apply blast
+    apply(safe) 
+       apply (metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+    apply (metis Reals_of_real mult.right_neutral real_scaleR_def scaleR_conv_of_real)
+    
+end
+
 end
