@@ -817,7 +817,7 @@ lemma "\<rho> \<in> carrier (BijGroup
 definition G where
   "G \<equiv> {id,\<rho>,\<rho> \<circ> \<rho>,\<rho> \<circ> \<rho> \<circ> \<rho>,\<tau>,\<tau> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>}"
 
-lemma 
+lemma g_no_fp:
   assumes "g \<in> G" "p \<in> e_circ" "g p = p" 
   shows "g = id"
 proof -
@@ -855,18 +855,27 @@ proof -
   then have "e' x y = 2 * (1 - t) / t \<or> e' x y = 2 * (-1 - t) / t"
     unfolding e'_def
     apply(cases)
-    apply(simp add: t_nz)
-    apply(simp add: t_nz divide_simps)
-         defer 1
-         apply(simp)
-         defer 1
+          apply(simp add: t_nz)
+    using assms(2) unfolding e_circ_def p_def apply blast
+    using assms(2) unfolding e_circ_def p_def apply blast
     apply (metis abs_of_nonneg c_d_pos c_eq_1 nonzero_mult_div_cancel_left one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro t_nz zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
     apply (metis abs_of_nonneg c_d_pos c_eq_1 one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
     apply (metis abs_of_nonneg c_d_pos c_eq_1 one_neq_neg_one power2_eq_1_iff power2_minus real_sqrt_abs real_sqrt_ge_0_iff t_def t_intro zero_le_mult_iff zero_le_one zero_le_power_eq_numeral)
-      apply(simp add: power2_eq_square)
-    apply(simp add: algebra_simps)
-    
-    sorry
+    proof -
+      assume as: "t * x\<^sup>2 = 1 \<and> t * y\<^sup>2 = 1"
+      then have "t\<^sup>2 * x\<^sup>2 * y\<^sup>2 = 1" by algebra
+      then have "x\<^sup>2 + y\<^sup>2 - 1 - t\<^sup>2 * x\<^sup>2 * y\<^sup>2 = x\<^sup>2 + y\<^sup>2 - 2" by simp
+      also have "... = 2 / t - 2" 
+      proof -
+        have "x\<^sup>2 = 1 / t" "y\<^sup>2 = 1 / t" using as t_nz 
+          by(simp add: divide_simps,simp add: mult.commute)+
+        then show ?thesis by simp
+      qed
+      also have "... = 2 * (1-t) / t"   
+        using t_nz by(simp add: divide_simps)
+      finally show "x\<^sup>2 + y\<^sup>2 - 1 - t\<^sup>2 * x\<^sup>2 * y\<^sup>2 = 2 * (1 - t) / t \<or>
+                    x\<^sup>2 + y\<^sup>2 - 1 - t\<^sup>2 * x\<^sup>2 * y\<^sup>2 = 2 * (- 1 - t) / t" by blast
+    qed
   then have "e' x y \<noteq> 0" 
     using t_sq_n1 t_nz by auto
   then have "p \<notin> e_circ" 
@@ -875,6 +884,45 @@ proof -
   from rotations symmetries 
   show ?thesis using G_def assms(1,2) by blast
 qed
+
+definition symmetries where 
+  "symmetries = {\<tau>,\<tau> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>}"
+
+definition e_aff_0 where
+  "e_aff_0 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e_aff \<and> 
+                                 (x2,y2) \<in> e_aff \<and> 
+                                 delta x1 y1 x2 y2 \<noteq> 0 }"
+
+definition e_aff_1 where
+  "e_aff_1 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e_aff \<and> 
+                                 (x2,y2) \<in> e_aff \<and> 
+                                 delta' x1 y1 x2 y2 \<noteq> 0 }"
+
+lemma dichotomy_1:
+  assumes "p \<in> e_aff" "q \<in> e_aff" 
+  shows "(p \<in> e_circ \<and> q = (g \<circ> i) p \<and> g \<in> symmetries) \<or>
+         (p,q) \<in> e_aff_0 \<or> (p,q) \<in> e_aff_1" 
+proof -
+  obtain x y where p_def: "p = (x,y)" by fastforce
+  consider (1) "(p,q) \<in> e_aff_0" |
+           (2) "(p,q) \<in> e_aff_1" |
+           (3) "\<not> ((p,q) \<in> e_aff_0) \<and> \<not> ((p,q) \<in> e_aff_1)" by blast
+  then show ?thesis
+  proof(cases)
+    case 1 then show ?thesis by blast  
+  next
+    case 2 then show ?thesis by simp
+  next
+    case 3
+    then have "p \<in> e_circ"
+      unfolding p_def e_circ_def sledgehammer
+    have "p \<in> e_circ \<and> q = (g \<circ> i) p \<and> g \<in> symmetries"
+      apply(auto)
+      sorry
+    then show ?thesis by blast
+  qed
+qed
+
 
 end
 
