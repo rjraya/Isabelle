@@ -900,10 +900,12 @@ definition e_aff_1 where
 
 lemma dichotomy_1:
   assumes "p \<in> e_aff" "q \<in> e_aff" 
-  shows "(p \<in> e_circ \<and> q = (g \<circ> i) p \<and> g \<in> symmetries) \<or>
+  shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or>
          (p,q) \<in> e_aff_0 \<or> (p,q) \<in> e_aff_1" 
 proof -
-  obtain x y where p_def: "p = (x,y)" by fastforce
+  obtain x1 y1 where p_def: "p = (x1,y1)" by fastforce
+  obtain x2 y2 where q_def: "q = (x2,y2)" by fastforce
+
   consider (1) "(p,q) \<in> e_aff_0" |
            (2) "(p,q) \<in> e_aff_1" |
            (3) "\<not> ((p,q) \<in> e_aff_0) \<and> \<not> ((p,q) \<in> e_aff_1)" by blast
@@ -914,12 +916,32 @@ proof -
     case 2 then show ?thesis by simp
   next
     case 3
-    then have "p \<in> e_circ"
-      unfolding p_def e_circ_def sledgehammer
-    have "p \<in> e_circ \<and> q = (g \<circ> i) p \<and> g \<in> symmetries"
-      apply(auto)
+    then have "delta x1 y1 x2 y2 = 0"
+      unfolding p_def q_def  e_aff_0_def e_aff_1_def using assms 
+      by (simp add: assms p_def q_def)
+    from 3 have "delta' x1 y1 x2 y2 = 0"
+      unfolding p_def q_def  e_aff_0_def e_aff_1_def using assms 
+      by (simp add: assms p_def q_def)
+    have "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+      using \<open>delta x1 y1 x2 y2 = 0\<close> 
+      unfolding delta_def delta_plus_def delta_minus_def by auto
+    then have "p \<in> e_circ" "q \<in> e_circ"
+      unfolding e_circ_def using assms p_def q_def by blast+
+    have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)" 
+    proof -
+      assume "delta_x x1 y1 x2 y2 = 0" 
+      obtain a0 b0 where "\<tau> q = (a0,b0)" by fastforce
+      obtain a1 b1 where "p = (a1,b1)" by fastforce
+      define \<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
+        "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_x x1 y1 (1/(t*x0)) (1/(t*y0)))" 
+      define \<delta>_plus :: "real \<Rightarrow> real \<Rightarrow> real" where
+        "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_y x1 y1 (1/(t*x0)) (1/(t*y0)))"
+      define \<delta>_minus :: "real \<Rightarrow> real \<Rightarrow> real" where
+        "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y x1 y1 (1/(t*x0)) (1/(t*y0)))"
+      
+    qed
       sorry
-    then show ?thesis by blast
+    then show ?thesis using \<open>p \<in> e_circ\<close> by auto
   qed
 qed
 

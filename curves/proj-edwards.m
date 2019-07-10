@@ -53,6 +53,9 @@ Module[{polx, gbx, prx},
   prx = Remainder[{q (x0^2 - y1^2), y0^2 - x1^2, x0 y0 - x1 y1}, 
     gbx, {x0, y0, x1, y1}]];
 
+poly = {e0, e1, dx, dBy, x0 y0 x1 y1 q - 1}
+  gby = GroebnerBasis[poly, {x0, y0, x1, y1, q}]
+
 Module[{poly, gby, pry},
   poly = {e0, e1, dx, dBy, x0 y0 x1 y1 q - 1};
   gby = GroebnerBasis[poly, {x0, y0, x1, y1, q}];
@@ -109,6 +112,9 @@ prassoc[i1_, i2_, i3_, i4_] := Module[{},
 
 Table[prassoc[i1, i2, i3, i4], {i1, 0, 1}, {i2, 0, 1}, {i3, 0, 
   1}, {i4, 0, 1}];
+
+
+
 
 
 
