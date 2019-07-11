@@ -545,7 +545,8 @@ proof
   qed
 qed
 
-(*exercise 8.4*)
+text\<open>Exercise 8.4\<close>
+
 lemma technical_m:
   fixes n a d :: nat
   assumes "n > 0" "coprime a d" "m = a + q*d" 
@@ -1143,7 +1144,8 @@ proof -
   then show ?thesis using sum by auto
 qed
 
-(* theorem 8.1 *)
+text \<open>Theorem 8.1\<close>
+
 theorem geometric_sum:
  fixes k :: nat and n :: int
  assumes gr: "k \<ge> 1"
@@ -1244,7 +1246,8 @@ next
     then show ?thesis by simp 
 qed
 
-(* theorem 8.2 *)
+text \<open>Theorem 8.2\<close>
+
 corollary lagrange:
   assumes "length zs_ws > 0" "distinct (map fst zs_ws)"
   shows "(\<exists>! (p :: complex poly).
@@ -1484,7 +1487,8 @@ proof -
   then show ?thesis by simp
 qed
 
-(* theorem 8.3 *)
+text \<open>Theorem 8.3\<close>
+
 lemma fourier_expansion_unique:
   assumes "length ws > 0"
   defines "k == length ws"
@@ -1648,7 +1652,8 @@ qed
   
 subsection\<open>Finite Fourier expansion of an arithmetical function\<close>
 
-(* theorem 8.4 *)
+text \<open>Theorem 8.4\<close>
+
 lemma fourier_expansion:
   assumes "k > 0"
   assumes "periodic f k"
@@ -2056,7 +2061,8 @@ lemma s_1_n: "s f g 1 n = f(1) * g(1)"
 lemma s_k_periodic: "periodic (s f g k) k"
   unfolding s_def periodic_def by simp
 
-(* theorem 8.5 *)
+text \<open>Theorem 8.5\<close>
+
 theorem s_k_fourier_expansion:
   fixes f g :: "nat \<Rightarrow> complex" and a :: "nat \<Rightarrow> nat \<Rightarrow> complex"
   assumes "k > 0" 
@@ -2213,7 +2219,8 @@ proof -
   then show ?thesis by blast
 qed
 
-(* theorem 8.6 *)
+text \<open>Theorem 8.6\<close>
+
 theorem c_k_dirichlet_form:
   fixes k n :: nat
   assumes "k > 0"
@@ -2397,7 +2404,8 @@ lemma comp_to_mult: "completely_multiplicative_function f \<Longrightarrow>
   unfolding completely_multiplicative_function_def
             multiplicative_function_def by auto
 
-(* theorem 8.7 *)
+text \<open>Theorem 8.7\<close>
+
 theorem s_mult_preservation:
   fixes f g :: "nat \<Rightarrow> complex"
   assumes "a > 0" "b > 0" "m > 0" "k > 0" (* remove cond. on m,n *)
@@ -2537,7 +2545,8 @@ corollary multi_c_mk:
   using multi_c_mk_ab[OF assms(1-3), of 1, simplified,OF assms(4,5)]
         c_k_1[of k] by simp
 
-(* theorem 2.18 *)
+text\<open>Theorem 2.18\<close>
+
 (* TODO Place in corresponding theory *)
 lemma sum_divisors_moebius_mu_times_multiplicative:
   fixes f :: "nat \<Rightarrow> 'a :: {comm_ring_1}"
@@ -2624,7 +2633,8 @@ proof -
     by blast
 qed
 
-(* theorem 8.8 *)
+text \<open>Theorem 8.8\<close>
+
 theorem s_k_n_dirichlet_expr:
   fixes f h :: "nat \<Rightarrow> complex" and n k :: nat
   defines "g \<equiv> (\<lambda> k. moebius_mu k * h k)" 
@@ -2884,10 +2894,10 @@ lemma chi_0_0: "\<chi> 0 = 0"
   using is_char dcharacters_def dcharacter_def dcharacter_axioms_def 
   using dcharacter.zero_eq_0 by auto
 
-(*
+text\<open>
  Observe that the case k = 1 corresponds to the trivial
  character (\<lambda> x . 1) which is not of interest here.
-*)
+\<close>
 lemma mod_positive: "k > 1" 
   using chi_dcharacter 
   unfolding dcharacter_def residues_nat_def by simp
@@ -2928,6 +2938,7 @@ proof -
          2: "\<not> coprime m k \<Longrightarrow> \<chi>(m) = 0"  
       unfolding principal_dchar_def by auto}
   note eq = this
+
   have "gauss_sum n = (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))"
     unfolding gauss_sum_def by simp
   also have "... = (\<Sum> m | m \<in> {1..k} \<and> coprime m k . \<chi>(m) * unity_root k (m*n))"
@@ -2950,7 +2961,8 @@ proof -
   finally show ?thesis .
 qed
 
-(* theorem 8.9 *)
+text \<open>Theorem 8.9\<close>
+
 lemma gauss_reduction:
   assumes "coprime n k" 
   shows "gauss_sum n = cnj (\<chi> n) * gauss_sum 1"
@@ -2987,9 +2999,8 @@ corollary gauss_coprime_separable:
   shows "separable n" 
   using gauss_reduction[OF assms] unfolding separable_def by simp
 
+text \<open>Theorem 8.10\<close>
 
-
-(* theorem 8.10 *)
 lemma global_separability_condition:
   "(\<forall> n > 0. separable n) \<longleftrightarrow> (\<forall> n > 0. \<not> coprime n k \<longrightarrow> gauss_sum n = 0)"
 proof -
@@ -3000,10 +3011,11 @@ proof -
     using dcharacter.eq_zero_iff by blast
   then have "cnj (\<chi> n) = 0" by blast
   then have "separable n \<longleftrightarrow> gauss_sum n = 0" 
-    unfolding separable_def by auto} note not_case = this
-  show ?thesis 
-    using gauss_coprime_separable 
-          not_case separable_def by blast      
+    unfolding separable_def by auto} 
+  note not_case = this
+  
+  show ?thesis
+    using gauss_coprime_separable not_case separable_def by blast      
 qed
 
 corollary principal_not_totally_separable:
@@ -3014,18 +3026,18 @@ proof -
    
 
   have tot_0: "totient k \<noteq> 0" by (simp add: k_gr_0)
-  have moeb_0: "\<exists> n. moebius_mu (k div gcd n k) \<noteq> 0" 
-    by (metis div_self gcd_nat.idem k_gr_0 moebius_mu.one zero_less_iff_neq_zero zero_neq_one)
+  have "moebius_mu (k div gcd k k) \<noteq> 0" by(simp add: \<open>k > 0\<close>)
+  then have moeb_0: "\<exists> n. moebius_mu (k div gcd n k) \<noteq> 0" by blast
   
   {fix n :: nat
   assume as: "n > 0"
   have "gauss_sum n = c k n"
     using ramanujan_to_gauss[OF assms(1)] .  
   also have "... = 
-   (totient k) * moebius_mu (k div gcd n k) /
-     (totient (k div gcd n k))"
-    using c_k_n_dirichlet_expr[OF k_gr_0 as] 
-    by (metis (no_types, lifting) of_int_moebius_mu of_int_mult of_int_of_nat_eq of_real_divide of_real_of_int_eq)
+   (totient k) * moebius_mu (k div gcd n k) / (totient (k div gcd n k))"
+    by(simp add: c_k_n_dirichlet_expr[OF k_gr_0 as],
+          subst of_int_moebius_mu[symmetric],
+          subst of_real_of_int_eq[symmetric],auto)
   finally have "gauss_sum n = 
     (totient k) * moebius_mu (k div gcd n k) /
      (totient (k div gcd n k))" by blast}
@@ -3037,8 +3049,8 @@ proof -
   from 1 2 3 have
     "\<exists> n. n > 0 \<and> \<not> coprime n k \<and> gauss_sum n \<noteq> 0" by blast
   then obtain n where "n > 0 \<and> \<not> coprime n k \<and> gauss_sum n \<noteq> 0" by blast
-
   note right_not_zero = this
+
   {fix n
   assume "\<not> coprime n k" 
   then have "\<chi>(n) = 0" 
@@ -3052,7 +3064,8 @@ proof -
      using right_not_zero by auto
 qed
 
-(* theorem 8.11 *)
+text \<open>Theorem 8.11\<close>
+
 theorem gauss_sum_1_mod_square_eq_k: 
   assumes "(\<forall> n. n > 0 \<longrightarrow> separable n)" "k > 0" 
   shows "(cmod (gauss_sum 1))^2 = k" 
@@ -3080,12 +3093,12 @@ proof -
     unfolding gauss_sum_def 
     by(rule sum.cong,simp,rule sum_distrib_right)
   also have "... = (\<Sum> m = 1..k. (\<Sum> r = 1..k. \<chi> r * unity_root k (m*(r-1)) ))"
-  proof(rule sum.cong,simp,rule sum.cong,simp,simp add:  unity_prod )
+  proof(rule sum.cong,simp,rule sum.cong,simp,simp add: unity_prod)
     fix xa x
     assume "Suc 0 \<le> xa \<and> xa \<le> k"
     then have "int xa * int x - int x = int x * int (xa - Suc 0)"
-      by(simp add: algebra_simps,
-         metis One_nat_def Suc_diff_le diff_Suc_1 mult_Suc_right of_nat_add of_nat_mult)
+      apply(simp add: algebra_simps,subst (2) SMT.int_ops(7)[symmetric],simp add: algebra_simps)
+      using int_ops(6) by fastforce
     then show "\<chi> xa = 0 \<or> unity_root k (int xa * int x - int x) = unity_root k (int x * int (xa - Suc 0))" by argo
   qed
   also have "... = (\<Sum> r=1..k. (\<Sum> m=1..k.  \<chi>(r) *unity_root k (m*(r-1))))"
@@ -3117,10 +3130,11 @@ proof -
   also have "... = \<chi> 1 * k" using geo_k_0 assms(2) by simp 
   also have "... = k" using chi_dcharacter dcharacter.Suc_0 by simp
   finally show ?thesis
-    by (metis \<open>complex_of_real ((cmod (local.gauss_sum 1))\<^sup>2) = local.gauss_sum 1 * cnj (local.gauss_sum 1)\<close> complex_mod_mult_cnj norm_of_nat)
+    using of_real_eq_iff by fastforce
 qed
 
-(*theorem 8.12*)
+text \<open>Theorem 8.12\<close>
+
 lemma g_non_zero_when_not_coprime:
   assumes "gauss_sum n \<noteq> 0" "\<not> coprime n k" "n > 0" "k > 0"
   defines "d \<equiv> k div gcd n k"  
@@ -3129,7 +3143,7 @@ lemma g_non_zero_when_not_coprime:
 proof -
   show "d dvd k" 
     unfolding d_def 
-    by (metis dvdI dvd_div_mult_self gcd_dvd2)
+    using dvdI[of k "k div gcd n k" "gcd n k"] dvd_div_mult_self by auto
   from assms(2) have "gcd n k \<noteq> 1" by blast
   then have "gcd n k > 1" using assms(3,4) by (simp add: nat_neq_iff)
   then show "d < k" by (simp add: assms(4) d_def)
@@ -3153,9 +3167,9 @@ proof -
     also have "... = m*n+m*b*k*(n div gcd n k)"
       by(simp add: div_mult_swap dvd_div_mult)
     also obtain p where "... = m*n+m*b*k*p" by blast
-    finally have "m*a*n = m*n+m*b*k*p" by simp
-    then have 1: "m*a*n mod k= m*n mod k" (* fix this *)
-      by (metis mod_mult_self1 semiring_normalization_rules(16))
+    finally have "m*a*n = m*n+m*b*p*k" by simp
+    then have 1: "m*a*n mod k= m*n mod k" 
+      using mod_mult_self1 by simp
     then have "unity_root k (m * a * n) = unity_root k (m * n)" 
     proof -
       have "unity_root k (m * a * n) = unity_root k ((m * a * n) mod k)"
@@ -3170,8 +3184,7 @@ proof -
   also have "... = (\<Sum> m = 1..k . \<chi>(a) * (\<chi>(m) * unity_root k (m*n)))"
     by(rule sum.cong,simp,subst dcharacter.mult[OF chi_dcharacter],simp)
   also have "... =  \<chi>(a) * (\<Sum> m = 1..k . \<chi>(m) * unity_root k (m*n))"
-    using sum_distrib_left[symmetric] (* fix this *)
-    by (smt sum.cong vector_space_over_itself.scale_scale)
+    by(simp add: sum_distrib_left[symmetric]) 
   also have "... = \<chi>(a) * gauss_sum n" 
     unfolding gauss_sum_def by blast
   finally have "gauss_sum n = \<chi>(a) * gauss_sum n" by blast
@@ -3190,15 +3203,10 @@ lemma g_non_zero_ind_mod:
   assumes "gauss_sum n \<noteq> 0" "\<not> coprime n k" "n > 0" "k > 0"
   assumes "d = k div gcd n k"  
   shows  "d < k" "induced_modulus d"
-  unfolding induced_modulus_def
-  using g_non_zero_when_not_coprime(2)[OF assms(1) 
-       assms(2) assms(3) assms(4), of 1, simplified] apply(simp add: assms(5))
-  apply(rule conjI)
-  using g_non_zero_when_not_coprime(1)[OF assms(1) 
-       assms(2) assms(3) assms(4),of 1, simplified] apply(simp add: assms(5))
-  apply(safe)
-   using g_non_zero_when_not_coprime(3)[OF assms(1) 
-       assms(2) assms(3) assms(4)] assms(5) by blast
+  unfolding induced_modulus_def 
+  apply(auto simp add: g_non_zero_when_not_coprime[OF assms(1-4)] assms(5))
+  apply(simp add: assms(5) g_non_zero_when_not_coprime(2)[OF assms(1-4), of 1, simplified])
+  by(simp add: assms(5) g_non_zero_when_not_coprime(1)[OF assms(1-4),of 1, simplified])
 
 lemma k_is_ind_mod:
   assumes "k > 0" 
@@ -3220,7 +3228,8 @@ proof(rule conjI,simp,safe)
   finally show "\<chi> a = 1" by blast
 qed
 
-(* theorem 8.13 *)
+text \<open>Theorem 8.13\<close>
+
 lemma one_ind_mod_if_pc:
  "induced_modulus 1 \<longleftrightarrow> \<chi> = principal_dchar k"
 proof
@@ -3249,7 +3258,8 @@ lemma principal_not_primitive_k_gr_1:
   unfolding primitive_character_def
   using one_ind_mod_if_pc assms by blast
 
-(* theorem 8.14 *)
+text \<open>Theorem 8.14\<close>
+
 lemma prime_non_principal_is_primitive:
   assumes "prime k"
   assumes "\<chi> \<noteq> principal_dchar k" 
@@ -3263,7 +3273,8 @@ proof -
   then show ?thesis using primitive_character_def by blast
 qed
 
-(* theorem 8.15 *)
+text \<open>Theorem 8.15\<close>
+
 corollary primitive_encoding:
   assumes "primitive_character" "k > 0" 
   shows "\<forall> n. n > 0 \<longrightarrow> gcd n k > 1 \<longrightarrow> gauss_sum n = 0" 
@@ -3283,12 +3294,13 @@ proof(safe)
   assume "n > 0" 
   then show "separable n"
     using global_separability_condition 1 
-    by (meson assms(1) assms(2) g_non_zero_ind_mod(1) g_non_zero_ind_mod(2) primitive_character_def)
+    by (meson assms(1-2) g_non_zero_ind_mod(1) g_non_zero_ind_mod(2) primitive_character_def)
   } then show "(cmod (gauss_sum 1))^2 = k"
     using gauss_sum_1_mod_square_eq_k assms(2) by blast
 qed
 
-(* theorem 8.16 *)
+text \<open>Theorem 8.16\<close>
+
 lemma chi_on_congruent_induced_modulus:
   assumes "d dvd k" "d > 0" 
   shows "induced_modulus d \<longleftrightarrow> (\<forall> a b. coprime a k \<and> coprime b k \<and> [a = b] (mod d) \<longrightarrow> \<chi>(a) = \<chi>(b))"
@@ -3300,25 +3312,28 @@ proof
     assume 2: "coprime a k" "coprime b k" "[a = b] (mod d)"
     show "\<chi>(a) = \<chi>(b)" 
     proof -
-      from 2(1) obtain a' where "[a*a' = 1] (mod k)"
+      from 2(1) obtain a' where eq: "[a*a' = 1] (mod k)"
         using cong_solve by blast
       from this assms(1) have "[a*a' = 1] (mod d)"
         using cong_dvd_modulus_nat by blast
       from this 1 have "\<chi>(a*a') = 1" 
         unfolding induced_modulus_def 
-        by (meson "2"(2) \<open>[a * a' = 1] (mod k)\<close> cong_imp_coprime_nat cong_sym coprime_divisors gcd_nat.refl one_dvd)
+        by (meson "2"(2) eq cong_imp_coprime_nat cong_sym coprime_divisors gcd_nat.refl one_dvd)
       then have 3: "\<chi>(a)*\<chi>(a') = 1" 
         using chi_dcharacter dcharacter.mult by simp
 
-      from 2(3) have "[a*a' = b*a'] (mod d)" by (simp add: cong_scalar_right)
+      from 2(3) have "[a*a' = b*a'] (mod d)" 
+        by (simp add: cong_scalar_right)
       moreover have 4: "[b*a' = 1] (mod d)" 
         using \<open>[a * a' = 1] (mod d)\<close> calculation cong_sym cong_trans by blast
-      from this 1 have "\<chi>(b*a') = 1" 
-        unfolding induced_modulus_def 
-        by (metis "2"(2) \<open>[a * a' = 1] (mod k)\<close> cong_imp_coprime cong_sym coprime_mult_left_iff mult.right_neutral)
+      have "\<chi>(b*a') = 1" 
+      proof -
+        have "coprime (b*a') k"
+          using "2"(2) cong_imp_coprime[OF cong_sym[OF eq],simplified] by simp
+        then show ?thesis using 4 induced_modulus_def 1 by blast
+      qed
       then have 4: "\<chi>(b)*\<chi>(a') = 1" 
         using chi_dcharacter dcharacter.mult by simp
-
       from 3 4 show "\<chi>(a) = \<chi>(b)" 
         apply(cases "\<chi>(a') = 0",auto simp add: field_simps)
         using mult_cancel_left by fastforce
@@ -3334,10 +3349,9 @@ next
     unfolding induced_modulus_def using assms(1) by blast
 qed
 
-(*theorem 8.17*)
+text \<open>Theorem 8.17\<close>
 
-(* the case d = 1 is exactly the case 
-   described in one_ind_mod_if_pc *)
+text\<open>The case d = 1 is exactly the case described in one_ind_mod_if_pc \<close>
 theorem ind_mod_characterized:
   assumes "d dvd k" "d \<noteq> 1" "k > 0" 
   assumes "\<chi>\<^sub>1 = principal_dchar k" 
@@ -3468,7 +3482,8 @@ proof
         proof -
           assume "\<Phi> n = \<chi> (f n)" "[f n = n] (mod d)" "\<chi>\<^sub>1 n = 1"
           then have "\<chi> n = \<chi> (f n)"
-            by (metis True \<open>coprime n d\<close> \<open>dcharacter d \<Phi>\<close> \<open>local.induced_modulus d\<close> assms(1) assms(3) chi_dcharacter chi_on_congruent_induced_modulus dcharacter.eq_zero_iff dvd_pos_nat)
+            using \<open>local.induced_modulus d\<close> chi_on_congruent_induced_modulus[OF assms(1) \<open>d > 0\<close>]
+                  True \<open>coprime n d\<close> m_prop(2) by auto
           also have "... = \<Phi> n" by (simp add: \<open>\<Phi> n = \<chi> (f n)\<close>)
           also have "... = \<Phi> n * \<chi>\<^sub>1 n" by(simp add: \<open>\<chi>\<^sub>1 n = 1\<close>)
           finally show ?thesis by simp
@@ -3546,27 +3561,34 @@ proof
     using one_ind_mod_if_pc by blast
 next
   assume "\<chi> = principal_dchar k"
-  then have "induced_modulus 1" using one_ind_mod_if_pc by auto
-  then show "conductor = 1" 
-    by (metis Min_le conductor_def conductor_fin conductor_gr_0 le_neq_implies_less mem_Collect_eq nat_dvd_not_less one_dvd)
+  then have im_1: "induced_modulus 1" using one_ind_mod_if_pc by auto
+  show "conductor = 1" 
+  proof -
+    have "conductor \<le> 1" 
+      using conductor_fin Min_le[OF conductor_fin,simplified,OF im_1]
+      by(simp add: conductor_def[symmetric])
+    then show ?thesis using conductor_gr_0 by auto
+  qed
 qed
 
 lemma primitive_conductor:
   assumes "\<not> primitive_character"
   shows "conductor < k" 
-  by (metis  Min_le assms conductor_def conductor_dvd conductor_fin 
-            div_greater_zero_iff dvd_div_eq_0_iff le_neq_implies_less 
-            mem_Collect_eq not_le not_less_zero primitive_character_def)
+proof -
+  obtain d where "induced_modulus d" "d < k" 
+    using primitive_character_def assms by blast
+  show ?thesis
+    using Min_le[OF conductor_fin,simplified,OF \<open>induced_modulus d\<close>]
+          conductor_def \<open>d < k\<close> by simp
+qed
 
 end
-
-
 
 context 
   includes no_vec_lambda_notation
 begin
 
-(* theorem 8.18 *)
+text \<open>Theorem 8.18\<close>
 theorem primitive_principal_form:
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes "\<chi>\<^sub>1 = principal_dchar k"
@@ -3595,7 +3617,6 @@ proof -
             induced_modulus_def phi_dchars by blast
     then have 2: "induced_modulus \<chi> k q" 
     proof -
-      thm induced_modulus_def
       {fix n
       assume mod_1: "[n = 1] (mod q)" 
       assume cop: "coprime n k" 
@@ -3617,11 +3638,9 @@ proof -
       from 1 have le: "q < d" by simp
       from d_def conductor_def[OF assms(1)]
       have min: "d = Min {d. induced_modulus \<chi> k d}" by blast
-      thm assms(1)
-      thm Min_le[of "{d. induced_modulus \<chi> k d}" q]
       from min 2 have "d \<le> q" 
         using Min_le[of "{d. induced_modulus \<chi> k d}" q]
-        using conductor_fin is_char by blast
+              conductor_fin is_char by blast
       then show "False" using le by simp
     qed
   qed     
@@ -3650,22 +3669,21 @@ proof -
  have fin_G: "finite (carrier G)"
    unfolding G_def residue_mult_group_def by simp
 
- have "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
+ have eq: "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
        (\<Sum> m | m \<in> carrier G . \<Phi>(m) * unity_root d m)"
   unfolding residue_mult_group_def totatives_def G_def
   by(rule sum.cong,auto)
  also have "... = sum (\<lambda> m. \<Phi>(m) * unity_root d m) (carrier G)" by simp
- also have "... = sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
+ also have eq': "... = sum (sum (\<lambda> m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)"
   by(rule disjoint_sum[OF fin_cosets fin_G 
           kernel_partition(1)[OF G_def H_def f_def 
- 
                  \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>],symmetric])
  also have "... =
   (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" by simp
  finally have 1: "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) =
                   (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)))" 
-   using \<open>(\<Sum>m | m \<in> {1..k} \<and> coprime m k. \<Phi> m * unity_root d (int m)) = (\<Sum>m | m \<in> carrier G. \<Phi> m * unity_root d (int m))\<close> \<open>(\<Sum>m\<in>carrier G. \<Phi> m * unity_root d (int m)) = sum (sum (\<lambda>m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f)\<close> by auto
- have "... =
+   using eq eq' by auto
+ have eq''': "... =
   (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
  proof(rule sum.cong,simp) 
    fix b
@@ -3688,9 +3706,10 @@ proof -
       then have \<Phi>_periodic: "periodic \<Phi> d" using dir_periodic by blast
       have 1: "\<Phi> m1 = \<Phi> m2" 
        using mod_periodic[OF \<open>periodic \<Phi> d\<close> m_mod[OF m_in]] by simp 
-      have 2: "unity_root d m1 = unity_root d m2"
-       using m_mod[OF m_in] unity_mod [of d] 
-       by (metis zmod_int)
+     have 2: "unity_root d m1 = unity_root d m2"
+        apply(subst unity_mod [of d],subst (2) unity_mod [of d])
+        apply(subst zmod_int[symmetric])+
+        by(simp add: m_mod[OF m_in])
       from 1 2 show ?thesis by simp
     qed
    } note all_eq_in_coset = this   
@@ -3726,8 +3745,10 @@ proof -
        using m_mod l_prop unfolding f_def by blast
      have eq: "f l = the_elem (f ` b)"
        using the_elem_image_unique[of _ f l, OF b_not_empty, OF foral,simplified, symmetric] by simp
-     then show ?thesis
-      by (metis dir_periodic f_def mod_mod_trivial mod_periodic prod unity_mod zmod_int)
+     have per: "periodic \<Phi> d" using prod dir_periodic by blast
+     show ?thesis
+       apply((subst eq[symmetric])+,(subst f_def)+,subst unity_mod,subst zmod_int)
+       using mod_periodic[OF per,of l "l mod d"] mod_mod_trivial by auto
    qed
    finally show "(\<Sum> m \<in> b. \<Phi> m * unity_root d (int m)) = 
                  ((totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
@@ -3736,23 +3757,23 @@ proof -
  have "... =
             (\<Sum> b \<in> (rcosets\<^bsub>G\<^esub> kernel G H f) . (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))"
    by blast
- also have "
+ also have eq'': "
     ... = (\<Sum> h \<in> carrier H . (totient k div totient d) * (\<Phi> (h) * unity_root d (int (h))))"
    by(rule sum.reindex_bij_betw[OF kernel_partition(6)[OF G_def H_def f_def
                   \<open>d > 1\<close> \<open>0 < k\<close> \<open>d dvd k\<close>]])
  finally have 2: "(\<Sum> m | m \<in> {1..k} \<and> coprime m k. \<Phi>(m) * unity_root d m) = 
                  (totient k div totient d)*(\<Sum> h \<in> carrier H .  (\<Phi> (h) * unity_root d (int (h))))"
-   using 1 
-   by (simp add: \<open>(\<Sum>b\<in>rcosets\<^bsub>G\<^esub> kernel G H f. of_nat (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b))))) = (\<Sum>h\<in>carrier H. of_nat (totient k div totient d) * (\<Phi> h * unity_root d (int h)))\<close> \<open>sum (sum (\<lambda>m. \<Phi> m * unity_root d (int m))) (rcosets\<^bsub>G\<^esub> kernel G H f) = (\<Sum>b\<in>rcosets\<^bsub>G\<^esub> kernel G H f. of_nat (totient k div totient d) * (\<Phi> (the_elem (f ` b)) * unity_root d (int (the_elem (f ` b)))))\<close> sum_distrib_left)
-  also have "... = (totient k div totient d)*(\<Sum>m | m \<in> {1..d} \<and> coprime m d . (\<Phi> (m) * unity_root d (int (m))))"
-    unfolding H_def residue_mult_group_def 
-    apply(simp)
-    unfolding totatives_def 
-    by (simp add: Suc_le_eq)
+   using 1 by (simp add: eq'' eq''' sum_distrib_left)
+ also have "... = (totient k div totient d)*(\<Sum>m | m \<in> {1..d} \<and> coprime m d . (\<Phi> (m) * unity_root d (int (m))))"
+   unfolding H_def residue_mult_group_def 
+   apply(simp)
+   unfolding totatives_def 
+   by (simp add: Suc_le_eq)
   finally show ?thesis by simp
 qed
   
-(* theorem 8.19 *)
+text \<open>Theorem 8.19\<close>
+
 theorem primitive_iff_gs_separable:
   assumes is_char: "\<chi> \<in> dcharacters k"
   assumes "\<chi> \<noteq> principal_dchar k" 
@@ -3785,8 +3806,14 @@ next
        define r where "r = k div d"
        have 0: "r \<noteq> 0" unfolding r_def 
          using \<open>0 < k\<close> \<open>d dvd k\<close> dvd_div_gt0 by auto
-       have "gcd r k > 1" unfolding r_def 
-        by (metis One_nat_def Suc_lessI \<open>1 < k\<close> \<open>d < k\<close> conductor_dvd d_def dvd_mult_div_cancel dvd_triv_right gcd_nat.absorb1 gcd_pos_nat is_char mult.right_neutral nat_neq_iff)
+       have "gcd r k > 1" 
+         unfolding r_def 
+       proof -  
+         have "k div d > 1" using \<open>1 < k\<close> \<open>d < k\<close> \<open>d dvd k\<close> by auto
+         have "k div d dvd k" using \<open>d dvd k\<close> by force 
+         have "gcd (k div d) k = k div d" using gcd_nat.absorb1[OF \<open>k div d dvd k\<close>] by blast
+         then show "1 < gcd (k div d) k" using \<open>k div d > 1\<close> by argo
+       qed
        then have 1: "\<not> coprime r k" by auto
        define \<chi>\<^sub>1 where "\<chi>\<^sub>1 = principal_dchar k" 
        from primitive_principal_form[OF assms(1) \<chi>\<^sub>1_def False]
@@ -3898,8 +3925,8 @@ proof(cases "n \<ge> 0")
     using gauss_int_extends_nat[OF is_char, of "nat n"]
           nat_0_le[OF True] by argo
   also have "... = gauss_sum \<chi> k (nat (n mod int k))"
-    using mod_periodic[OF gauss_sum_periodic[OF is_char]]
-    by (metis True mod_mod_trivial nat_int nat_mod_distrib of_nat_0_le_iff)
+    using mod_periodic[OF gauss_sum_periodic[OF is_char], of "nat n" "(nat (n mod int k))"]
+          mod_mod_trivial by (simp add: True nat_mod_distrib)
   finally show ?thesis by argo
 next
   case False
@@ -3910,8 +3937,16 @@ next
     fix x
     assume "x \<in> {1..k}" 
     have "unity_root k (int x * n) = unity_root k (int (x * nat (n mod int k)))" 
-      using unity_mod[of k "x*n"] 
-      by (metis int_ops(7) mult.commute semiring_normalization_rules(7) unity_mod_nat unity_pow)
+    proof -
+      have "unity_root k (int (x * nat (n mod int k))) = 
+            unity_root k (x * ( n mod int k))"
+        using int_nat_eq is_char mod_positive by fastforce
+      also have "... = unity_root k ((x * n mod int k))"
+        by(subst mod_mult_right_eq[of x n k,symmetric],subst unity_mod,simp)
+      also have "... = unity_root k (int x * n)"
+        using unity_mod by auto
+      finally show ?thesis by argo
+    qed           
     then show " \<chi> x * unity_root k (int x * n) =
          \<chi> x * unity_root k (int (x * nat (n mod int k)))" by argo
   qed
@@ -3943,8 +3978,14 @@ proof -
     have fact_per: "periodic (\<lambda> n. g n * unity_root k (int m * int n)) k"
       using mult_periodic[OF g_per] unity_periodic_mult by auto
     show ?thesis
-      using periodic_sum_periodic_shift[OF fact_per \<open>k > 0\<close>, of 1, simplified]
-      by (metis One_nat_def assms(2) atMost_atLeast0 calculation sum_eq_ineq)  
+    proof -
+      have "(\<Sum>n<k. g n * unity_root k (int m * int n)) =
+            (\<Sum>l = 0..k - Suc 0. g l * unity_root k (int m * int l))"
+        using atMost_atLeast0 sum_eq_ineq[OF assms(2)] by auto
+      also have "... = (\<Sum>l = Suc 0..k. g l * unity_root k (int m * int l))"
+        using periodic_sum_periodic_shift[OF fact_per \<open>k > 0\<close>, of 1, simplified] by blast
+      finally show ?thesis by simp
+    qed
   qed
   also have "... = (\<Sum> n = 1..k. (1 div of_nat k) * gauss_sum_int \<chi> k (-n) * unity_root k (m*n))"
   proof -
@@ -3957,8 +3998,14 @@ proof -
       then have prod_per: "periodic (\<lambda> m. \<chi> m * unity_root k (- int n * int m)) k"
         using per mult_periodic by blast
       show ?thesis
-        using periodic_sum_periodic_shift[OF prod_per \<open>k > 0\<close>, of 1, simplified]
-        by (metis (no_types, lifting) One_nat_def Suc_diff_le Suc_leI Suc_pred assms(2) atLeast0AtMost periodic_sum_periodic_shift plus_1_eq_Suc prod_per sum_eq_ineq zero_less_one)
+      proof -
+        have "(\<Sum>m<k. \<chi> m * unity_root k (- int n * int m)) =
+              (\<Sum>l = 0..k - Suc 0. \<chi> l * unity_root k (- int n * int l))"
+          using atMost_atLeast0 sum_eq_ineq[OF assms(2)] by auto
+        also have "... = (\<Sum>m = 1..k. \<chi> m * unity_root k (- int n * int m))"
+          using periodic_sum_periodic_shift[OF prod_per \<open>k > 0\<close>, of 1, simplified] by auto
+        finally show ?thesis by simp
+      qed
     qed
     have "g n = 1 / of_nat k *
       (\<Sum>m<k. \<chi> m * unity_root k (- int n * int m))"
@@ -3977,7 +4024,8 @@ proof -
     finally show ?thesis by blast
 qed
 
-(* theorem 8.20 *)
+text\<open>Theorem 8.20\<close>
+
 theorem fourier_primitive_character:
   fixes m  k :: nat and \<chi> :: "nat \<Rightarrow> complex"
         and \<tau> :: "(nat \<Rightarrow> complex) \<Rightarrow> nat \<Rightarrow> complex"
@@ -3990,17 +4038,15 @@ theorem fourier_primitive_character:
 proof -
   have chi_not_principal: "\<chi> \<noteq> principal_dchar k" 
     using principal_not_totally_separable[OF is_char]
-          primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>] 
-    by blast
-  have "dcharacter k \<chi>" 
-    using is_char dcharacters_def by simp
-  have "periodic \<chi> k" 
-    using dir_periodic[OF is_char] by simp
+          primitive_encoding(2)[OF is_char is_prim \<open>k > 0\<close>] by blast
+  have "dcharacter k \<chi>" using is_char dcharacters_def by simp
+  have "periodic \<chi> k" using dir_periodic[OF is_char] by simp
+
   then have case_0: "(\<Sum> n = 1..k . \<chi> n) = 0"
   proof -
     have "sum \<chi> {..<k} = sum \<chi> {1..k}"
       using periodic_sum_periodic_shift[OF \<open>periodic \<chi> k\<close> \<open>k > 0\<close>, of 1,simplified]
-      by (metis One_nat_def assms(3) atMost_atLeast0 sum_eq_ineq)
+            atMost_atLeast0 sum_eq_ineq[OF assms(3)] by auto
     show "(\<Sum> n = 1..k . \<chi> n) = 0"
       using \<open>sum \<chi> {..<k} = sum \<chi> {1..k}\<close>
             dcharacter.sum_dcharacter_block[OF \<open>dcharacter k \<chi>\<close>]
@@ -4030,11 +4076,10 @@ proof -
       then have nat_0: "nat ((- n) mod k) = 0" by blast
       show ?thesis 
       proof -
-        have "gauss_sum \<chi> k (nat (- int n mod int k)) = 
-              gauss_sum \<chi> k 0" using nat_0 by argo
+        have "gauss_sum \<chi> k (nat (- int n mod int k)) = gauss_sum \<chi> k 0" 
+          using nat_0 by argo
         also have "... =  (\<Sum>m = 1..k. \<chi> m)" 
-          unfolding gauss_sum_def[OF is_char] 
-          by(rule sum.cong,simp,simp add: unity_k_0)
+          unfolding gauss_sum_def[OF is_char] by(rule sum.cong,simp,simp add: unity_k_0)
         also have "... = 0" using case_0 by blast
         finally have 1: "gauss_sum \<chi> k (nat (- int n mod int k)) = 0"
           by blast
@@ -4045,27 +4090,21 @@ proof -
       qed
     qed
     then show "1 / of_nat k * gauss_sum \<chi> k (nat (- int n mod int k)) * unity_root k (int (m * n)) =
-         1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) * gauss_sum \<chi> k 1 * unity_root k (int (m * n))" by auto
+               1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) * gauss_sum \<chi> k 1 * unity_root k (int (m * n))" 
+      by auto
   qed
   also have "... = (\<Sum>n = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int n mod int k))) * (gauss_sum \<chi> k 1) * unity_root k (int (m * (nat (int n mod int k)))))"
   proof(rule sum.cong,simp)
     fix x   
     assume "x \<in> {1..k}" 
     have "unity_root k (m * x) = unity_root k (m * x mod k)"
-      using unity_mod_nat[of k "m*x"] 
-      by (simp add: nat_mod_as_int)
+      using unity_mod_nat[of k "m*x"] by (simp add: nat_mod_as_int)
     also have "... = unity_root k (m * (x mod k))"
-      by (metis mod_mult_right_eq of_nat_mod unity_mod)
+      by(subst (2) unity_mod,subst of_nat_mod[symmetric],subst mod_mult_right_eq[symmetric],blast)
     finally have "unity_root k (m * x) = unity_root k (m * (x mod k))" by blast
-    then show "1 / of_nat k *
-         cnj (\<chi> (nat (- int x mod int k))) *
-         gauss_sum \<chi> k 1 *
-         unity_root k (int (m * x)) =
-         1 / of_nat k *
-         cnj (\<chi> (nat (- int x mod int k))) *
-         gauss_sum \<chi> k 1 *
-         unity_root k (int (m * nat (int x mod int k)))" 
-      by (simp add: nat_mod_as_int)    
+    then show "1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) * gauss_sum \<chi> k 1 * unity_root k (int (m * x)) =
+               1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) * gauss_sum \<chi> k 1 * unity_root k (int (m * nat (int x mod int k)))" 
+      by(simp add: nat_mod_as_int)    
   qed
   also have "... = (\<Sum>n = 0..k-1. 1 / of_nat k * cnj (\<chi> n) * (gauss_sum \<chi> k 1) * unity_root k (- int (m * n)))"
   proof -
@@ -4078,7 +4117,42 @@ proof -
         fix x y
         assume a1: "x \<in> {1..k}" "y \<in> {1..k}"
         assume a2: "nat (- x mod k) = nat (- y mod k)"
+        then have "(- x) mod k = - y mod k"
+          using assms(3) eq_nat_nat_iff by auto
+        then have "[-int x = - int y] (mod k)" 
+          using cong_def by blast
+        then have cong: "[x = y] (mod k)" 
+          by (simp add: cong_int_iff cong_minus_minus_iff)
+        then have "x = y"
+        proof(cases "x = k")
+          case True
+          then show ?thesis using cong a1(2)  sledgehammer sorry
+        next
+          case False
+          then show ?thesis sorry
+        qed
+
+          using a1 sledgehammer
+        proof -
+          have "x mod k = - (- x) mod k" 
+            using add.inverse_inverse 
+        qed
+          thm add.inverse_inverse mod_minus_eq nat_mod_as_int
+          by (metis add.inverse_inverse mod_minus_eq nat_mod_as_int)
         then have 3: "k - x = k - y" 
+        proof -
+          have "k - x = nat (-x mod k)"
+            using a1(1)
+            apply(simp)
+            thm a1(1) atLeastAtMost_iff diff_less mod_add_self2 mod_less nat_int 
+                 nat_mod_distrib not_one_le_zero of_nat_0_le_iff of_nat_0_less_iff of_nat_diff
+            by (smt a1(1) atLeastAtMost_iff diff_less mod_add_self2 mod_less nat_int nat_mod_distrib not_one_le_zero of_nat_0_le_iff of_nat_0_less_iff of_nat_diff)
+          
+          also have "... = k - x" 
+            using a1(1)
+        qed
+          thm Euclidean_Division.pos_mod_sign a1(1) a1(2) atLeastAtMost_iff 
+              diff_is_0_eq int_nat_eq less_one mod_if mod_minus_cong nat_int nat_mod_distrib nat_zminus_int not_le of_nat_0_less_iff
           by (smt Euclidean_Division.pos_mod_sign a1(1) a1(2) atLeastAtMost_iff diff_is_0_eq int_nat_eq less_one mod_if mod_minus_cong nat_int nat_mod_distrib nat_zminus_int not_le of_nat_0_less_iff)
         then show "x = y" using a1 by auto
       qed

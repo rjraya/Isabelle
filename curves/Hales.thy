@@ -933,12 +933,33 @@ proof -
       obtain a0 b0 where "\<tau> q = (a0,b0)" by fastforce
       obtain a1 b1 where "p = (a1,b1)" by fastforce
       define \<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
-        "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_x x1 y1 (1/(t*x0)) (1/(t*y0)))" 
+        "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus x1 y1 (1/(t*x0)) (1/(t*y0)))" 
       define \<delta>_plus :: "real \<Rightarrow> real \<Rightarrow> real" where
-        "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_y x1 y1 (1/(t*x0)) (1/(t*y0)))"
+        "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_x x1 y1 (1/(t*x0)) (1/(t*y0)))"
       define \<delta>_minus :: "real \<Rightarrow> real \<Rightarrow> real" where
         "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y x1 y1 (1/(t*x0)) (1/(t*y0)))"
+
+      {fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>' x0 y0 = 1"
+        unfolding \<delta>'_def delta_minus_def using t_expr(2)
+        "
+        apply(simp add: algebra_simps t_nz as power2_eq_square)}
+      note \<delta>_plus_expr = this
       
+      {fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>_plus x0 y0 = -x0*x1+y0*y1"
+        unfolding \<delta>_plus_def delta_x_def 
+        by(simp add: algebra_simps t_nz as)}
+      note \<delta>_plus_expr = this
+
+      {fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>_minus x0 y0 = x0*y1+x1*y0"
+        unfolding \<delta>_minus_def delta_y_def 
+        by(simp add: algebra_simps t_nz as)}
+      note \<delta>_minus_expr = this
     qed
       sorry
     then show ?thesis using \<open>p \<in> e_circ\<close> by auto

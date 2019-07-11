@@ -1181,9 +1181,9 @@ next
 qed
 
 section\<open>Finite Fourier series\<close>
+(* cleared *)
 
 subsection\<open>Lagrange property\<close>
-(* cleared *)
 
 lemma lagrange_exists:
   assumes d: "distinct (map fst zs_ws)"
@@ -1656,38 +1656,40 @@ lemma fourier_expansion:
   shows "periodic g k" 
         "f(m) = (\<Sum>n<k. g(n)* unity_root k (m*n))"  
 proof -
+ {fix l
+  from unity_periodic mult_period
+  have period: "periodic (\<lambda>x. unity_root k x) (k*l)" by simp}
+  note period = this
+ {fix n l
+  have "unity_root k (-(n+k)*l) = inverse (unity_root k ((n+k)*l))"
+    by(subst mult_minus_left,
+       subst SMT.int_ops(7)[symmetric],
+       subst unity_minus,blast) 
+  also have "... = inverse (unity_root k (n*l))"
+    apply(simp add: distrib_right)
+    apply(subst SMT.int_ops(7)[symmetric])+
+    apply(subst SMT.int_ops(5)[symmetric])
+    using period unfolding periodic_def by blast
+  also have "... = unity_root k (-n*l)"
+    using unity_minus by simp 
+  finally have "unity_root k (-(n+k)*l) = unity_root k (-n*l)" by simp}
+  note u_period = this
+  
   show 1: "periodic g k"
     unfolding periodic_def
   proof 
-    fix n
-    from unity_periodic mult_period
-    have period: "periodic (\<lambda>x. unity_root k x) (k*(2*m))" by simp
-
-    have "unity_root k (-(n+k)*m) = unity_root k (-n*m-k*m)"
-    proof -
-      have "-(n+k)*m = -n*m-k*m" by(simp add: algebra_simps)
-      then show "unity_root k (-(n+k)*m) = unity_root k (-n*m-k*m)" by auto
-    qed
-    also have "... = unity_root k (-n*m)"
-      using period unity_minus 
-      using periodic_def 
-    proof -
-      have "unity_root k (-n*m-k*m) = 
-            unity_root k ((-n*m-k*m)+k*(2*m))" 
-        using period unfolding periodic_def 
-        
- 
-    qed
-      thm calculation distrib_right mult_minus_left of_nat_mult
-    
-      by (metis calculation distrib_right mult_minus_left of_nat_mult)
-    finally have u_period: "unity_root k (-(n+k)*m) = unity_root k (-n*m)" by simp
-
+    fix n 
+   
     have "g(n+k) = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-(n+k)*m))"
       using assms(3) by fastforce
     also have "... = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
-      using u_period 
-      by (metis (no_types, hide_lams) mod_add_self2 unity_minus unity_mod unity_pow zmod_int)
+    proof -
+      have "(\<Sum>m<k. f(m) * unity_root k (-(n+k)*m)) = 
+            (\<Sum>m<k. f(m) * unity_root k (-n*m))" 
+        apply(rule sum.cong,simp)
+        using u_period by simp
+      then show ?thesis by argo
+    qed
     also have "... = g(n)"
       using assms(3) by fastforce
     finally show "g(n+k) = g(n)" by simp 
@@ -1715,11 +1717,20 @@ proof -
   proof - 
     have "periodic (\<lambda> n. g(n)* unity_root k (i * int n)) k"  for i :: int
      using 1 unity_periodic mult_periodic unity_periodic_mult by auto
-     then have "\<forall>i<k. periodic (\<lambda> n. g(n)* unity_root k (i * int n)) k"
+    then have p_s: "\<forall>i<k. periodic (\<lambda> n. g(n)* unity_root k (i * int n)) k"
       by simp
-    then have "periodic (\<lambda>i. \<Sum>n<k. g(n)* unity_root k (i * int n)) k"
-      using fin_sum_periodic[of k _ k] (* fix this *)
-      by (smt mod_add_self2 periodic_def sum.cong unity_mod unity_pow zmod_int)        
+    have "periodic (\<lambda>i. \<Sum>n<k. g(n)* unity_root k (i * int n)) k"
+      unfolding periodic_def
+    proof
+      fix n
+      show "(\<Sum>na<k. g na * unity_root k (int (n + k) * int na)) =
+            (\<Sum>na<k. g na * unity_root k (int n * int na))"      
+        apply(rule sum.cong,simp)
+        apply(simp add: distrib_right)
+        apply(subst SMT.int_ops(7)[symmetric])+
+        apply(subst SMT.int_ops(5)[symmetric])
+        using period unfolding periodic_def by blast
+    qed
    then show ?thesis by simp
  qed  
   
@@ -1732,13 +1743,19 @@ qed
 lemma fourier_uniqueness:
   fixes f g :: "nat \<Rightarrow> complex" 
   assumes "k > 0"
-  assumes "periodic f k" and "periodic g k" (*periodicity of g required by theorem? *)
+  assumes "periodic f k" "periodic g k" (*periodicity of g required by theorem? *)
   assumes "\<And> m. f(m) = (\<Sum>n<k. g(n)* unity_root k (int (m*n)))" 
   shows "g(n) = ((1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m)))"
 proof -
   let ?p = "poly_of_list [g(n). n \<leftarrow> [0..<k]]"
-  have d: "degree ?p \<le> k-1" 
-    by (metis degree_poly diff_zero length_map length_upt)
+  have d: "degree ?p \<le> k-1"
+  proof -
+    have "degree ?p \<le> length [g(n). n \<leftarrow> [0..<k]] - 1" 
+      using degree_poly by blast
+    also have "... = length [0..<k] - 1" 
+      using length_map by auto
+    finally show ?thesis by simp
+  qed    
   have c: "coeff ?p i = (if i < k then g(i) else 0)" for i
     by (simp add: nth_default_def)
   {fix z
@@ -1773,11 +1790,17 @@ proof -
 
   {fix n 
   assume b: "n \<le> k-1"
-  have "coeff ?p n = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"  
+  have f_1: "coeff ?p n = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"  
     using p_is_fourier coeff_fun using assms(1) b by auto
   then have "g(n) = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
     using c b assms(1) 
-    by (metis One_nat_def Suc_pred diff_le_self le_neq_implies_less le_trans less_Suc_eq_le nat_less_le poly_of_list_def)
+  proof -
+    have 1: "coeff ?p n = (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))"
+      using f_1 by blast
+    have 2: "coeff ?p n =  g n"
+      using c assms(1) b by simp
+    show ?thesis using 1 2 by argo
+  qed
   }
  (* now show right hand side is periodic and use unique_periodic_extension *)
   have "periodic (\<lambda> n. (1 / k) * (\<Sum>m<k. f(m) * unity_root k (-n*m))) k"
@@ -1800,6 +1823,7 @@ proof -
 qed  
         
 section\<open>Ramanujan's sums\<close>
+(* cleared *)
 
 subsection\<open>Dirichlet product neutral element\<close>
 
@@ -1850,8 +1874,11 @@ proof -
 qed
 
 lemma I_left_neutral:
- "dirichlet_prod I f n = f n " if "n > 0" for f :: "nat \<Rightarrow> complex" and n
-  using I_right_neutral dirichlet_prod_commutes that by metis
+ "dirichlet_prod I f n = f n " 
+ if "n > 0" for f :: "nat \<Rightarrow> complex" and n
+  using I_right_neutral[OF that, of f] 
+        dirichlet_prod_commutes[of f I]
+  by argo
 
 corollary I_right_neutral_0:
   fixes f :: "nat \<Rightarrow> complex" 
@@ -1865,16 +1892,22 @@ proof(cases "n = 0")
 next
   case False
   have 1: "unity_root n 0 = 1" by (simp add: unity_k_0)
-  then have 2: "unity_root n n = 1" 
-    using unity_periodic[of n]
-    unfolding periodic_def 
-    by (metis add.left_neutral of_nat_0)
+  have 2: "unity_root n n = 1" 
+    using unity_periodic[of n] add.left_neutral
+  proof -
+    have "1 = unity_root n (int 0)"
+       using 1 by auto
+    also have "unity_root n (int 0) = unity_root n (int (0 + n))"
+      using unity_periodic[of n] periodic_def by algebra
+    also have "... = unity_root n (int n)" by simp
+    finally show ?thesis by auto 
+  qed
   have "(\<Sum>k = 1..n. unity_root n k) = 
         (\<Sum>k = 0..n. unity_root n k) - 1"
     by (simp add: sum_head_Suc sum.atLeast0_atMost_Suc_shift 1)
   also have "... = ((\<Sum>k = 0..n-1. unity_root n k)+1) - 1"
-    using sum.atLeast0_atMost_Suc False 
-    by (metis (no_types, lifting) One_nat_def Suc_pred neq0_conv 2)
+    using sum.atLeast0_atMost_Suc[of "(\<lambda> k. unity_root n k)" "n-1"] False 
+    by(simp add: 2)
   also have "... = (\<Sum>k = 0..n-1. unity_root n k)" by auto
   also have "... = geometric_sum n 1" 
     using geometric_sum_def[of n 1]
@@ -1907,7 +1940,7 @@ lemma dirichlet_coprime_sum:
 proof(cases "n = 0")
   case True
   then show ?thesis 
-    using assms(2) unfolding dirichlet_prod_def  by fastforce
+    using assms(2) unfolding dirichlet_prod_def by fastforce
 next
   case False
   have "S(n) = (\<Sum> k | k \<in> {1..n} \<and> coprime k n . (f k n))"
@@ -1937,15 +1970,15 @@ next
     by (simp add: sum_distrib_left mult.commute)
   also have "... = (\<Sum>d | d dvd n. moebius_mu d * (\<Sum>q \<in> {1..n div d}. (f q (n div d))))"
   proof - 
-    have "
+    have st: "
       (\<Sum>k | k \<in> {1..n} \<and> d dvd k. (f k n)) =
         (\<Sum>q \<in> {1..n div d}. (f q (n div d)))" 
       if "d dvd n" "d > 0" for d :: nat
       by(rule sum.reindex_bij_witness[of _ "\<lambda>k. k * d" "\<lambda>k. k div d"])
          (use assms(3) that in \<open>fastforce simp: div_le_mono\<close>)+
-    then show ?thesis 
-      by (smt False dvd_div_mult_self mem_Collect_eq mult_cancel_left mult_eq_0_iff mult_is_0 not_gr0 sum.cong)
-      (* fix this: proving summation with summands should be easy with substitutions *)
+    show ?thesis 
+      apply(rule sum.cong,simp)
+      using st False by fastforce    
   qed
   also have "... = (\<Sum>d | d dvd n. moebius_mu d * F(n div d))"
   proof - 
@@ -2078,12 +2111,15 @@ proof -
   proof -
     {fix d c
     assume "d dvd k"
-    have "unity_root k (- m * (c * d)) = 
-          unity_root (k div d) (- m * c)"
-      using unity_div[of d k] 
-      apply(simp add: algebra_simps)
-      by (metis (no_types, lifting) \<open>d dvd k\<close> mult.assoc mult.commute unity_minus)}
-   then show ?thesis by simp
+    have "unity_root k (- m * (c * d)) = unity_root (k div d) (- m * c)"
+      apply(subst mult_minus_left)+
+      apply(subst SMT.int_ops(7)[symmetric])+
+      apply(subst mult.assoc[symmetric])
+      apply(subst SMT.int_ops(7))
+      apply(subst unity_minus)+
+      apply(subst unity_div[OF \<open>d dvd k\<close>]) 
+      by blast}
+    then show ?thesis by simp
   qed
   also have "... = 1 / k *
                    dirichlet_prod (\<lambda> d. f(d)*g(k div d))
@@ -2133,14 +2169,15 @@ proof -
        (f (k div d) * g d)) = 
       (\<Sum>d | d dvd k. geometric_sum d (-m) * (f (k div d) * g d))" by simp
     also have "... = (\<Sum>d | d dvd k \<and> d dvd m. geometric_sum d (-m) * (f (k div d) * g d))"
-      apply(intro 
-          sum.mono_neutral_right[of "{d. d dvd k}"
-            "{d. d dvd k \<and> d dvd m}"
-            "\<lambda> d. geometric_sum d (-m) * (f (k div d) * g d)"])
-        (* fix this *)
-      using geometric_sum[of _ "(-m)"] assms
-      by (simp, blast, simp, 
-        metis (mono_tags, lifting) DiffE assms(1) div_greater_zero_iff dvd_div_gt0 less_eq_Suc_le mem_Collect_eq)
+    proof(intro sum.mono_neutral_right,simp add: \<open>k > 0\<close>,blast,standard)
+      fix i
+      assume as: "i \<in> {d. d dvd k} - {d. d dvd k \<and> d dvd m}"
+      then have "i \<ge> 1" using \<open>k > 0\<close> by auto
+      have "k \<ge> 1" using \<open>k > 0\<close> by auto  
+      have "\<not> i dvd (-m)" using as by auto
+      show "geometric_sum i (- int m) * (f (k div i) * g i) = 0" 
+        using geometric_sum(1)[OF \<open>i \<ge> 1\<close> \<open>\<not> i dvd (-m)\<close>] by simp
+    qed   
     also have "... = (\<Sum>d | d dvd k \<and> d dvd m. d * (f (k div d) * g d))"
     proof - 
       {fix d :: nat
@@ -2197,8 +2234,7 @@ proof -
      assume dvd: "d dvd gcd m k"
      have "moebius_mu d * of_nat (k div d) * of_nat d = moebius_mu d * of_nat k"
      proof -
-       have "(k div d) * d = k" 
-         using dvd by auto
+       have "(k div d) * d = k" using dvd by auto
        then show "moebius_mu d * of_nat (k div d) * of_nat d = moebius_mu d * of_nat k"  
          by(simp add: algebra_simps,metis of_nat_mult)
      qed} note eq = this
@@ -2238,8 +2274,8 @@ proof -
       have "periodic (\<lambda> m. if gcd m k = 1 then 1 else 0) k"
         by(simp add: periodic_def)
       moreover have "periodic (\<lambda> m. unity_root k (int m * n)) k" 
-        using unity_periodic_mult 
-        by (metis (no_types, lifting) mod_add_self2 periodic_def unity_mod unity_pow zmod_int)      
+        using unity_periodic_mult[of k n]
+        by(subst mult.commute,simp) 
       ultimately show "periodic ?f k"
         using mult_periodic by simp
     qed
@@ -2332,8 +2368,7 @@ proof -
   have "f ((m*k) div (d1*d2)) = f((m div d1) * (k div d2))"
     using assms(2,3) by fastforce
   also have "... = f(m div d1) * f(k div d2)"
-    using assms unfolding completely_multiplicative_function_def
-    by (simp,metis One_nat_def le_eq_less_or_eq less_Suc0 mult.left_neutral mult.right_neutral mult_zero_left mult_zero_right not_le)
+    by (simp add: \<open>d1 dvd m\<close> assms(1) completely_multiplicative_function.mult)
   finally show ?thesis by simp
 qed
 
@@ -2347,13 +2382,10 @@ proof -
   have "d \<noteq> 0" using assms(2,3) by auto
   then have nz: "f(d) \<noteq> 0" using assms(1,4) non_zero_c by simp
 
-  from assms(2,3) obtain a where div: "k = a * d "
-    by fastforce
+  from assms(2,3) obtain a where div: "k = a * d " by fastforce
   have "f (k div d) = f ((a*d) div d)" using div by simp
-  also have "... = f(a)" 
-    using assms(3) div by simp
-  also have "... = f(a)*f(d) div f(d)" 
-    using nz by auto
+  also have "... = f(a)" using assms(3) div by simp
+  also have "... = f(a)*f(d) div f(d)" using nz by auto
   also have "... = f(a*d) div f(d)" 
     by (simp add: div assms(1) completely_multiplicative_function.mult)
   also have "... = f (k) div f(d)" using div by simp
@@ -2378,7 +2410,7 @@ proof -
    by (simp add: linear_gcd  gcd.commute mult.commute)
   have "s f g (m*k) (a*b) = 
         (\<Sum> d | d dvd gcd (m*k) (a*b). f(d) * g((m*k) div d))"
-    unfolding s_def using gcd.commute by metis
+    unfolding s_def by(rule sum.cong, simp add: gcd.commute,blast) 
   also have "... = 
      (\<Sum> d | d dvd gcd a m * gcd k b. f(d) * g((m*k) div d))"
     using eq by simp
@@ -2407,9 +2439,8 @@ proof -
     also have "... = (\<Sum> d1 | d1 dvd gcd a m.
      (\<Sum> d2 |  d2 dvd gcd k b. 
           f(d1) * f(d2) * g((m*k) div (d1*d2))))"
-      apply(rule sum.cong,blast, rule sum.cong, blast)   
-      using assms(7-8) multipl_prod
-      by (metis (no_types, lifting) gcd_nat.bounded_iff mem_Collect_eq mult.commute)
+      apply(rule sum.cong,blast, rule sum.cong, blast)  
+      using assms(5) assms(8) multiplicative_function.mult_coprime by fastforce
     also have "... = (\<Sum> d1 | d1 dvd gcd a m.
      (\<Sum> d2 |  d2 dvd gcd k b. 
           f(d1) * f(d2) * g(m div d1) * g(k div d2)))"
@@ -2451,7 +2482,7 @@ proof -
   have "s f g m (a*b) = s f g m a * s f g 1 b"
     using assms s_mult_preservation[of a b m 1 f g] by simp
   also have "... = s f g m a * f 1 * g 1"
-    using s_1_n  by auto
+    using s_1_n by auto
   also have "... = s f g m a"
     using  assms(5-6) 
     by (simp add: multiplicative_function_def)
@@ -2500,13 +2531,14 @@ corollary multi_c_m:
         mult_of_nat s_m_a_b by auto
 
 corollary multi_c_mk:
- assumes "a > 0" "k > 0" "m > 0" "b > 0" (* remove cond. on m,n *)
+ assumes "a > 0" "k > 0" "m > 0"  (* remove cond. on m,n *)
  assumes "coprime a k" "coprime m k" 
  shows "c (m*k) a = c m a * moebius_mu k"
-  using assms
-  by (metis c_k_1 coprime_1_left mult.commute mult.left_neutral multi_c_mk_ab zero_less_one)
+  using multi_c_mk_ab[OF assms(1-3), of 1, simplified,OF assms(4,5)]
+        c_k_1[of k] by simp
 
-(* TODO Remove, 2.18 *)
+(* theorem 2.18 *)
+(* TODO Place in corresponding theory *)
 lemma sum_divisors_moebius_mu_times_multiplicative:
   fixes f :: "nat \<Rightarrow> 'a :: {comm_ring_1}"
   assumes "multiplicative_function f" "n > 0"
@@ -2535,14 +2567,13 @@ proof -
   have "g' n = g n"
     by (simp add: g_def g'_def dirichlet_prod_def)
   also from assms have "g' n = (\<Prod>p\<in>prime_factors n. g' (p ^ multiplicity p n))"
-      by (intro prod_prime_factors) auto
+   by (intro prod_prime_factors) auto
   also have "\<dots> = (\<Prod>p\<in>prime_factors n. 1 - f p)"
     by (intro prod.cong) (auto simp: g'_primepow prime_factors_multiplicity)
   finally show ?thesis by (simp add: g_def)
 qed
 
-lemma multiplicative_ind_coprime [intro]: "multiplicative_function (ind
-(coprime N))"
+lemma multiplicative_ind_coprime [intro]: "multiplicative_function (ind (coprime N))"
   by (intro multiplicative_function_ind) auto
 
 lemma sum_divisors_moebius_mu_times_multiplicative_revisited:
@@ -2557,11 +2588,9 @@ proof -
   also have "\<dots> = (\<Prod>p\<in>prime_factors n. 1 - ind (coprime N) p * f p)"
     using assms by (intro sum_divisors_moebius_mu_times_multiplicative)
                    (auto intro: multiplicative_function_mult)
-  also from assms have "\<dots> = (\<Prod>p | p \<in> prime_factors n \<and> \<not>(p dvd N). 1 -
-f p)"
+  also from assms have "\<dots> = (\<Prod>p | p \<in> prime_factors n \<and> \<not>(p dvd N). 1 - f p)"
     by (intro prod.mono_neutral_cong_right)
-       (auto simp: ind_def prime_factors_dvd coprime_commute dest:
-prime_imp_coprime)
+       (auto simp: ind_def prime_factors_dvd coprime_commute dest: prime_imp_coprime)
   finally show ?thesis .
 qed
 
@@ -2580,7 +2609,7 @@ proof -
           comp_to_mult assms(4,5) by blast
 
   have "F(k) = dirichlet_prod g f k"
-    unfolding F_def using dirichlet_prod_commutes by metis
+    unfolding F_def using dirichlet_prod_commutes[of f g] by auto
   also have "... = (\<Sum> d | d dvd k. moebius_mu d * h d * f(k div d))"
     unfolding g_def dirichlet_prod_def by blast
   also have "... = (\<Sum> d | d dvd k. moebius_mu d * h d * (f(k) div f(d)))"
@@ -2652,15 +2681,14 @@ proof -
     then have 2: "?b = (\<Sum>d | d dvd a. f_aux (a div d))" 
       unfolding f_aux_def by(simp add: algebra_simps)
     show "?a = ?b" 
-    using sum.reindex_bij_betw[of "((div) a)" "{d. d dvd a}" "{d. d dvd a}"]
-          bij 1 2 by metis
+      using bij 1 2
+      by (simp add: sum.reindex_bij_betw[of "((div) a)" "{d. d dvd a}" "{d. d dvd a}"])
   qed
   also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
    (is "?a = ?b")
   proof -
     have "?a = (\<Sum> d | d dvd a \<and> coprime N d. f(a div d) * moebius_mu (N*d) * h (N*d))"
-      by(rule sum.mono_neutral_right)
-        (auto simp add: moebius_not_c 3)
+      by(rule sum.mono_neutral_right)(auto simp add: moebius_not_c 3)
     also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * f(a div d) * moebius_mu d * h d)"
     proof(rule sum.cong,simp)
       fix d
@@ -2676,7 +2704,7 @@ proof -
        by(simp add: divide_simps 1 2)
     qed
     also have "... = (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu N * h N * (f a div f d) * moebius_mu d * h d)"
-     apply(rule sum.cong,simp,simp) (*fix this*)
+     apply(rule sum.cong,simp,simp) 
      using multipl_div_mono[of f _ a] assms(4,6-8) 3 by force
     also have "... = moebius_mu N * h N * f a * (\<Sum> d | d dvd a \<and> coprime N d. moebius_mu d * (h d div f d))"
       by(simp add: sum_distrib_left algebra_simps)
@@ -2703,22 +2731,23 @@ proof -
     have "{p. p \<in>prime_factors a \<and> \<not> p dvd N} = 
           ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
       using p_div_set[of a N] by blast
-
-    then have "(\<Prod>p\<in>{p. p \<in>prime_factors a \<and> \<not> p dvd N}. 1 - h p / f p) = 
+    then have eq2: "(\<Prod>p\<in>{p. p \<in>prime_factors a \<and> \<not> p dvd N}. 1 - h p / f p) = 
           prod (\<lambda> p. 1 - h p / f p) ({p. p \<in>prime_factors (a*N)} - {p. p \<in>prime_factors N})"
       by auto
-    also have "... = prod (\<lambda> p. 1 - h p / f p) {p. p \<in>prime_factors (a*N)} div
+    also have eq: "... = prod (\<lambda> p. 1 - h p / f p) {p. p \<in>prime_factors (a*N)} div
                      prod (\<lambda> p. 1 - h p / f p) {p. p \<in>prime_factors N}"
-      by(intro prod_div_sub)
-        (simp,metis "2" Collect_mono N_def a_def dvd_triv_left in_diffD prime_factorization_divide,
-         simp,metis assms(6) in_prime_factors_iff)     
+    proof(intro prod_div_sub,simp,simp,simp add: "3" Ngr0 dvd_prime_factors,simp,standard)
+      fix b
+      assume "b \<in># prime_factorization N"
+      then have p_b: "prime b" using in_prime_factors_iff by blast
+      then show "f b = 0 \<or> h b \<noteq> f b" using assms(6)[OF p_b] by auto
+    qed
     also have "... = (\<Prod>p\<in>{p. p \<in> prime_factors (a*N)}. 1 - (h p div f p)) div
      (\<Prod>p\<in>{p. p \<in> prime_factors N}. 1 - (h p div f p))" by blast
     finally have "(\<Prod>p\<in>{p. p \<in>prime_factors a \<and> \<not> p dvd N}. 1 - h p / f p) = 
         (\<Prod>p\<in>{p. p \<in> prime_factors (a*N)}. 1 - (h p div f p)) div
      (\<Prod>p\<in>{p. p \<in> prime_factors N}. 1 - (h p div f p))" 
-      using \<open>(\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)} - {p. p \<in># prime_factorization N}. 1 - h p / f p) = (\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)}. 1 - h p / f p) / (\<Prod>p\<in>{p. p \<in># prime_factorization N}. 1 - h p / f p)\<close> \<open>(\<Prod>p\<in>{p. p \<in># prime_factorization a \<and> \<not> p dvd N}. 1 - h p / f p) = (\<Prod>p\<in>{p. p \<in># prime_factorization (a * N)} - {p. p \<in># prime_factorization N}. 1 - h p / f p)\<close> by auto
-      (* fix this : equation should be chained correctly *)
+      using eq eq2 by auto
     then show ?thesis by simp
   qed
   also have "... = f(a) * moebius_mu(N) * h(N) * (F(k) div f(k)) * (f(N) div F(N))"
@@ -2730,8 +2759,7 @@ proof -
     then have eq_1: "(\<Prod>p\<in> prime_factors N. 1 - (h p div f p)) = 
                F N div f N" using 2 f_N_not_z by simp
     have "F(k) = (f k) * (\<Prod>p\<in> prime_factors k. 1 - (h p div f p))"
-      unfolding F_def g_def
-      by(intro F_form)(auto simp add: assms(4-7))
+      unfolding F_def g_def by(intro F_form)(auto simp add: assms(4-7))
     then have eq_2: "(\<Prod>p\<in> prime_factors k. 1 - (h p div f p)) = 
                F k div f k" using 2 f_k_not_z by simp
 
