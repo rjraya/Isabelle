@@ -2243,7 +2243,7 @@ proof -
      proof -
        have "(k div d) * d = k" using dvd by auto
        then show "moebius_mu d * of_nat (k div d) * of_nat d = moebius_mu d * of_nat k"  
-         by(simp add: algebra_simps,metis of_nat_mult)
+         by(simp add: algebra_simps,subst of_nat_mult[symmetric],simp)
      qed} note eq = this
      show ?thesis using sum.cong by (simp add: eq)
    qed
@@ -2341,8 +2341,8 @@ proof(induction d rule: nat_less_induct)
     case False
     then obtain p where 2:"prime p \<and> p dvd n" 
       using prime_factor_nat by blast
-    then obtain a where 3: "n = p * a \<and> a \<noteq> 0" 
-      using 1 by (metis dvdE mult_0_right)
+    then obtain a where 3: "n = p * a"  "a \<noteq> 0" 
+      using 1 by auto
     then have 4: "f(a) \<noteq> 0" using 1 
       using 2 prime_nat_iff by fastforce
     have 5: "f(p) \<noteq> 0" using assms(3) 2 by simp
@@ -3359,7 +3359,6 @@ theorem ind_mod_characterized:
          (\<exists> \<Phi>. dcharacter d \<Phi> \<and> (\<forall> n. \<chi> n = \<Phi> n * \<chi>\<^sub>1 n))"
 proof
   assume as_im: "induced_modulus d" 
-  thm technical_m
   define f where
     "f \<equiv> (\<lambda> n. n + 
       (if n = 1 then
@@ -4121,40 +4120,19 @@ proof -
           using assms(3) eq_nat_nat_iff by auto
         then have "[-int x = - int y] (mod k)" 
           using cong_def by blast
-        then have cong: "[x = y] (mod k)" 
+        then have "[x = y] (mod k)" 
           by (simp add: cong_int_iff cong_minus_minus_iff)
-        then have "x = y"
+        then have cong: "x mod k = y mod k" using cong_def by blast
+        then show "x = y"
         proof(cases "x = k")
-          case True
-          then show ?thesis using cong a1(2)  sledgehammer sorry
+          case True then show ?thesis using cong a1(2) by auto
         next
           case False
-          then show ?thesis sorry
+          then have "x mod k = x" using a1(1) by auto
+          then have "y \<noteq> k" using a1(1) local.cong by fastforce
+          then have "y mod k = y" using a1(2) by auto
+          then show ?thesis using \<open>x mod k = x\<close> cong by linarith
         qed
-
-          using a1 sledgehammer
-        proof -
-          have "x mod k = - (- x) mod k" 
-            using add.inverse_inverse 
-        qed
-          thm add.inverse_inverse mod_minus_eq nat_mod_as_int
-          by (metis add.inverse_inverse mod_minus_eq nat_mod_as_int)
-        then have 3: "k - x = k - y" 
-        proof -
-          have "k - x = nat (-x mod k)"
-            using a1(1)
-            apply(simp)
-            thm a1(1) atLeastAtMost_iff diff_less mod_add_self2 mod_less nat_int 
-                 nat_mod_distrib not_one_le_zero of_nat_0_le_iff of_nat_0_less_iff of_nat_diff
-            by (smt a1(1) atLeastAtMost_iff diff_less mod_add_self2 mod_less nat_int nat_mod_distrib not_one_le_zero of_nat_0_le_iff of_nat_0_less_iff of_nat_diff)
-          
-          also have "... = k - x" 
-            using a1(1)
-        qed
-          thm Euclidean_Division.pos_mod_sign a1(1) a1(2) atLeastAtMost_iff 
-              diff_is_0_eq int_nat_eq less_one mod_if mod_minus_cong nat_int nat_mod_distrib nat_zminus_int not_le of_nat_0_less_iff
-          by (smt Euclidean_Division.pos_mod_sign a1(1) a1(2) atLeastAtMost_iff diff_is_0_eq int_nat_eq less_one mod_if mod_minus_cong nat_int nat_mod_distrib nat_zminus_int not_le of_nat_0_less_iff)
-        then show "x = y" using a1 by auto
       qed
       show "(\<lambda>n. nat (- int n mod int k)) ` {1..k} = {0..k - 1}"
         unfolding image_def 
@@ -4166,8 +4144,7 @@ proof -
           fix y
           assume "y \<in> {y. \<exists>x\<in>{1..k}. y = nat (- int x mod int k)}"
           then obtain x where "x\<in>{1..k} \<and> y = nat (- int x mod int k)" by blast
-          then show "y \<in> {0..k - 1}" 
-            by (metis One_nat_def Suc_pred assms(3) atMost_atLeast0 atMost_iff int_nat_eq less_Suc_eq_le nat_int of_nat_0 of_nat_0_less_iff of_nat_less_iff unique_euclidean_semiring_numeral_class.pos_mod_bound)
+          then show "y \<in> {0..k - 1}" by (simp add: nat_le_iff of_nat_diff)           
         qed
         show "?A \<supseteq> ?B" 
         proof 
@@ -4178,10 +4155,10 @@ proof -
           have "x = nat (- int (k-x) mod int k)"
           proof -
             have "nat (- int (k-x) mod int k) = nat (int x) mod int k"
-              by (smt Euclidean_Division.pos_mod_sign \<open>k - x \<in> {1..k}\<close> atLeastAtMost_iff int_nat_eq int_ops(6) mod_add_self2 not_one_le_zero of_nat_le_0_iff)
+              apply(simp add: int_ops(6),rule conjI)
+              using \<open>k - x \<in> {1..k}\<close> by force+
             also have "... = x" 
-              using 1 
-              by (metis One_nat_def Suc_pred assms(3) atLeastAtMost_iff less_Suc_eq_le mod_less nat_int of_nat_mod)
+              using 1 assms(3) by auto
             finally show ?thesis by presburger
           qed
           then show "x \<in> {y. \<exists>x\<in>{1..k}. y = nat (- int x mod int k)}"
@@ -4196,21 +4173,19 @@ proof -
             (\<Sum>x = 1..k. 1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
         gauss_sum \<chi> k 1 * unity_root k (- int (m * nat (- int x mod int k))))"
       proof(rule sum.cong,simp)
-        fix x
-        
+        fix x        
         have "(int m * (int x mod int k)) mod k =
               (m*x) mod k" 
           by (simp add: mod_mult_right_eq zmod_int)
         also have "... = (- ((- int (m*x) mod k))) mod k" 
           by (simp add: mod_minus_eq of_nat_mod)
-        also have "... = (- (int m * (- int x mod int k))) mod k"
-          by (metis (mono_tags, hide_lams) mod_minus_eq mod_mult_right_eq mult_minus_right of_nat_mult)
-        finally have "(int m * (int x mod int k)) mod k = (- (int m * (- int x mod int k))) mod k"
-          by blast
-        
+        have "(int m * (int x mod int k)) mod k = (- (int m * (- int x mod int k))) mod k"
+          apply(subst mod_mult_right_eq,subst add.inverse_inverse[symmetric],subst (5) add.inverse_inverse[symmetric])
+          by(subst minus_mult_minus,subst mod_mult_right_eq[symmetric],auto)
         then have "unity_root k (int m * (int x mod int k)) =
-              unity_root k (- (int m * (- int x mod int k)))"
-          by (metis unity_mod)
+                   unity_root k (- (int m * (- int x mod int k)))"
+          using unity_mod[of k "int m * (int x mod int k)"] 
+                 unity_mod[of k " - (int m * (- int x mod int k))"] by argo
         then show "1 / of_nat k * cnj (\<chi> (nat (- int x mod int k))) *
          gauss_sum \<chi> k 1 *
          unity_root k (int (m * nat (int x mod int k))) =
@@ -4250,7 +4225,13 @@ proof -
       using sum_shift_lb_Suc0_0[of ?f, OF \<open>?f 0 = 0\<close>]
       by auto
     also have "... = (\<Sum>n = 1..k. ?f n)"
-      using \<open>?f k = 0\<close> by (metis (no_types, lifting) One_nat_def Suc_pred add.right_neutral assms(3) not_less_eq sum_cl_ivl_Suc)
+    proof(rule sum.mono_neutral_left,simp,simp,safe)
+      fix i
+      assume "i \<in> {1..k}" "i \<notin> {1..k - 1}" 
+      then have "i = k" using \<open>k > 0\<close> by auto
+      then show "1 / of_nat k * cnj (\<chi> i) * gauss_sum \<chi> k 1 * unity_root k (- int (m * i)) = 0" 
+        using \<open>?f k = 0\<close> by blast
+    qed
     finally show ?thesis by blast
   qed
   also have "... = (\<Sum>n = 1..k.
@@ -4264,7 +4245,7 @@ proof -
       have "\<tau> \<chi> k / sqrt (real k) = gauss_sum \<chi> k 1 div sqrt k div sqrt(k)"
         using assms(4) by auto
       also have "... = gauss_sum \<chi> k 1 div (sqrt k * sqrt(k))"
-        using divide_divide_eq_left by (metis of_real_mult)
+        by(subst divide_divide_eq_left,subst of_real_mult,blast) 
       also have "... = gauss_sum \<chi> k 1 div k" 
         using real_sqrt_mult_self by simp
       finally show ?thesis by simp
@@ -4435,20 +4416,18 @@ next
 next
   case (step n)
   have "harm (n+1) = harm n + 1/(n+1)"
-    by (metis Suc_eq_plus1 harm_Suc inverse_eq_divide)
+    by((subst Suc_eq_plus1[symmetric])+,subst harm_Suc,subst inverse_eq_divide,blast)
   also have "... < ln (real (2 * n + 1)) + 1/(n+1)"
     using step(1-2) by auto
   also have "... < ln (real (2 * n + 1)) + ln(1+2/(2*n+1))"
   proof -
-    find_theorems "harm _"
     from step(1) have "real n \<ge> 1" by simp
     have "1 / real (n + 1) < ln (1 + 2 / real (2 * n + 1))"
       using ineq_2[OF \<open>1 \<le> (real n)\<close>]  by (simp add: add.commute)
     then show ?thesis by auto
   qed
   also have "... = ln ((2 * n + 1) * (1+2/(2*n+1)))"
-    apply(rule ln_mult[symmetric],simp,simp)
-    using \<open>n \<ge> 1\<close> by (metis add_pos_pos divide_pos_pos less_numeral_extra(1) mult_2 of_nat_0_less_iff of_nat_Suc of_nat_add one_add_one zero_less_Suc)
+    by(rule ln_mult[symmetric],simp,simp add: field_simps)
   also have "... = ln(2*(n+1)+1)"
   proof -
     have "(2 * n + 1) * (1+2/(2*n+1)) = 2*(n+1)+1"
@@ -4523,6 +4502,8 @@ proof -
     using even_case[OF assms] by blast
 qed
 
+text\<open>Theorem 8.21\<close>
+
 theorem polya_inequality:
   fixes \<chi> :: "nat \<Rightarrow> complex" and k x :: nat
   assumes is_char: "\<chi> \<in> dcharacters k"
@@ -4541,8 +4522,10 @@ proof -
   {fix m
   have "\<chi> m = (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n))"
     using fourier_primitive_character(1)[OF is_char is_prim \<open>k > 0\<close>, of "\<lambda> \<chi> k. \<tau>" m] \<tau>_def by blast}
-  then have "(\<Sum> m = 1..x. \<chi>(m)) = (\<Sum> m = 1..x. (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n)))"
-    by metis
+  note chi_expr = this
+  have "(\<Sum> m = 1..x. \<chi>(m)) = (\<Sum> m = 1..x. (\<tau> div sqrt k) * (\<Sum> n = 1..k. (cnj (\<chi> n)) * unity_root k (-m*n)))"
+    apply(rule sum.cong,simp)
+    using chi_expr by blast
   also have "... = (\<Sum> m = 1..x. (\<Sum> n = 1..k. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
     by(rule sum.cong,simp,simp add: sum_distrib_left)
   also have "... = (\<Sum> n = 1..k. (\<Sum> m = 1..x. (\<tau> div sqrt k) * ((cnj (\<chi> n)) * unity_root k (-m*n))))"
@@ -4593,9 +4576,10 @@ proof -
       fix n
       assume "n \<in> {1..k - 1}" 
       define sum_aux :: real where "sum_aux = cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))"
+      have "sum_aux \<ge> 0" unfolding sum_aux_def by auto
       have "cmod (cnj (\<chi> n)) \<le> 1" using ineq .
       then have "cmod (cnj (\<chi> n)) * sum_aux \<le> 1 * sum_aux"
-        by (metis mult.commute mult_left_mono norm_ge_zero sum_aux_def)
+        using \<open>sum_aux \<ge> 0\<close> by (simp add: mult_left_le_one_le)
       then show " cmod (cnj (\<chi> n)) *
          cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))
          \<le> cmod (\<Sum> m = 1..x. unity_root k (- int m * int n))"
@@ -4620,10 +4604,8 @@ proof -
         by (simp add: right_diff_distrib')
       have 2: "(- int xa * k + int xa *n) mod k = (int xa * n) mod k"
         using mod_mult_self3 by blast
-      show "unity_root k (- int xa * (int k - n)) =
-            unity_root k (int xa * n)"
-        using unity_mod 1 2
-        by metis
+      show "unity_root k (- int xa * (int k - n)) = unity_root k (int xa * n)"
+        by(subst 1,subst unity_mod,subst 2,subst unity_mod[symmetric],simp)
     qed
     also have "... = cnj(f(n))"
     proof -
@@ -4648,7 +4630,8 @@ proof -
     assume "odd k" 
     define g where "g = (\<lambda> n. cmod (f (n)))"
     have "(k-1) div 2  = k div 2" using \<open>odd k\<close> \<open>k > 1\<close> 
-      by (metis div_mult_self1_is_m odd_two_times_div_two_nat pos2)
+      using div_mult_self1_is_m[OF pos2,of "k-1"] 
+            odd_two_times_div_two_nat[OF \<open>odd k\<close>] by linarith      
     have "(\<Sum>i=1..k-1. g i) = (\<Sum>i\<in>{1..k div 2}\<union>{k div 2<..k-1}. g i)"
       using \<open>k > 1\<close> by(intro sum.cong,auto) 
     also have "\<dots> = (\<Sum>i\<in>{1..k div 2}. g i) + (\<Sum>i\<in>{k div 2<..k-1}. g i)"
@@ -4667,8 +4650,7 @@ proof -
       by(rule sum_distrib_left[symmetric])
     finally have 2: "(\<Sum>i=1..k div 2. g i + g (k - i)) = 2 * (\<Sum>i=1..k div 2. g i)"
       by blast
-    from 1 2 have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..k div 2. g i)"
-      by metis
+    from 1 2 have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..k div 2. g i)" by algebra
     then show "(\<Sum>n = 1..k - 1. cmod (f (int n))) \<le> 2 * (\<Sum> n = 1..(k-1) div 2. cmod (f (int n)))" 
       unfolding g_def \<open>(k-1) div 2 = k div 2\<close> by blast
   next
@@ -4698,8 +4680,7 @@ proof -
       by(rule sum_distrib_left[symmetric])
     finally have 2: "(\<Sum>i=1..<k div 2. g i + g (k - i)) = 2 * (\<Sum>i=1..<k div 2. g i)"
       by blast
-    from 1 2 have 3: "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..<k div 2. g i) + g(k div 2)"
-      by metis
+    from 1 2 have 3: "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..<k div 2. g i) + g(k div 2)" by algebra
     then have "(\<Sum>i=1..k-1. g i) \<le> 2 * (\<Sum>i=1..(k-2) div 2. g i) + g(k div 2)" 
     proof -
       have "{1..<k div 2} = {1..(k-2) div 2}" by auto
@@ -4721,28 +4702,25 @@ proof -
   have "z^2 = exp (2*(-(pi*n/k)* \<i>))"
     unfolding z_def using exp_double[symmetric] by blast
   also have "... = y"
-    unfolding y_def unity_exp
-    by(simp add: algebra_simps)
+    unfolding y_def unity_exp by(simp add: algebra_simps)
   finally have z_eq: "y = z^2" by blast
   have z_not_0: "z \<noteq> 0" 
     using z_eq by (simp add: z_def)
   
   then have "y \<noteq> 1" 
-    using unity_dvd_int[OF \<open>k > 0\<close>, of n] 
-    using \<open>1 \<le> n\<close> \<open>n \<le> int (k - 1)\<close> not_less unity_dvd_int y_def zdvd_not_zless by auto
+    using unity_dvd_int[OF \<open>k > 0\<close>, of n] \<open>1 \<le> n\<close> \<open>n \<le> int (k - 1)\<close> not_less unity_dvd_int y_def zdvd_not_zless by auto
 
   have "f(n) = (\<Sum> m = 1..x . y^m)" 
     unfolding f_def y_def 
-    by (metis (no_types, lifting) minus_mult_commute mult.commute unity_pow y_def)
-  also have "... = (\<Sum> m = 1..<x+1 . y^m)"
-    by (metis add_diff_cancel_right' add_is_0 g_sum_eq_ineq neq0_conv zero_less_one)
+    by(subst unity_pow,rule sum.cong,simp,simp add: algebra_simps)
+  also have sum: "... = (\<Sum> m = 1..<x+1 . y^m)"
+    by(rule sum.cong,fastforce,simp)
   also have "... = (\<Sum> m = 0..<x+1 . y^m) - 1"
   proof -
     have "y^0 = 1" 
       unfolding y_def
       using unity_pow[of k "-n" 0] unity_k_0 by simp
-    then show ?thesis 
-      by (metis One_nat_def \<open>sum ((^) y) {1..x} = sum ((^) y) {1..<x + 1}\<close> add.right_neutral add_Suc_right add_diff_cancel_left' atLeast0AtMost atLeast0LessThan le_add2 lessThan_Suc_atMost sum_head_Suc)
+    show ?thesis by(simp add: sum_head_upt_Suc)
   qed
   also have "... = (y^(x+1) - 1) div (y - 1) - 1"
     using Set_Interval.geometric_sum[OF \<open>y \<noteq> 1\<close>, of "x+1"]
@@ -4751,8 +4729,7 @@ proof -
   proof -
     have "y - 1 \<noteq> 0" using \<open>y \<noteq> 1\<close> by simp
     show ?thesis
-      using divide_diff_eq_iff[OF \<open>y - 1 \<noteq> 0\<close>, of "(y^(x+1) - 1)" 1]
-      by auto
+      using divide_diff_eq_iff[OF \<open>y - 1 \<noteq> 0\<close>, of "(y^(x+1) - 1)" 1] by auto
   qed
   also have "... = (y^(x+1) - y) div (y - 1)"
     by(simp add: algebra_simps)
@@ -4797,8 +4774,8 @@ proof -
   proof -
     have "cmod(z) = 1" 
       unfolding z_def by auto
-    then have "cmod(z^(x+1)) = 1" 
-      by (metis norm_power power_one)
+    have "cmod(z^(x+1)) = 1"
+      by(subst norm_power,simp add: \<open>cmod(z) = 1\<close>)
     then show ?thesis by simp
   qed
   also have "... = cmod((exp (-(x*pi*n/k)* \<i>) - exp ((x*pi*n/k)* \<i>)) div 
@@ -4806,7 +4783,7 @@ proof -
   proof -
     have 1: "z ^ x = exp (-(x*pi*n/k)* \<i>)"
       unfolding z_def
-      by (metis (no_types, lifting) exp_of_nat_mult minus_divide_divide minus_divide_left mult.assoc of_real_mult of_real_of_nat_eq times_divide_eq_right)
+      by(subst exp_of_nat_mult[symmetric],simp add: algebra_simps)
     have "inverse (z ^ x) = inverse (exp (-(x*pi*n/k)* \<i>))"
       using \<open>z ^ x = exp (-(x*pi*n/k)* \<i>)\<close> by auto
     also have "... = (exp ((x*pi*n/k)* \<i>))"
@@ -4893,17 +4870,13 @@ proof -
       by auto
   qed
 
-  from 26 have "cmod(f(n)) \<le> 1 div abs((sin (pi*n/k)))"
-    by simp
+  from 26 have "cmod(f(n)) \<le> 1 div abs((sin (pi*n/k)))" by simp
   also have "... \<le> 1 div abs((2*n) div real k)" 
   proof -
-    have "sin (pi*n/k) \<ge> (2*n) div real k" 
-      using sin_ineq_inst by simp
-    moreover have "(2*n) div real k > 0" 
-      using \<open>0 < k\<close> \<open>1 \<le> n\<close> by auto
+    have "sin (pi*n/k) \<ge> (2*n) div real k" using sin_ineq_inst by simp
+    moreover have "(2*n) div real k > 0" using \<open>0 < k\<close> \<open>1 \<le> n\<close> by auto
     ultimately have "abs((sin (pi*n/k))) \<ge> abs(((2*n) div real k))" by auto
-    have "abs(((2*n) div real k)) > 0" 
-      using \<open>(2*n) div real k > 0\<close> by argo
+    have "abs(((2*n) div real k)) > 0" using \<open>(2*n) div real k > 0\<close> by argo
     then show "1 div abs((sin (pi*n/k))) \<le> 1 div abs(((2*n) div real k))"
       using frac_le[of 1 1,simplified,OF \<open>abs(((2*n) div real k)) > 0\<close> \<open>abs((sin (pi*n/k))) \<ge> abs(((2*n) div real k))\<close>]
       by blast
@@ -4923,8 +4896,7 @@ proof -
         using ineq[OF \<open> int (k div 2) \<ge> 1\<close>,simplified] True \<open>0 < k\<close> by force
     qed
     from 24 have "sqrt (real k) * cmod (sum \<chi> {1..x}) 
-               \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))"
-      by blast
+               \<le> (\<Sum>n = 1..k - 1. cmod (f (int n)))" by blast
     also have "... \<le> 2 * (\<Sum>n = 1..(k - 2) div 2. cmod (f (int n))) + cmod(f(k div 2))"
       using 25(2)[OF True] by blast
     also have "... \<le>  real k * (\<Sum>n = 1..(k - 2) div 2. real 1 div n) + cmod(f(k div 2))"
@@ -4953,7 +4925,7 @@ proof -
       case True 
       have "real k * harm ((k - 2) div 2) + cmod (f (int (k div 2))) \<le> 1" 
         using \<open>k = 2\<close> \<open>cmod (f (int (k div 2))) \<le> 1\<close>
-        unfolding harm_def by(simp)
+        unfolding harm_def by simp
       moreover have "real k * ln (real k) \<ge> 4 div 3" 
         using \<open>k = 2\<close> ln2_ge_two_thirds by auto
       ultimately show ?thesis by argo                
@@ -4988,10 +4960,10 @@ proof -
         by argo
       also have "... = real k * ( ln (real (k - 1) * (1 + 1 / (real k - 1))))"
       proof -
-        have "real (k - 1) > 0" "1 / real (k - 1) > 0"  using \<open>k > 1\<close> by auto
+        have "real (k - 1) > 0" "1 + 1 / (real (k) - 1) > 0"  
+          using \<open>k > 1\<close> by (auto simp add: add_pos_nonneg)
         show ?thesis 
-          using ln_mult [OF \<open>real (k - 1) > 0\<close> \<open>1 / real (k - 1) > 0\<close>,symmetric]
-          by (metis \<open>0 < real (k - 1)\<close> add_pos_pos assms(3) diff_gt_0_iff_gt divide_pos_pos linorder_not_le ln_mult of_nat_1 of_nat_le_iff zero_less_one)
+          by(subst ln_mult [OF \<open>real (k - 1) > 0\<close> \<open>1 + 1 / (real (k) - 1) > 0\<close>,symmetric],blast)          
       qed
       also have "... = real k * ln k"   
         using \<open>k > 1\<close> by(auto simp add: divide_simps)

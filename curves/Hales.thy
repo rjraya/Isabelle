@@ -941,10 +941,11 @@ proof -
 
       {fix x0 y0 :: real
       assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
-      have "\<delta>' x0 y0 = 1"
-        unfolding \<delta>'_def delta_minus_def using t_expr(2)
-        "
-        apply(simp add: algebra_simps t_nz as power2_eq_square)}
+      have "\<delta>' x0 y0 = x0*y0 - x1*y1"
+        unfolding \<delta>'_def delta_minus_def 
+        apply(simp add: algebra_simps as)
+        apply(subst power2_eq_square[symmetric],subst t_expr(1))
+        by(simp add: d_nz)}
       note \<delta>_plus_expr = this
       
       {fix x0 y0 :: real
