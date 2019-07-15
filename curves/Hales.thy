@@ -1,5 +1,6 @@
 theory Hales
   imports Complex_Main "HOL-Algebra.Group" "HOL-Algebra.Bij"
+          "HOL-Library.Bit" Groebner_Bases.Groebner_Bases
 begin
 
 section\<open>Edwards curves\<close>
@@ -57,29 +58,21 @@ proof -
      c^2 * d * x1^2 * y1^2 * y2^4 + c * d^2 * x1^4 * x2^2 * y1^2 * y2^4 + 
      c^2 * d^2 * x1^2 * x2^2 * y1^4 * y2^4 - 
      d^4 * x1^4 * x2^4 * y1^4 * y2^4"    
-  define r1 where "r1 =
-    x2^4 + 4 * c * x2^2 * y2^2 - 2 * d * x2^2 * y2^2 - 
-    2 * c * x2^4 * y2^2 - d * x1^2 * x2^4 * y2^2 - 
-    c * d * x2^4 * y1^2 * y2^2 + c^2 * y2^4 - 2 * c^2 * x2^2 * y2^4 - 
-    c * d * x1^2 * x2^2 * y2^4 + 2 * c * d * x2^4 * y2^4 - 
-    d^2 * x2^4 * y2^4 + d^2 * x1^2 * x2^4 * y2^4 - 
-    c^2 * d * x2^2 * y1^2 * y2^4 + c * d^2 * x2^4 * y1^2 * y2^4 + 
-    d^3 * x1^2 * x2^4 * y1^2 * y2^4
-  "
-  define r2 where "r2 = 
-    1 + x2^2 - x1^2 * x2^2 - c * x2^2 * y1^2 + c * y2^2 - 
-    c * x1^2 * y2^2 - 2 * c * x2^2 * y2^2 + d * x2^2 * y2^2 + 
-    2 * c * x1^2 * x2^2 * y2^2 - 2 * d * x1^2 * x2^2 * y2^2 + 
-    d * x1^4 * x2^2 * y2^2 - c^2 * y1^2 * y2^2 + 
-    2 * c^2 * x2^2 * y1^2 * y2^2 - 2 * c * d * x2^2 * y1^2 * y2^2 + 
-    c^2 * d * x2^2 * y1^4 * y2^2
-  "
 
   define e1 where "e1 = e x1 y1"
   define e2 where "e2 = e x2 y2"
-  have prod_eq_1: "prod - (r1 * e1 + r2 * e2) = 0"
-    unfolding prod_def r1_def e1_def r2_def e2_def e_def              
-    by(simp add: algebra_simps,algebra) 
+
+(*
+  Exception!
+
+  have prod_eq_1: "\<exists> r1 r2. 
+      (e x3 y3)*(delta x1 y1 x2 y2)\<^sup>2 - (r1 * e1 + r2 * e2) = 0"
+    unfolding prod_def e1_def e2_def e_def delta_def
+              delta_plus_def delta_minus_def x3_expr y3_expr
+    apply(algebra add: assms(5,6))
+*)
+  have prod_eq_1: "\<exists> r1 r2. prod - (r1 * e1 + r2 * e2) = 0"
+    unfolding prod_def e1_def e2_def e_def by algebra
 
   define a where "a = x1*x2 - c*y1*y2"
   define b where "b = x1*y2+y1*x2"
@@ -95,8 +88,7 @@ proof -
     1 -
     d * (a div delta_minus x1 y1 x2 y2)\<^sup>2 *
    (b div delta_plus x1 y1 x2 y2)\<^sup>2) * (delta x1 y1 x2 y2)\<^sup>2"
-    unfolding delta_plus_def delta_minus_def delta_def e_def
-    by simp
+    unfolding delta_plus_def delta_minus_def delta_def e_def by simp
   also have "... = 
     ((a div delta_minus x1 y1 x2 y2)\<^sup>2 * (delta x1 y1 x2 y2)\<^sup>2 +
     c * (b div delta_plus x1 y1 x2 y2)\<^sup>2 * (delta x1 y1 x2 y2)\<^sup>2 -
@@ -105,25 +97,18 @@ proof -
    (b div delta_plus x1 y1 x2 y2)\<^sup>2 * (delta x1 y1 x2 y2)\<^sup>2)"
     by(simp add: algebra_simps)
   also have "... = 
-    ((a * delta_plus x1 y1 x2 y2)\<^sup>2 +
-    c * (b * delta_minus x1 y1 x2 y2)\<^sup>2 -
-    (delta x1 y1 x2 y2)\<^sup>2 -
-    d * a\<^sup>2 * b\<^sup>2)"
+    ((a * delta_plus x1 y1 x2 y2)\<^sup>2 + c * (b * delta_minus x1 y1 x2 y2)\<^sup>2 -
+     (delta x1 y1 x2 y2)\<^sup>2 - d * a\<^sup>2 * b\<^sup>2)"
    unfolding delta_def by(simp add: field_simps assms(5,6))+
   also have "... - prod = 0"
-    unfolding prod_def delta_plus_def 
-              delta_minus_def delta_def
-              a_def b_def
-    by algebra
-  finally have "(e x3 y3)*(delta x1 y1 x2 y2)\<^sup>2 = prod"
-    by simp
+    unfolding prod_def delta_plus_def delta_minus_def delta_def a_def b_def by algebra
+  finally have "(e x3 y3)*(delta x1 y1 x2 y2)\<^sup>2 = prod" by simp
   then have prod_eq_2: "(e x3 y3) = prod div (delta x1 y1 x2 y2)\<^sup>2"
     using assms(5,6) delta_def by auto
 
   have "e1 == 0" unfolding e1_def using assms(7) by simp
   moreover have "e2 == 0" unfolding e2_def using assms(8) by simp
-  ultimately have "prod == 0" 
-    using prod_eq_1 by simp
+  ultimately have "prod == 0" using prod_eq_1 by simp
   then show "e x3 y3 == 0" using prod_eq_2 by simp
 qed
 
@@ -150,66 +135,8 @@ proof -
  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' z3) - fst(add z1 z3')"
  define g\<^sub>y where "g\<^sub>y = snd(add z1' z3) - snd(add z1 z3')"
  define gxpoly where "gxpoly = g\<^sub>x * Delta\<^sub>x"
- define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
- 
- define r1x where "r1x = 
-    -d*x1*x2^3*x3*y2^2+d*x1*x2^3*x3^3*y2^2+c*d*x2^2*x3*y1*y2^3-c*d*x2^2*x3^3*y1*y2^3
-    +d*x1*x2^4*x3^2*y2*y3+c*d*x2^3*y1*y2^2*y3+c*d*x1*x2^2*y2^3*y3-d^2*x1*x2^4*x3^2*y2^3*y3
-    +c^2*d*x2*x3^2*y1*y2^4*y3-c*d^2*x2^3*x3^2*y1*y2^4*y3+c*d*x2^4*x3*y1*y2*y3^2
-    -c*d^2*x2^4*x3*y1*y2^3*y3^2-c^2*d*x1*x2*x3*y2^4*y3^2+c*d^2*x1*x2^3*x3*y2^4*y3^2
-    -c^2*d*x2^3*y1*y2^2*y3^3-c^2*d*x1*x2^2*y2^3*y3^3"
- define r2x where "r2x = 
-    x1*x2*x3-x1^3*x2*x3-x1*x2*x3^3+x1^3*x2*x3^3-c*x1*x2*x3*y1^2+c*x1*x2*x3^3*y1^2
-    -c*x3*y1*y2+c*x1^2*x3*y1*y2+c*x3^3*y1*y2-c*x1^2*x3^3*y1*y2+c^2*x3*y1^3*y2-c^2*x3^3*y1^3*y2
-    -c*x2*y1*y3+c*x1^2*x2*y1*y3+c*x2*x3^2*y1*y3-c*x1^2*x2*x3^2*y1* y3+c^2*x2*y1^3*y3-c^2*x2*x3^2*y1^3*y3
-    -c*x1*y2*y3+c*x1^3*y2*y3+c*x1*x3^2*y2*y3-c* x1^3*x3^2*y2*y3+d*x1*x2^2*x3^2*y2*y3-d*x1^3*x2^2*x3^2*y2*y3
-    +c^2*x1*y1^2*y2*y3-c^2*x1*x3^2*y1^2*y2*y3-c*d*x1*x2^2*x3^2*y1^2*y2*y3+c*d*x2*x3^2*y1*y2^2*y3
-    -c*d*x1^2*x2*x3^2*y1*y2^2*y3-c^2*d*x2*x3^2*y1^3*y2^2*y3-c*x1*x2*x3*y3^2+c*x1^3*x2*x3*y3^2
-    +d*x1*x2*x3^3*y3^2-d*x1^3*x2*x3^3*y3^2+c^2*x1*x2*x3*y1^2*y3^2-c*d*x1*x2*x3^3*y1^2*y3^2+c^2*x3*y1*y2*y3^2
-    -c^2*x1^2*x3*y1*y2*y3^2+c*d*x2^2*x3*y1*y2*y3^2-c*d*x1^2*x2^2*x3*y1*y2*y3^2-c*d*x3^3*y1*y2*y3^2
-    +c*d*x1^2*x3^3*y1*y2*y3^2+d^2*x1^2*x2^2*x3^3*y1*y2*y3^2-c^3*x3*y1^3*y2*y3^2-c^2*d*x2^2*x3*y1^3*y2*y3^2
-    +c^2*d*x3^3*y1^3*y2*y3^2-c*d*x1*x2*x3*y2^2*y3^2+c*d*x1^3*x2*x3*y2^2*y3^2+c^2*d*x1*x2*x3*y1^2*y2^2*y3^2
-    -c* d^2*x1*x2*x3^3*y1^2*y2^2*y3^2+c^2*x2*y1*y3^3-c^2*x1^2*x2*y1*y3^3-c*d*x2*x3^2*y1*y3^3+c*d*x1^2*x2*x3^2*y1*y3^3
-    -c^3*x2*y1^3*y3^3+c^2*d*x2*x3^2*y1^3*y3^3+c^2*x1*y2*y3^3-c^2*x1^3*y2*y3^3-c*d*x1*x3^2*y2*y3^3
-    +c*d*x1^3*x3^2*y2*y3^3-c^3*x1*y1^2*y2*y3^3+c^2*d*x1*x3^2*y1^2*y2*y3^3+c*d^2*x1*x2^2*x3^2*y1^2*y2*y3^3
-    +c* d^2*x1^2*x2*x3^2*y1*y2^2*y3^3"
-  define r3x where "r3x = 
-    -x1*x2*x3+x1^3*x2*x3+x1*x2^3*x3-x1^3*x2^3*x3+c*x1*x2*x3*y1^2-c*x1*x2^3*x3*y1^2+c*x3*y1*y2
-    -c*x1^2*x3*y1*y2-c*x2^2*x3*y1*y2+c*x1^2*x2^2*x3*y1*y2-d*x1^2*x2^2*x3*y1*y2-c^2*x3*y1^3*y2
-    +c^2*x2^2*x3*y1^3*y2+c*x1*x2*x3*y2^2-c*x1^3*x2*x3*y2^2-c^2*x1*x2*x3*y1^2*y2^2+c*d*x1*x2*x3*y1^2*y2^2
-    -c^2*x3*y1*y2^3+c^2*x1^2*x3*y1*y2^3+c^3*x3*y1^3*y2^3+c*x2*y1*y3-c*x1^2*x2*y1*y3-c*x2^3*y1*y3
-    +c*x1^2*x2^3*y1*y3-c^2*x2*y1^3*y3+c^2*x2^3*y1^3*y3+c*x1*y2*y3-c*x1^3*y2*y3-c*x1*x2^2*y2*y3
-    +c*x1^3*x2^2*y2*y3-c^2*x1*y1^2*y2*y3+c^2*x1*x2^2*y1^2*y2*y3-c*d*x1*x2^2*y1^2*y2*y3-c^2*x2*y1*y2^2*y3
-    +c^2*x1^2*x2*y1*y2^2*y3-c*d*x1^2*x2*y1*y2^2*y3+c^3*x2*y1^3*y2^2*y3-c^2*x1*y2^3*y3+c^2*x1^3*y2^3*y3
-    +c^3*x1*y1^2*y2^3*y3"
-  
-  define r1y where "r1y = 
-    -d*x2^3*x3*y1*y2^2+d*x2^3*x3^3*y1*y2^2-d*x1*x2^2*x3*y2^3+d*x1*x2^2*x3^3*y2^3+d*x2^4*x3^2*y1*y2*y3
-    -d*x1*x2^3*y2^2*y3+c*d*x2^2*y1*y2^3*y3-d^2*x2^4*x3^2*y1*y2^3*y3-c*d*x1*x2*x3^2*y2^4*y3+d^2*x1*x2^3*x3^2*y2^4*y3
-    -d*x1*x2^4*x3*y2*y3^2+d^2*x1*x2^4* x3*y2^3*y3^2-c^2*d*x2*x3*y1*y2^4*y3^2+c*d^2*x2^3*x3*y1*y2^4*y3^2
-    +c*d*x1*x2^3*y2^2* y3^3-c^2*d*x2^2*y1*y2^3*y3^3"
-  define r2y where "r2y = 
-    x2*x3*y1-x1^2*x2*x3*y1-x2*x3^3*y1+x1^2*x2*x3^3*y1-c*x2*x3*y1^3+c*x2*x3^3*y1^3+x1*x3*y2-x1^3*x3*y2
-    -x1*x3^3*y2+x1^3*x3^3*y2-c*x1*x3*y1^2*y2+c*x1*x3^3*y1^2*y2+x1*x2*y3-x1^3*x2*y3-x1*x2*x3^2*y3
-    +x1^3*x2*x3^2*y3-c*x1*x2*y1^2*y3+c*x1*x2*x3^2*y1^2*y3-c*y1*y2*y3+c*x1^2*y1*y2*y3+c*x3^2*y1*y2*y3
-    -c*x1^2*x3^2*y1*y2*y3+d*x2^2*x3^2*y1*y2*y3-d*x1^2*x2^2*x3^2*y1*y2*y3+c^2*y1^3*y2*y3-c^2*x3^2*y1^3*y2*y3
-    -c*d*x2^2*x3^2*y1^3*y2*y3-d*x1*x2*x3^2*y2^2*y3+d*x1^3*x2*x3^2*y2^2*y3+c*d*x1*x2*x3^2*y1^2*y2^2*y3
-    -c*x2*x3*y1*y3^2+c*x1^2*x2*x3*y1*y3^2+d*x2*x3^3*y1*y3^2-d*x1^2*x2*x3^3*y1*y3^2+c^2*x2*x3*y1^3*y3^2
-    -c*d*x2*x3^3*y1^3*y3^2-c*x1*x3*y2*y3^2+c*x1^3*x3*y2*y3^2-d*x1*x2^2*x3*y2*y3^2+d*x1^3*x2^2*x3*y2*y3^2
-    +d*x1*x3^3*y2*y3^2-d*x1^3*x3^3*y2*y3^2+c^2*x1*x3*y1^2*y2*y3^2+c*d*x1*x2^2*x3*y1^2*y2*y3^2
-    -c*d*x1*x3^3*y1^2*y2*y3^2-d^2*x1*x2^2*x3^3*y1^2*y2*y3^2-c*d*x2*x3*y1*y2^2*y3^2+c*d*x1^2*x2*x3*y1*y2^2*y3^2
-    -d^2*x1^2*x2*x3^3*y1*y2^2*y3^2+c^2*d*x2*x3*y1^3*y2^2*y3^2-c*x1*x2*y3^3+c*x1^3*x2*y3^3+d*x1*x2*x3^2*y3^3
-    -d*x1^3*x2*x3^2*y3^3+c^2*x1*x2*y1^2*y3^3-c*d*x1*x2*x3^2*y1^2*y3^3+c^2*y1*y2*y3^3-c^2*x1^2*y1*y2*y3^3
-    -c*d*x3^2*y1*y2*y3^3+c*d*x1^2*x3^2*y1*y2*y3^3+d^2*x1^2*x2^2*x3^2*y1*y2*y3^3-c^3*y1^3*y2*y3^3
-    +c^2*d*x3^2*y1^3*y2*y3^3-c*d^2*x1*x2*x3^2*y1^2*y2^2*y3^3"
-  define r3y where "r3y = 
-    -x2*x3*y1+x1^2*x2*x3*y1+x2^3*x3*y1-x1^2*x2^3*x3*y1+c*x2*x3*y1^3-c*x2^3*x3*y1^3-x1*x3*y2+x1^3*x3*y2+
-    x1*x2^2*x3*y2-x1^3*x2^2*x3*y2+c*x1*x3*y1^2*y2-c*x1*x2^2*x3*y1^2*y2+d*x1*x2^2*x3*y1^2*y2+c*x2*x3*y1*y2^2
-    -c*x1^2*x2*x3*y1*y2^2+d*x1^2*x2*x3*y1*y2^2-c^2*x2*x3*y1^3*y2^2+c*x1*x3*y2^3-c*x1^3*x3*y2^3-c^2*x1*x3*y1^2*y2^3
-    -x1*x2*y3+x1^3*x2*y3+x1*x2^3*y3-x1^3*x2^3*y3+c*x1*x2*y1^2*y3-c*x1*x2^3*y1^2*y3+c*y1*y2*y3-c*x1^2*y1*y2*y3
-    -c*x2^2*y1*y2*y3+c*x1^2*x2^2*y1*y2*y3-d*x1^2*x2^2*y1*y2*y3-c^2*y1^3*y2*y3+c^2*x2^2*y1^3*y2*y3+c*x1*x2*y2^2*y3
-    -c*x1^3*x2*y2^2*y3-c^2*x1*x2*y1^2*y2^2*y3+c*d*x1*x2*y1^2*y2^2*y3-c^2*y1*y2^3*y3+c^2*x1^2*y1*y2^3*y3
-    +c^3*y1^3*y2^3*y3"
+  define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
+
   define gxpoly_expr where "gxpoly_expr = 
     d*x2* y2* (x1^2* x2* x3* y1-x1^2* x2* x3^3* y1-c* x1* x3* y1^2* y2+d* x1^3* x2^2* x3* y1^2* y2
     +c* x1* x3^3* y1^2* y2-d* x1^3* x2^2* x3^3* y1^2* y2-c* d* x1^2* x2* x3* y1^3* y2^2+c* d* x1^2* x2* x3^3* y1^3* y2^2
@@ -265,9 +192,14 @@ proof -
        "1 + d * x1 * y1 * x3' * y3' \<noteq> 0"
     using assms(8-15)
     unfolding delta_plus_def delta_minus_def by blast+
+
   
-  have "gxpoly_expr = r1x * e1 + r2x * e2 + r3x * e3"
-    unfolding gxpoly_expr_def r1x_def e1_def r2x_def e2_def r3x_def e3_def e_def             
+  have gx_div: "\<exists> r1 r2 r3. gxpoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding gxpoly_expr_def e1_def e2_def e3_def e_def 
+    by algebra
+
+  have gy_div: "\<exists> r1 r2 r3. gypoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding gypoly_expr_def e1_def e2_def e3_def e_def 
     by algebra
 
   have simp1gx: "
@@ -308,18 +240,14 @@ proof -
     unfolding gxpoly_expr_def
     by algebra
 
-  have "gxpoly = r1x * e1 + r2x * e2 + r3x * e3"
-    using \<open>gxpoly = gxpoly_expr\<close> \<open>gxpoly_expr = r1x * e1 + r2x * e2 + r3x * e3\<close> by auto
+  obtain r1x r2x r3x where "gxpoly = r1x * e1 + r2x * e2 + r3x * e3"
+    using \<open>gxpoly = gxpoly_expr\<close> gx_div by auto
   then have "gxpoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>x \<noteq> 0" 
     using Delta\<^sub>x_def delta_def assms(10-14) non_unfolded_adds by auto
   then have "g\<^sub>x = 0" 
     using \<open>gxpoly = 0\<close> gxpoly_def by auto
-
-  have "gypoly_expr = r1y * e1 + r2y * e2 + r3y * e3"
-    unfolding gypoly_expr_def r1y_def e1_def r2y_def e2_def r3y_def e3_def e_def             
-    by algebra
 
   have simp1gy: "(x1' * y3 + y1' * x3) * local.delta_plus x1 y1 x3' y3' *
     (local.delta x1 y1 x2 y2 * local.delta x2 y2 x3 y3) = 
@@ -356,8 +284,8 @@ proof -
     unfolding gypoly_expr_def
     by algebra
 
-  have "gypoly = r1y * e1 + r2y * e2 + r3y * e3"
-    using \<open>gypoly = gypoly_expr\<close> \<open>gypoly_expr = r1y * e1 + r2y * e2 + r3y * e3\<close> by auto
+  obtain r1y r2y r3y where "gypoly = r1y * e1 + r2y * e2 + r3y * e3"
+    using \<open>gypoly = gypoly_expr\<close> gy_div by auto
   then have "gypoly = 0" 
     using e1_def assms(16) e2_def assms(17) e3_def assms(18) by auto
   have "Delta\<^sub>y \<noteq> 0" 
@@ -381,7 +309,7 @@ lemma inverse:
   apply(rule conjI)
   using delta_def apply simp
   unfolding e_def delta_plus_def
-  by (smt mult.assoc power2_eq_square semiring_normalization_rules(16))
+  by algebra
 
 lemma affine_closure:
   assumes "delta x1 y1 x2 y2 = 0" "e x1 y1 = 0" "e x2 y2 = 0"
@@ -579,6 +507,8 @@ fun \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where
   "\<rho> (x,y) = (-y,x)"
 fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where 
   "\<tau> (x,y) = (1/(t*x),1/(t*y))"
+
+lemma tau_sq: "(\<tau> \<circ> \<tau>) (x,y) = (x,y)" by(simp add: t_nz)
 
 fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
  "ext_add (x1,y1) (x2,y2) =
@@ -888,6 +818,14 @@ qed
 definition symmetries where 
   "symmetries = {\<tau>,\<tau> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho>,\<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>}"
 
+definition rotations where
+  "rotations = {id,\<rho>,\<rho> \<circ> \<rho>,\<rho> \<circ> \<rho> \<circ> \<rho>}"
+
+lemma tau_rot_sym:
+  assumes "r \<in> rotations"
+  shows "\<tau> \<circ> r \<in> symmetries"
+  using assms unfolding rotations_def symmetries_def by auto
+
 definition e_aff_0 where
   "e_aff_0 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e_aff \<and> 
                                  (x2,y2) \<in> e_aff \<and> 
@@ -929,7 +867,6 @@ proof -
       unfolding e_circ_def using assms p_def q_def by blast+
     have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)" 
     proof -
-      assume "delta_x x1 y1 x2 y2 = 0" 
       obtain a0 b0 where "\<tau> q = (a0,b0)" by fastforce
       obtain a1 b1 where "p = (a1,b1)" by fastforce
       define \<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
@@ -961,11 +898,116 @@ proof -
         unfolding \<delta>_minus_def delta_y_def 
         by(simp add: algebra_simps t_nz as)}
       note \<delta>_minus_expr = this
+      
+      {fix x0 y0 :: real
+      assume "x0 \<noteq> 0" "y0 \<noteq> 0" 
+      define q where "q = 1 / (x0 * y0 * x1 * y1)"
+      have "q*x0*y0*x1*y1 - 1 = 0" 
+        using q_def \<open>x0 \<noteq> 0\<close> \<open>y0 \<noteq> 0\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> by auto}    
+    
+    {fix x0 y0 :: real
+    assume "\<delta>_plus x0 y0 = 0" 
+    define q where "q = 1 / (x0 * y0 * x1 * y1)"
+    define gb1 where "gb1 = 1 - q * y1^2 - t^2 * y1^2 + q * y1^4"
+    define gb2 where "gb2 = -q - t^2 + q * x1^2 + q * y1^2"
+    define gb3 where "gb3 = 1 - x1^2 - y1^2 + t^2 * x1^2 * y1^2"
+    define gb4 where "gb4 = y0^2 - x1^2"
+    define gb5 where "gb5 = x0 - q * x1 * y0 * y1^3"       
+    
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dplus_0 = this
+    {fix x0 y0 :: real
+    assume "\<delta>_minus x0 y0 = 0" 
+    define q where "q = 1 / (x0 * y0 * x1 * y1)"
+    define gb1 where "gb1 = q + t^2"
+    define gb2 where "gb2 = -1 + t^2 * y1^4"
+    define gb3 where "gb3 = x1^2 + y1^2"
+    define gb4 where "gb4 = y0^2 + y1^2"
+    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"   
+    assume "x0 \<noteq> 0" "y0 \<noteq> 0"
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dminus_0 = this
+    
+      have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        sorry
+      moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+        using \<open>p = (a1, b1)\<close> p_def by auto
+      ultimately have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+        by blast
+      then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
+        unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
+      then obtain g where "g \<in> rotations \<and> \<tau> q = (g \<circ> i) p"
+        by blast
+      then have "q = (\<tau> \<circ> g \<circ> i) p"
+        using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
+      then show "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+        unfolding symmetries_def rotations_def 
+        using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast
     qed
-      sorry
     then show ?thesis using \<open>p \<in> e_circ\<close> by auto
   qed
 qed
+
+lemma dichotomy_2:
+  assumes "p \<in> e_aff" "q \<in> e_aff" 
+  assumes "delta x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)"
+  shows "q = i p"
+  sorry
+
+lemma dichotomy_3:
+  assumes "p \<in> e_aff" "q \<in> e_aff" 
+  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)"
+  shows "q = i p"
+  sorry
+
+section \<open>Projective addition\<close>
+
+definition gluing :: "(((real \<times> real) \<times> bit) \<times> (real \<times> real) \<times> bit) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). ((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1)}"
+
+definition "Bits = range Bit"
+definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
+ "e_aff_bit = e_aff \<times> Bits"
+
+lemma "equiv e_aff_bit gluing"
+  unfolding equiv_def
+  apply(rule conjI)+
+  unfolding refl_on_def
+  apply(rule conjI)
+  using gluing_def e_aff_bit_def
+ 
+
+function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
+  "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
+    if "delta x1 y1 x2 y2 \<noteq> 0"
+| "proj_add ((x1,y1),l) ((x2,y2),j) = ((ext_add (x1,y1) (x2,y2)), l+j)" 
+if "delta' x1 y1 x2 y2 \<noteq> 0"
+
+proof(atomize_elim) 
+  fix x :: "((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)"
+  obtain x1 y1 l x2 y2 j where "x = (((x1, y1), l), (x2, y2), j)"
+    by (metis surj_pair)
+  have "delta x1 y1 x2 y2 \<noteq> 0 \<or> delta' x1 y1 x2 y2 \<noteq> 0"
+    try0
+  assume "\<exists> g. (x2,y2) = (g \<circ> i) p" "g \<in> symmetries"
+qed
+
 
 
 end
