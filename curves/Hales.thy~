@@ -507,7 +507,7 @@ fun \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where
   "\<rho> (x,y) = (-y,x)"
 fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where 
   "\<tau> (x,y) = (1/(t*x),1/(t*y))"
-term nat
+
 lemma tau_sq: "(\<tau> \<circ> \<tau>) (x,y) = (x,y)" by(simp add: t_nz)
 
 fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
@@ -903,20 +903,47 @@ proof -
       assume "x0 \<noteq> 0" "y0 \<noteq> 0" 
       define q where "q = 1 / (x0 * y0 * x1 * y1)"
       have "q*x0*y0*x1*y1 - 1 = 0" 
-        using q_def \<open>x0 \<noteq> 0\<close> \<open>y0 \<noteq> 0\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> by auto}
-
-    fix x0 y0 x1 y1 :: real
+        using q_def \<open>x0 \<noteq> 0\<close> \<open>y0 \<noteq> 0\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> by auto}    
+    
+    {fix x0 y0 :: real
+    assume "\<delta>_plus x0 y0 = 0" 
     define q where "q = 1 / (x0 * y0 * x1 * y1)"
-    have "x0*x1 + y0*y1 \<noteq> 0 \<Longrightarrow>
-          (\<exists> q1 q2 q3 q4 q5.
-          q1 * (x0^2 + y0^2 - 1 - t^2 * x0^2 * y0^2) + 
-          q2 * (x1^2 + y1^2 - 1 - t^2 * x1^2 * y1^2) +
-          q3 * (x0*x1 + y0*y1) * (x1*y0 - x0*y1) + 
-          q4 * (x1*y0 - x0*y1) +
-          q5 * (q*x0*x1*y0*y1 - 1) = x0^2 - y1^2)"
-      try0
-      by algebra
-
+    define gb1 where "gb1 = 1 - q * y1^2 - t^2 * y1^2 + q * y1^4"
+    define gb2 where "gb2 = -q - t^2 + q * x1^2 + q * y1^2"
+    define gb3 where "gb3 = 1 - x1^2 - y1^2 + t^2 * x1^2 * y1^2"
+    define gb4 where "gb4 = y0^2 - x1^2"
+    define gb5 where "gb5 = x0 - q * x1 * y0 * y1^3"       
+    
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dplus_0 = this
+    {fix x0 y0 :: real
+    assume "\<delta>_minus x0 y0 = 0" 
+    define q where "q = 1 / (x0 * y0 * x1 * y1)"
+    define gb1 where "gb1 = q + t^2"
+    define gb2 where "gb2 = -1 + t^2 * y1^4"
+    define gb3 where "gb3 = x1^2 + y1^2"
+    define gb4 where "gb4 = y0^2 + y1^2"
+    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"   
+    assume "x0 \<noteq> 0" "y0 \<noteq> 0"
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dminus_0 = this
+    
       have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
         sorry
       moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
@@ -950,6 +977,21 @@ lemma dichotomy_3:
   sorry
 
 section \<open>Projective addition\<close>
+
+definition gluing :: "(((real \<times> real) \<times> bit) \<times> (real \<times> real) \<times> bit) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). ((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1)}"
+
+definition "Bits = range Bit"
+definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
+ "e_aff_bit = e_aff \<times> Bits"
+
+lemma "equiv e_aff_bit gluing"
+  unfolding equiv_def
+  apply(rule conjI)+
+  unfolding refl_on_def
+  apply(rule conjI)
+  using gluing_def e_aff_bit_def
+ 
 
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 

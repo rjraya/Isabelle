@@ -47,15 +47,17 @@ dx = x0 y0 Together[deltad[-d, x1, y1, 1/(t x0), 1/(t y0)]];
 dBx = t x0 y0 deltaBx[z1, z2i] // Together;
 dBy = t x0 y0 deltaBy[z1, z2i] // Together;
 
-polx = {e0, e1, dx, dBx, x0 y0 x1 y1 q - 1}
+polx = {e0, e1, dx, dBx, x0 y0 x1 y1 q - 1};
 gbx = GroebnerBasis[polx, {x0, y0, x1, y1, q}]
-prx = Remainder[{q (x0^2 - y1^2), y0^2 - x1^2, x0 y0 - x1 y1}, gbx, {x0, y0, x1, y1}]
  
 Module[{polx, gbx, prx},
   polx = {e0, e1, dx, dBx, x0 y0 x1 y1 q - 1};
   gbx = GroebnerBasis[polx, {x0, y0, x1, y1, q}];
   prx = Remainder[{q (x0^2 - y1^2), y0^2 - x1^2, x0 y0 - x1 y1}, 
   gbx, {x0, y0, x1, y1}]];
+  
+poly = {e0, e1, dx, dBy, x0 y0 x1 y1 q - 1};
+gby = GroebnerBasis[poly, {x0, y0, x1, y1, q}]
 
 Module[{poly, gby, pry},
   poly = {e0, e1, dx, dBy, x0 y0 x1 y1 q - 1};
@@ -113,6 +115,9 @@ prassoc[i1_, i2_, i3_, i4_] := Module[{},
 
 Table[prassoc[i1, i2, i3, i4], {i1, 0, 1}, {i2, 0, 1}, {i3, 0, 
   1}, {i4, 0, 1}];
+
+
+
 
 
 

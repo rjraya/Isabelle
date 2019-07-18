@@ -37,8 +37,6 @@ lemma add_with_deltas:
 lemma commutativity: "add z1 z2 = add z2 z1"
   by(cases "z1",cases "z2",simp add: algebra_simps)
 
-(* try first with integers, in paper they use general rings *)
-
 lemma closure: 
   assumes "z1 = (x1,y1)" "z2 = (x2,y2)" "z3 = (x3,y3)" "z3 = add z1 z2"
   assumes "delta_minus x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0"
