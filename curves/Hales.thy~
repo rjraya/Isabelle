@@ -37,8 +37,6 @@ lemma add_with_deltas:
 lemma commutativity: "add z1 z2 = add z2 z1"
   by(cases "z1",cases "z2",simp add: algebra_simps)
 
-(* try first with integers, in paper they use general rings *)
-
 lemma closure: 
   assumes "z1 = (x1,y1)" "z2 = (x2,y2)" "z3 = (x3,y3)" "z3 = add z1 z2"
   assumes "delta_minus x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0"
@@ -978,8 +976,12 @@ lemma dichotomy_3:
 
 section \<open>Projective addition\<close>
 
-definition gluing :: "(((real \<times> real) \<times> bit) \<times> (real \<times> real) \<times> bit) set" where
-  "gluing = {(((x0,y0),l),((x1,y1),j)). ((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1)}"
+typedef e_aff_t = "e_aff" 
+
+definition gluing :: "((e_aff \<times> bit) \<times> (real \<times> real) \<times> bit) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). 
+               ((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
+                (x0 = x1 \<and> y0 = y1 \<and> l = j \<and> (x0,y0) \<in> e_aff)}"
 
 definition "Bits = range Bit"
 definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
@@ -990,8 +992,8 @@ lemma "equiv e_aff_bit gluing"
   apply(rule conjI)+
   unfolding refl_on_def
   apply(rule conjI)
-  using gluing_def e_aff_bit_def
- 
+  using gluing_def e_aff_bit_def e_aff_def e_circ_def
+    apply(simp)
 
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 

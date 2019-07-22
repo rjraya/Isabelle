@@ -976,8 +976,11 @@ lemma dichotomy_3:
 
 section \<open>Projective addition\<close>
 
-definition gluing :: "(((real \<times> real) \<times> bit) \<times> (real \<times> real) \<times> bit) set" where
-  "gluing = {(((x0,y0),l),((x1,y1),j)). ((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1)}"
+definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). 
+               ((x0,y0) \<in> e_aff \<and> (x1,y1) \<in> e_aff) \<and>
+               (((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
+                (x0 = x1 \<and> y0 = y1 \<and> l = j))}"
 
 definition "Bits = range Bit"
 definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
@@ -985,11 +988,20 @@ definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
 
 lemma "equiv e_aff_bit gluing"
   unfolding equiv_def
-  apply(rule conjI)+
-  unfolding refl_on_def
   apply(rule conjI)
-  using gluing_def e_aff_bit_def
- 
+  unfolding refl_on_def
+   apply(rule conjI)
+  unfolding gluing_def e_aff_bit_def Bits_def range_def
+    apply(simp)
+  
+    defer 1
+  using gluing_def
+    apply auto[1]
+   defer 1
+  unfolding gluing_def e_aff_bit_def 
+  
+  using gluing_def e_aff_bit_def e_aff_def e_circ_def
+    apply(simp)
 
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
