@@ -964,15 +964,18 @@ qed
 
 lemma dichotomy_2:
   assumes "p \<in> e_aff" "q \<in> e_aff" 
-  assumes "delta x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)"
+  assumes "delta x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)" "((x1,y1),(x2,y2)) \<in> e_aff_0"
   shows "q = i p"
   sorry
 
 lemma dichotomy_3:
   assumes "p \<in> e_aff" "q \<in> e_aff" 
-  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)"
+  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)" "((x1,y1),(x2,y2)) \<in> e_aff_1"
   shows "q = i p"
   sorry
+
+lemma "\<tau> \<circ> \<tau> = id"
+  using t_nz comp_def by auto
 
 section \<open>Projective addition\<close>
 
@@ -980,41 +983,69 @@ definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<tim
   "gluing = {(((x0,y0),l),((x1,y1),j)). 
                ((x0,y0) \<in> e_aff \<and> (x1,y1) \<in> e_aff) \<and>
                (((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
-                (x0 = x1 \<and> y0 = y1 \<and> l = j))}"
+                ((x0,y0) \<in> e_aff \<and> x0 = x1 \<and> y0 = y1 \<and> l = j))}"
 
 definition "Bits = range Bit"
 definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
  "e_aff_bit = e_aff \<times> Bits"
 
-lemma "equiv e_aff_bit gluing"
+lemma eq_rel: "equiv e_aff_bit gluing"
   unfolding equiv_def
-  apply(rule conjI)
-  unfolding refl_on_def
-   apply(rule conjI)
-  unfolding gluing_def e_aff_bit_def Bits_def range_def
-    apply(simp)
+proof(intro conjI)
+  show "refl_on e_aff_bit gluing"
+    unfolding refl_on_def
+  proof 
+    show "(\<forall>x\<in>e_aff_bit. (x, x) \<in> gluing)"
+      unfolding e_aff_bit_def gluing_def by auto
+    have "range Bit = (UNIV::bit set)" 
+      by (simp add: type_definition.Abs_image[OF type_definition_bit]) 
+    show "gluing \<subseteq> e_aff_bit \<times> e_aff_bit" 
+      unfolding e_aff_bit_def gluing_def Bits_def
+      using \<open>range Bit = (UNIV::bit set)\<close> by auto
+  qed
   
-    defer 1
-  using gluing_def
-    apply auto[1]
-   defer 1
-  unfolding gluing_def e_aff_bit_def 
+  show "sym gluing" 
+    unfolding sym_def gluing_def
+    by(auto simp add: e_circ_def t_nz)
   
-  using gluing_def e_aff_bit_def e_aff_def e_circ_def
-    apply(simp)
+  show "trans gluing"
+    unfolding trans_def gluing_def
+     by(auto simp add: e_circ_def t_nz)
+qed
+
+definition e_proj where "e_proj = e_aff_bit // gluing"
 
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
     if "delta x1 y1 x2 y2 \<noteq> 0"
 | "proj_add ((x1,y1),l) ((x2,y2),j) = ((ext_add (x1,y1) (x2,y2)), l+j)" 
-if "delta' x1 y1 x2 y2 \<noteq> 0"
-
+    if "delta' x1 y1 x2 y2 \<noteq> 0"
+| "proj_add ((x1,y1),l) ((x2,y2),j) = undefined"
+    if "delta x1 y1 x2 y2 = 0 \<and> delta' x1 y1 x2 y2 = 0"
+        apply(fast,fastforce)
+  defer 1
+  apply simp+
+  
+  
 proof(atomize_elim) 
+  thm dichotomy_1
+  show "\<And>x. (\<exists>x1 y1 x2 y2 l j.
+             (delta x1 y1 x2 y2 \<noteq> 0 \<and>
+              (x1, y1) \<in> e_aff \<and> (x2, y2) \<in> e_aff) \<and>
+             x = (((x1, y1), l), (x2, y2), j)) \<or>
+         (\<exists>x1 y1 x2 y2 l j.
+             (delta' x1 y1 x2 y2 \<noteq> 0 \<and>
+              (x1, y1) \<in> e_aff \<and> (x2, y2) \<in> e_aff) \<and>
+             x = (((x1, y1), l), (x2, y2), j)) \<or>
+         (\<exists>x1 y1 x2 y2 l j.
+             ((x1, y1) \<notin> e_aff \<or> (x2, y2) \<notin> e_aff) \<and>
+             x = (((x1, y1), l), (x2, y2), j))" 
+    
   fix x :: "((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)"
   obtain x1 y1 l x2 y2 j where "x = (((x1, y1), l), (x2, y2), j)"
     by (metis surj_pair)
   have "delta x1 y1 x2 y2 \<noteq> 0 \<or> delta' x1 y1 x2 y2 \<noteq> 0"
-    try0
+    
   assume "\<exists> g. (x2,y2) = (g \<circ> i) p" "g \<in> symmetries"
 qed
 
