@@ -1025,8 +1025,9 @@ function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<ti
   apply(fast,fastforce)
   using coherence e_aff_def by auto
 
-function proj_add_class  where
-"proj_add_class c1 c2 = (\<Union> cr \<in> c. proj_add cr.fst cr.snd)"
+function proj_add_class :: "((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set"  where
+"proj_add_class c1 c2 = 
+  (\<Union> cr \<in> c1 \<times> c2.  proj_add cr.fst cr.snd)"
 
 
 lemma
