@@ -1040,7 +1040,7 @@ proof -
   qed    
   then show ?thesis using p_simp by auto
 qed
-
+(*
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
     if "delta x1 y1 x2 y2 \<noteq> 0 \<and> (x1,y1) \<in> e_aff \<and> (x2,y2) \<in> e_aff"
@@ -1053,6 +1053,69 @@ function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<ti
 
 definition proj_add_class where
 "proj_add_class c1 c2 = (case_prod proj_add) ` ({x. proj_add_dom x} \<inter> (c1 \<times> c2))"
+*)
+definition p_delta where 
+  "p_delta p1 p2 = 
+    delta (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
+
+definition p_delta' where 
+  "p_delta' p1 p2 = 
+    delta' (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
+
+partial_function (option) proj_add :: 
+  "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> ((real \<times> real) \<times> bit) option" where
+  "
+  proj_add p1 p2 =  
+    (
+      if (p_delta p1 p2 \<noteq> 0 \<and> fst p1 \<in> e_aff \<and> fst p2 \<in> e_aff) 
+      then Some (add (fst p1) (fst p2), (snd p1) + (snd p2))
+      else 
+        (
+          if (p_delta' p1 p2 \<noteq> 0 \<and> fst p1 \<in> e_aff \<and> fst p2 \<in> e_aff)   
+          then Some (ext_add (fst p1) (fst p2), (snd p1) + (snd p2))
+          else None
+        )
+    )
+  "
+
+definition "proj_add_class c1 c2 = 
+  (case_prod proj_add) ` (Map.dom (case_prod proj_add) \<inter> (c1 \<times> c2))"
+
+lemma rho_circ: 
+  assumes "p \<in> e_circ"
+  shows "\<rho> p \<in> e_circ"
+  using assms unfolding e_circ_def e_aff_def e'_def 
+  by(simp split: prod.splits,argo) 
+
+lemma i_circ:
+  assumes "(x,y) \<in> e_circ"
+  shows "i (x,y) \<in> e_circ"
+  using assms unfolding e_circ_def e_aff_def e'_def by auto
+
+lemma rot_circ:
+  assumes "p \<in> e_circ" "tr \<in> rotations"
+  shows "tr p \<in> e_circ"
+proof -
+  consider (1) "tr = id" | (2) "tr = \<rho>"  | (3) "tr = \<rho> \<circ> \<rho>" | (4) "tr = \<rho> \<circ> \<rho> \<circ> \<rho>"
+    using assms(2) unfolding rotations_def by blast
+  then show ?thesis by(cases,auto simp add: assms(1) rho_circ)          
+qed
+  
+lemma \<tau>_circ:
+  assumes "p \<in> e_circ"
+  shows "\<tau> p \<in> e_circ"
+  using assms unfolding e_circ_def 
+  apply(simp split: prod.splits) 
+  apply(simp add: divide_simps t_nz)
+  unfolding e_aff_def e'_def
+  apply(simp split: prod.splits) 
+  apply(simp add: divide_simps t_nz)
+  apply(subst power_mult_distrib)+
+  apply(subst ring_distribs(1)[symmetric])+
+  apply(subst (1) mult.assoc)
+  apply(subst right_diff_distrib[symmetric])
+  apply(simp add: t_nz)
+  by(simp add: algebra_simps)
 
 lemma covering:
   assumes "p \<in> e_proj" "q \<in> e_proj"
@@ -1060,7 +1123,7 @@ lemma covering:
 proof -
   from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
   obtain x y l x' y' l' where 
-    "p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)} " 
+    p_q_expr: "p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)} " 
     "q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}"
     "(x,y) \<in> e_aff" "(x',y') \<in> e_aff" 
     by blast
@@ -1073,26 +1136,50 @@ proof -
   then show ?thesis 
   proof(cases)
     case 1
+    then obtain r where eq: "(x',y') = (\<tau> \<circ> r) (i (x,y))" "r \<in> rotations"
+      unfolding symmetries_def rotations_def by force
+    then have "\<tau> \<in> G" unfolding G_def by auto
+    have "i (x,y) \<in> e_circ"
+      using 1 unfolding e_circ_def e_aff_def e'_def by auto
+    then have "(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ" 
+      using i_circ rho_circ rot_circ \<tau>_circ eq(2) by auto
+    have "\<tau> (x',y') \<noteq> (\<tau> \<circ> r \<circ> i) (x,y)"
+      unfolding eq(1) 
+      using g_no_fp[OF \<open>\<tau> \<in> G\<close> \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close>] 
+      apply(simp)
+      by (metis \<tau>.simps c_eq_1 d_nz divide_divide_eq_left fst_conv id_apply mult.assoc mult_cancel_right1 power2_eq_square semiring_normalization_rules(11) t_expr(1) t_sq_n1)
+    have "proj_add_class {((x,y),l)} ((x',y'),l') = 
+          proj_add_class ((x,y),l) (\<tau> (x',y'),l'+1)"
+      
     then show ?thesis 
       
       sorry
   next
     case 2
-    
+    then have "delta x y x' y' \<noteq> 0" 
+      unfolding e_aff_0_def by simp
+    then obtain v where add_some: "proj_add ((x,y),l) ((x',y'),l') = Some v"
+      using proj_add.simps[of "((x,y),l)" "((x',y'),l')"] p_q_expr
+      unfolding p_delta_def by auto
+    then have in_set: "(((x,y),l),((x',y'),l')) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
+      unfolding dom_def using p_q_expr by fast
     then show ?thesis 
-      unfolding e_aff_0_def proj_add_class_def 
-      sorry
+      unfolding proj_add_class_def 
+      using add_some in_set by blast
   next
     case 3
-    then show ?thesis sorry
+    then have "delta' x y x' y' \<noteq> 0" 
+      unfolding e_aff_1_def by simp
+    then obtain v where add_some: "proj_add ((x,y),l) ((x',y'),l') = Some v"
+      using proj_add.simps[of "((x,y),l)" "((x',y'),l')"] p_q_expr
+      unfolding p_delta'_def by fastforce
+    then have in_set: "(((x,y),l),((x',y'),l')) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
+      unfolding dom_def using p_q_expr by fast
+    then show ?thesis 
+      unfolding proj_add_class_def 
+      using add_some in_set by blast
   qed
-  thm dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>]
-
 qed
-
-
-
-
 
 function proj_add_class :: "((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set"  where
 "proj_add_class c1 c2 = 
