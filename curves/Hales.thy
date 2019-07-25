@@ -1,6 +1,7 @@
 theory Hales
   imports Complex_Main "HOL-Algebra.Group" "HOL-Algebra.Bij"
           "HOL-Library.Bit" Groebner_Bases.Groebner_Bases
+          
 begin
 
 section\<open>Edwards curves\<close>
@@ -1015,6 +1016,31 @@ qed
 
 definition e_proj where "e_proj = e_aff_bit // gluing"
 
+lemma e_proj_eq:
+  assumes "p \<in> e_proj"
+  shows "\<exists> x y l. (p = {((x,y),l)} \<or> p = {((x,y),l),(\<tau> (x,y),l+1)}) \<and> (x,y) \<in> e_aff"        
+proof -
+  obtain g where p_expr: "p = gluing `` {g}" "g \<in> e_aff_bit"
+    using assms unfolding e_proj_def quotient_def by blast+
+  then obtain x y l where g_expr: "g = ((x,y),l)" "(x,y) \<in> e_aff" 
+    using e_aff_bit_def by auto
+  then have p_simp: "p = gluing `` {((x,y),l)}" "((x,y),l) \<in> e_aff_bit" "(x,y) \<in> e_aff"
+    using p_expr by simp+
+  {fix x' y' l'
+  assume "((x',y'), l') \<in> gluing `` {((x,y),l)}"
+  then have "(x' = x \<and> y' = y \<and> l' = l) \<or>
+        ((x',y') = \<tau> (x,y) \<and> l' = l + 1)" 
+    unfolding gluing_def Image_def by auto}
+  note pair_form = this
+  have "p = {((x,y),l), (\<tau> (x,y), l+1)} \<or> p =  {((x,y),l)}" 
+  proof -
+    have "((x,y),l) \<in> p" 
+      using p_simp eq_rel unfolding equiv_def refl_on_def by blast
+    then show ?thesis using pair_form p_simp by auto
+  qed    
+  then show ?thesis using p_simp by auto
+qed
+
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
     if "delta x1 y1 x2 y2 \<noteq> 0 \<and> (x1,y1) \<in> e_aff \<and> (x2,y2) \<in> e_aff"
@@ -1025,13 +1051,54 @@ function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<ti
   apply(fast,fastforce)
   using coherence e_aff_def by auto
 
-function proj_add_class  where
-"proj_add_class c1 c2 = (\<Union> cr \<in> c. proj_add cr.fst cr.snd)"
+definition proj_add_class where
+"proj_add_class c1 c2 = (case_prod proj_add) ` ({x. proj_add_dom x} \<inter> (c1 \<times> c2))"
 
-
-lemma
+lemma covering:
   assumes "p \<in> e_proj" "q \<in> e_proj"
-  shows "{(pl,ql) | pl \<in> p \<and> ql \<in> q \<and> \<not> undefined (proj_add pl ql)} \<noteq> {}"
+  shows "proj_add_class p q \<noteq> {}"
+proof -
+  from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
+  obtain x y l x' y' l' where 
+    "p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)} " 
+    "q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}"
+    "(x,y) \<in> e_aff" "(x',y') \<in> e_aff" 
+    by blast
+    
+  consider 
+     "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" 
+   | "((x, y), x', y') \<in> e_aff_0" 
+   | "((x, y), x', y') \<in> e_aff_1"
+    using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>] by blast
+  then show ?thesis 
+  proof(cases)
+    case 1
+    then show ?thesis 
+      
+      sorry
+  next
+    case 2
+    
+    then show ?thesis 
+      unfolding e_aff_0_def proj_add_class_def 
+      sorry
+  next
+    case 3
+    then show ?thesis sorry
+  qed
+  thm dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>]
+
+qed
+
+
+
+
+
+function proj_add_class :: "((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set"  where
+"proj_add_class c1 c2 = 
+  (\<Union> cr \<in> c1 \<times> c2.  proj_add (fst cr) (snd cr))"
+
+
 
 end
 
