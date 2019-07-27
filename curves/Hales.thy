@@ -1016,6 +1016,42 @@ qed
 
 definition e_proj where "e_proj = e_aff_bit // gluing"
 
+lemma rho_circ: 
+  assumes "p \<in> e_circ"
+  shows "\<rho> p \<in> e_circ"
+  using assms unfolding e_circ_def e_aff_def e'_def 
+  by(simp split: prod.splits,argo) 
+
+lemma i_circ:
+  assumes "(x,y) \<in> e_circ"
+  shows "i (x,y) \<in> e_circ"
+  using assms unfolding e_circ_def e_aff_def e'_def by auto
+
+lemma rot_circ:
+  assumes "p \<in> e_circ" "tr \<in> rotations"
+  shows "tr p \<in> e_circ"
+proof -
+  consider (1) "tr = id" | (2) "tr = \<rho>"  | (3) "tr = \<rho> \<circ> \<rho>" | (4) "tr = \<rho> \<circ> \<rho> \<circ> \<rho>"
+    using assms(2) unfolding rotations_def by blast
+  then show ?thesis by(cases,auto simp add: assms(1) rho_circ)          
+qed
+  
+lemma \<tau>_circ:
+  assumes "p \<in> e_circ"
+  shows "\<tau> p \<in> e_circ"
+  using assms unfolding e_circ_def 
+  apply(simp split: prod.splits) 
+  apply(simp add: divide_simps t_nz)
+  unfolding e_aff_def e'_def
+  apply(simp split: prod.splits) 
+  apply(simp add: divide_simps t_nz)
+  apply(subst power_mult_distrib)+
+  apply(subst ring_distribs(1)[symmetric])+
+  apply(subst (1) mult.assoc)
+  apply(subst right_diff_distrib[symmetric])
+  apply(simp add: t_nz)
+  by(simp add: algebra_simps)
+
 lemma e_proj_eq:
   assumes "p \<in> e_proj"
   shows "\<exists> x y l. (p = {((x,y),l)} \<or> p = {((x,y),l),(\<tau> (x,y),l+1)}) \<and> (x,y) \<in> e_aff"        
@@ -1032,7 +1068,7 @@ proof -
         ((x',y') = \<tau> (x,y) \<and> l' = l + 1)" 
     unfolding gluing_def Image_def by auto}
   note pair_form = this
-  have "p = {((x,y),l), (\<tau> (x,y), l+1)} \<or> p =  {((x,y),l)}" 
+  have "p = {((x,y),l), (\<tau> (x,y), l+1)} \<or> p = {((x,y),l)}" 
   proof -
     have "((x,y),l) \<in> p" 
       using p_simp eq_rel unfolding equiv_def refl_on_def by blast
@@ -1040,6 +1076,14 @@ proof -
   qed    
   then show ?thesis using p_simp by auto
 qed
+
+lemma rot_comp:
+  assumes "t1 \<in> rotations" "t2 \<in> rotations"
+  shows "t1 \<circ> t2 \<in> rotations"
+  using assms unfolding rotations_def by auto
+
+
+  
 (*
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
   "proj_add ((x1,y1),l) ((x2,y2),j) = ((add (x1,y1) (x2,y2)), l+j)" 
@@ -1081,53 +1125,61 @@ partial_function (option) proj_add ::
 definition "proj_add_class c1 c2 = 
   (case_prod proj_add) ` (Map.dom (case_prod proj_add) \<inter> (c1 \<times> c2))"
 
-lemma rho_circ: 
-  assumes "p \<in> e_circ"
-  shows "\<rho> p \<in> e_circ"
-  using assms unfolding e_circ_def e_aff_def e'_def 
-  by(simp split: prod.splits,argo) 
+lemma rot_com:
+  assumes "tr \<in> rotations"
+  shows "tr \<circ> \<tau> = \<tau> \<circ> tr"
+  using assms unfolding rotations_def by(auto)
 
-lemma i_circ:
-  assumes "(x,y) \<in> e_circ"
-  shows "i (x,y) \<in> e_circ"
-  using assms unfolding e_circ_def e_aff_def e'_def by auto
+lemma rot_inv:
+  assumes "r \<in> rotations"
+  shows "\<exists> r' \<in> rotations. r' \<circ> r = id" 
+  using assms unfolding rotations_def by force
 
-lemma rot_circ:
-  assumes "p \<in> e_circ" "tr \<in> rotations"
-  shows "tr p \<in> e_circ"
+lemma group_lem:
+  assumes "r' \<in> rotations" "r \<in> rotations"
+  assumes "(r' \<circ> i) (x,y) = (\<tau> \<circ> r) (i (x, y))"
+  shows "\<exists> r''. r'' \<in> rotations \<and> i (x,y) = (\<tau> \<circ> r'') (i (x,y))" 
 proof -
-  consider (1) "tr = id" | (2) "tr = \<rho>"  | (3) "tr = \<rho> \<circ> \<rho>" | (4) "tr = \<rho> \<circ> \<rho> \<circ> \<rho>"
-    using assms(2) unfolding rotations_def by blast
-  then show ?thesis by(cases,auto simp add: assms(1) rho_circ)          
+  obtain r'' where "r'' \<circ> r' = id" "r'' \<in> rotations" using rot_inv assms(1) by blast
+  then have "i (x,y) = (r'' \<circ> \<tau> \<circ> r) (i (x, y))"
+    using assms(3) by (simp,metis pointfree_idE)
+  then have "i (x,y) = (\<tau> \<circ> r'' \<circ> r) (i (x, y))"
+    using rot_com[OF \<open>r'' \<in> rotations\<close>] by simp
+  then show ?thesis using rot_comp[OF \<open>r'' \<in> rotations\<close> assms(2)] by auto    
 qed
-  
-lemma \<tau>_circ:
-  assumes "p \<in> e_circ"
-  shows "\<tau> p \<in> e_circ"
-  using assms unfolding e_circ_def 
-  apply(simp split: prod.splits) 
-  apply(simp add: divide_simps t_nz)
-  unfolding e_aff_def e'_def
-  apply(simp split: prod.splits) 
-  apply(simp add: divide_simps t_nz)
-  apply(subst power_mult_distrib)+
-  apply(subst ring_distribs(1)[symmetric])+
-  apply(subst (1) mult.assoc)
-  apply(subst right_diff_distrib[symmetric])
-  apply(simp add: t_nz)
-  by(simp add: algebra_simps)
+
+lemma tau_not_id: "\<tau> \<noteq> id"
+  apply(simp add: fun_eq_iff) 
+  by (metis c_eq_1 eq_divide_eq_1 mult_cancel_left2 one_power2 t_def t_ineq(1))
+
+lemma sym_not_id:
+  assumes "r \<in> rotations"
+  shows "\<tau> \<circ> r \<noteq> id"
+  using assms unfolding rotations_def 
+  apply(subst fun_eq_iff,simp)
+  apply(auto)
+  using tau_not_id apply auto[1]
+   apply (metis d_nz)
+  apply (metis eq_divide_eq_1 minus_mult_minus mult.right_neutral ring_normalization_rules(1) semiring_normalization_rules(29) t_expr(1) t_sq_n1)
+  by (metis d_nz)
 
 lemma covering:
   assumes "p \<in> e_proj" "q \<in> e_proj"
   shows "proj_add_class p q \<noteq> {}"
 proof -
+  have "p \<in> e_aff_bit // gluing"
+    using assms(1) unfolding e_proj_def by blast
   from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
   obtain x y l x' y' l' where 
     p_q_expr: "p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)} " 
     "q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}"
     "(x,y) \<in> e_aff" "(x',y') \<in> e_aff" 
     by blast
-    
+  then have gluings: "p = (gluing `` {((x,y),l)})" 
+                     "q = (gluing `` {((x',y'),l')})"
+    using assms(1) assms(2) unfolding e_proj_def 
+    using Image_singleton_iff equiv_class_eq_iff[OF eq_rel] insertI1 quotientE
+    by metis+
   consider 
      "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" 
    | "((x, y), x', y') \<in> e_aff_0" 
@@ -1148,12 +1200,105 @@ proof -
       using g_no_fp[OF \<open>\<tau> \<in> G\<close> \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close>] 
       apply(simp)
       by (metis \<tau>.simps c_eq_1 d_nz divide_divide_eq_left fst_conv id_apply mult.assoc mult_cancel_right1 power2_eq_square semiring_normalization_rules(11) t_expr(1) t_sq_n1)
-    have "proj_add_class {((x,y),l)} ((x',y'),l') = 
-          proj_add_class ((x,y),l) (\<tau> (x',y'),l'+1)"
-      
-    then show ?thesis 
-      
-      sorry
+    have "\<tau> (x',y') \<in> e_aff" 
+      using \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq e_circ_def \<tau>_circ by auto
+    
+    have "\<tau> (x',y') \<in> e_circ" 
+      using \<tau>_circ \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq(1) by auto 
+    then have "(\<tau> (x',y'),l'+1) \<in> (gluing `` {((x',y'),l')})"
+      unfolding gluing_def Image_def 
+      apply(simp split: prod.splits del: \<tau>.simps,safe)
+      apply (simp add: p_q_expr(4))
+      using \<open>\<tau> (x', y') \<in> e_aff\<close> apply auto[1]
+      using \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq(1) by auto
+    then have sc: "(gluing `` {((x',y'),l')}) = (gluing `` {(\<tau> (x',y'),l'+1)})"
+      by (meson Image_singleton_iff eq_rel equiv_class_eq_iff)
+    have "proj_add_class p q =
+          proj_add_class (gluing `` {((x,y),l)}) (gluing `` {((x',y'),l')})"
+      using gluings by simp
+    also have "... = 
+          proj_add_class (gluing `` {((x,y),l)}) (gluing `` {(\<tau> (x',y'),l'+1)})"
+      using sc by simp
+    finally have eq_simp: "proj_add_class p q = proj_add_class (gluing `` {((x,y),l)}) (gluing `` {(\<tau> (x',y'),l'+1)})"
+      by blast
+
+    consider
+      "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. \<tau> (x', y') = (g \<circ> i) (x, y))" 
+    | "((x, y), \<tau> (x', y')) \<in> e_aff_0" 
+    | "((x, y), \<tau> (x', y')) \<in> e_aff_1"
+      using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>\<tau> (x', y') \<in> e_aff\<close>] by blast  
+    then show ?thesis
+    proof(cases)
+      case 1
+      define q' where "q' = \<tau> (x',y')"
+      from 1 have "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. q' = (g \<circ> i) (x, y))"
+        by(simp add: q'_def)  
+      then obtain r' where eq1: "q' = (\<tau> \<circ> r') (i (x,y))" "r' \<in> rotations"
+        unfolding symmetries_def rotations_def by force
+      then have "\<tau> (x',y') = (\<tau> \<circ> r') (i (x,y))" 
+        by(simp add: q'_def)  
+      then have "(x',y') = (r' \<circ> i) (x,y)" 
+        using tau_sq apply(simp del: \<tau>.simps) by (metis surj_pair)
+      then have "(r' \<circ> i) (x,y) = (\<tau> \<circ> r) (i (x, y))"
+        using eq by simp
+      then obtain r'' where eq2: "i (x,y) = (\<tau> \<circ> r'') (i (x,y))" "r'' \<in> rotations"
+        using group_lem[OF \<open>r' \<in> rotations\<close> \<open>r \<in> rotations\<close>] by blast
+      have "\<tau> \<circ> r'' \<in> G" 
+        using G_def \<open>r'' \<in> rotations\<close> rotations_def 
+        apply(simp) 
+        using G_def \<open>(r' \<circ> i) (x, y) = (\<tau> \<circ> r) (i (x, y))\<close> symmetries_def tau_rot_sym by auto
+      have "i (x,y) \<in> e_circ" 
+        using \<open>i (x, y) \<in> e_circ\<close> by auto
+      have "\<tau> \<circ> r'' \<noteq> id"
+        using sym_not_id[OF \<open>r'' \<in> rotations\<close>] by blast
+      then have "False"
+        using g_no_fp[OF \<open>\<tau> \<circ> r'' \<in> G\<close> \<open>i (x,y) \<in> e_circ\<close> eq2(1)[symmetric]]
+        by blast
+      then show ?thesis by blast
+    next
+      case 2
+      define x'' where "x'' = fst (\<tau> (x',y'))"
+      define y'' where "y'' = snd (\<tau> (x',y'))"
+      from 2 have "delta x y x'' y'' \<noteq> 0"
+        unfolding e_aff_0_def using x''_def y''_def by simp 
+      then obtain v where add_some: "proj_add ((x,y),l) ((x'',y''),l'+1) = Some v"
+        using proj_add.simps[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
+        unfolding p_delta_def 
+        using \<open>\<tau> (x', y') \<in> e_aff\<close> fst_conv x''_def y''_def by auto
+      have in_set: "(((x,y),l),((x'',y''),l'+1)) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
+        unfolding dom_def using p_q_expr 
+        apply(simp del: \<tau>.simps)
+        apply(rule conjI)
+        apply (metis add_some surjective_pairing)
+        apply(rule conjI)     
+        apply blast
+        using \<open>(\<tau> (x', y'), l' + 1) \<in> gluing `` {((x', y'), l')}\<close> gluings(2) x''_def y''_def by auto
+      then show ?thesis 
+        unfolding proj_add_class_def 
+        using add_some in_set by blast
+    next
+      case 3
+      define x'' where "x'' = fst (\<tau> (x',y'))"
+      define y'' where "y'' = snd (\<tau> (x',y'))"
+      from 3 have "delta' x y x'' y'' \<noteq> 0"
+        unfolding e_aff_1_def using x''_def y''_def by simp 
+      then obtain v where add_some: "proj_add ((x,y),l) ((x'',y''),l'+1) = Some v"
+        using proj_add.simps[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
+        unfolding p_delta'_def 
+        using \<open>\<tau> (x', y') \<in> e_aff\<close> fst_conv x''_def y''_def 
+        by (metis prod.collapse snd_conv)
+      have in_set: "(((x,y),l),((x'',y''),l'+1)) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
+        unfolding dom_def using p_q_expr 
+        apply(simp del: \<tau>.simps)
+        apply(rule conjI)
+        apply (metis add_some surjective_pairing)
+        apply(rule conjI)     
+        apply blast
+        using \<open>(\<tau> (x', y'), l' + 1) \<in> gluing `` {((x', y'), l')}\<close> gluings(2) x''_def y''_def by auto
+      then show ?thesis 
+        unfolding proj_add_class_def 
+        using add_some in_set by blast
+  qed
   next
     case 2
     then have "delta x y x' y' \<noteq> 0" 
@@ -1181,9 +1326,6 @@ proof -
   qed
 qed
 
-function proj_add_class :: "((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set \<Rightarrow> ((real \<times> real) \<times> bit) set"  where
-"proj_add_class c1 c2 = 
-  (\<Union> cr \<in> c1 \<times> c2.  proj_add (fst cr) (snd cr))"
 
 
 
