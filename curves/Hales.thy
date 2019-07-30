@@ -866,84 +866,65 @@ proof -
       unfolding e_circ_def using assms p_def q_def by blast+
     have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)" 
     proof -
-      obtain a0 b0 where "\<tau> q = (a0,b0)" by fastforce
+      obtain a0 b0 where tq_expr: "\<tau> q = (a0,b0)" by fastforce
       obtain a1 b1 where "p = (a1,b1)" by fastforce
+      have a0_nz: "a0 \<noteq> 0" "b0 \<noteq> 0"
+        using \<open>\<tau> q = (a0, b0)\<close> \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> comp_apply q_def tau_sq by auto 
+      have a1_nz: "a1 \<noteq> 0" "b1 \<noteq> 0"
+        using \<open>p = (a1, b1)\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> p_def by auto
       define \<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
-        "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus x1 y1 (1/(t*x0)) (1/(t*y0)))" 
+        "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
       define \<delta>_plus :: "real \<Rightarrow> real \<Rightarrow> real" where
-        "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_x x1 y1 (1/(t*x0)) (1/(t*y0)))"
+        "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_x a1 b1 (1/(t*x0)) (1/(t*y0)))"
       define \<delta>_minus :: "real \<Rightarrow> real \<Rightarrow> real" where
-        "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y x1 y1 (1/(t*x0)) (1/(t*y0)))"
-
-      {fix x0 y0 :: real
-      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
-      have "\<delta>' x0 y0 = x0*y0 - x1*y1"
+        "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y a1 b1 (1/(t*x0)) (1/(t*y0)))"
+      assume cas1: "delta_minus a1 b1 (fst q) (snd q) = 0" 
+                   "\<delta>_plus a0 b0 = 0"
+      have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
         unfolding \<delta>'_def delta_minus_def 
-        apply(simp add: algebra_simps as)
+        apply(simp add: algebra_simps a0_nz a1_nz)
         apply(subst power2_eq_square[symmetric],subst t_expr(1))
-        by(simp add: d_nz)}
-      note \<delta>_plus_expr = this
-      
-      {fix x0 y0 :: real
-      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
-      have "\<delta>_plus x0 y0 = -x0*x1+y0*y1"
+        by(simp add: d_nz)
+      then have eq1': "a0*b0 - a1*b1 = 0" 
+      proof -
+        have "(fst q) = (1 / (t * a0))" 
+             "(snd q) = (1 / (t * b0))"
+          using tq_expr q_def tau_sq by auto
+        then have "\<delta>' a0 b0 = a0 * b0 * delta_minus a1 b1 (fst q) (snd q)"
+          unfolding \<delta>'_def by auto
+        then show ?thesis using \<delta>'_expr cas1 by auto
+      qed
+      then have eq1: "a0 = a1 * (b1 / b0)"  
+        using a0_nz(2) by(simp add: divide_simps) 
+
+      have "0 = \<delta>_plus a0 b0"
+        using cas1 by auto
+      also have "\<delta>_plus a0 b0 = -a0*a1+b0*b1"
         unfolding \<delta>_plus_def delta_x_def 
-        by(simp add: algebra_simps t_nz as)}
-      note \<delta>_plus_expr = this
+        by(simp add: algebra_simps t_nz a0_nz)
+      also have "... = b0*b1 - a1^2 * (b1 / b0)" 
+        by(simp add: divide_simps a0_nz eq1 power2_eq_square[symmetric])
+      also have "... = (b1 / b0) * (b0^2 - a1^2)"
+        apply(simp add: divide_simps a0_nz)
+        by(simp add: algebra_simps power2_eq_square[symmetric])
+      finally have "(b1 / b0) * (b0^2 - a1^2) = 0" by auto
+      then have eq2: "(b0^2 - a1^2) = 0" 
+        by(simp add: a0_nz a1_nz)
 
-      {fix x0 y0 :: real
-      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
-      have "\<delta>_minus x0 y0 = x0*y1+x1*y0"
-        unfolding \<delta>_minus_def delta_y_def 
-        by(simp add: algebra_simps t_nz as)}
-      note \<delta>_minus_expr = this
-      
-      {fix x0 y0 :: real
-      assume "x0 \<noteq> 0" "y0 \<noteq> 0" 
-      define q where "q = 1 / (x0 * y0 * x1 * y1)"
-      have "q*x0*y0*x1*y1 - 1 = 0" 
-        using q_def \<open>x0 \<noteq> 0\<close> \<open>y0 \<noteq> 0\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> by auto}    
-    
-    {fix x0 y0 :: real
-    assume "\<delta>_plus x0 y0 = 0" 
-    define q where "q = 1 / (x0 * y0 * x1 * y1)"
-    define gb1 where "gb1 = 1 - q * y1^2 - t^2 * y1^2 + q * y1^4"
-    define gb2 where "gb2 = -q - t^2 + q * x1^2 + q * y1^2"
-    define gb3 where "gb3 = 1 - x1^2 - y1^2 + t^2 * x1^2 * y1^2"
-    define gb4 where "gb4 = y0^2 - x1^2"
-    define gb5 where "gb5 = x0 - q * x1 * y0 * y1^3"       
-    
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
-    note case_dplus_0 = this
-    {fix x0 y0 :: real
-    assume "\<delta>_minus x0 y0 = 0" "x0 \<noteq> 0" "y0 \<noteq> 0"
-    define q where "q = 1 / (x0 * y0 * x1 * y1)"
-    define gb1 where "gb1 = q + t^2"
-    define gb2 where "gb2 = -1 + t^2 * y1^4"
-    define gb3 where "gb3 = x1^2 + y1^2"
-    define gb4 where "gb4 = y0^2 + y1^2"
-    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"      
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
-    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
-                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
-      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
-    note case_dminus_0 = this
+      have "a0^2 - b1^2 = a1^2 * (b1^2 / b0^2) - b1^2"
+        by(simp add: algebra_simps eq1 power2_eq_square)
+      also have "... = (b1^2 / b0^2) * (a1^2 - b0^2)"
+        by(simp add: divide_simps a0_nz right_diff_distrib')
+      also have "... = 0" 
+        using eq2 by auto
+      finally have eq3: "a0^2 - b1^2 = 0" by blast
 
-    have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
-        sorry
+      from eq2 have pos1: "a1 = b0 \<or> a1 = -b0" by algebra
+      from eq3 have pos2: "a0 = b1 \<or> a0 = -b1" by algebra
+      have "(a0 = b1 \<and> a1 = b0) \<or> (a0 = -b1 \<and> a1 = -b0)"
+        using pos1 pos2 eq2 eq3 eq1' by fastforce 
+      then have "(a0,b0) = (b1,a1) \<or> (a0,b0) = (-b1,-a1)" by auto        
+      then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}" by simp
       moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
         using \<open>p = (a1, b1)\<close> p_def by auto
       ultimately have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
@@ -954,7 +935,7 @@ proof -
         by blast
       then have "q = (\<tau> \<circ> g \<circ> i) p"
         using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
-      then show "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+      then have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
         unfolding symmetries_def rotations_def 
         using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast
     qed
@@ -1325,21 +1306,28 @@ proof -
   qed
 qed
 
-lemma 
-  assumes "p_delta p q = 0" "p_delta' p q = 0" 
-  shows "card (proj_add_class p q) = 1" 
+lemma wd_d_nz:
+  assumes "g \<in> symmetries" "(x', y') = (g \<circ> i) (x, y)" "(x,y) \<in> e_circ"
+  shows "delta x y x' y' = 0"
+  using assms unfolding symmetries_def e_circ_def delta_def delta_minus_def delta_plus_def
+  by(auto,auto simp add: divide_simps t_nz t_expr(1) power2_eq_square[symmetric] d_nz)
 
-
+lemma wd_d'_nz:
+  assumes "g \<in> symmetries" "(x', y') = (g \<circ> i) (x, y)" "(x,y) \<in> e_circ"
+  shows "delta' x y x' y' = 0"
+  using assms unfolding symmetries_def e_circ_def delta'_def delta_x_def delta_y_def
+  by(auto)
+  
 theorem well_defined:
   assumes "p \<in> e_proj" "q \<in> e_proj"
   shows "card (proj_add_class p q) = 1"
 proof -
   from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
   obtain x y l x' y' l' where 
-    p_q_expr: "(p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)}) \<and>
-     (x, y) \<in> e_aff" 
-    "(q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) \<and>
-     (x', y') \<in> e_aff" by blast
+    p_q_expr: "(p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)})" 
+              "(x, y) \<in> e_aff" 
+              "(q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)})"
+              "(x', y') \<in> e_aff" by blast
   then consider
            (1) "p = {((x, y), l)}" "q = {((x', y'), l')}" |
            (2) "p = {((x, y), l)}" "q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}" |
@@ -1350,39 +1338,69 @@ proof -
       case 1
       then have "proj_add_class p q = proj_add_class {((x, y), l)} {((x', y'), l')}"
         by auto
-      then obtain v where "proj_add ((x, y), l) ((x', y'), l') = Some v"
+      then obtain v where v_expr: "proj_add ((x, y), l) ((x', y'), l') = Some v"
         using covering[OF assms] unfolding proj_add_class_def by auto
-      then have "(\<lambda>(x, y). proj_add x y) ` (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q) = 
+      have "(\<lambda>(x, y). proj_add x y) ` (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q) = 
             {proj_add ((x, y), l) ((x', y'), l')}"
-        unfolding image_def dom_def 1
-      proof(simp split: prod.splits) 
-        have "(\<exists>a b ba. v = ((a, b), ba))" sledgehammer
+        unfolding image_def dom_def 1 apply(simp add: v_expr)
+      proof -
+        have "(\<exists>a b ba. v = ((a, b), ba))" 
+          by (metis surjective_pairing)
+        then show "{y. y = Some v \<and> (\<exists>a b ba. v = ((a, b), ba))} = {Some v}" by simp
+      qed
       then show ?thesis 
-        thm dom_def
-        unfolding proj_add_class_def 
-        apply(simp split: prod.split)
-      then show ?thesis 
-        unfolding proj_add_class_def 
-        sorry
+        unfolding proj_add_class_def by auto
     next
       case 2
+      consider
+        (a) "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" |
+        (b) "((x, y), x', y') \<in> e_aff_0" |
+        (c) "((x, y), x', y') \<in> e_aff_1"
+        using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>] by blast
+      then show ?thesis 
+      proof(cases)
+        case a
+        then obtain g where "g \<in> symmetries" "(x', y') = (g \<circ> i) (x, y)" by auto        
+        then have "delta x y x' y' = 0" "delta' x y x' y' = 0"
+          using wd_d_nz wd_d'_nz a by auto 
+        then have "proj_add ((x, y), l) ((x', y'), l') = None"
+          using proj_add.simps unfolding p_delta_def p_delta'_def by auto
+        then have "proj_add_class p q = {proj_add ((x, y), l) (\<tau> (x', y'), l' + 1)}"
+          using covering[OF assms] unfolding proj_add_class_def 2 by auto
+        then show ?thesis by simp
+      next
+        case b
+        then have "delta x y x' y' \<noteq> 0" 
+          unfolding e_aff_0_def by auto     
+        then have "delta x y (fst (\<tau> (x',y'))) (snd (\<tau> (x',y'))) \<noteq> 0" 
+          unfolding delta_def delta_plus_def delta_minus_def
+          apply(simp add: divide_simps t_nz t_expr(1))
+          sorry
+        have eq1: "proj_add ((x, y), l) ((x', y'), l') =
+              Some (add (x, y) (x', y'),l + l')" 
+          by (simp add: \<open>delta x y x' y' \<noteq> 0\<close> p_delta_def p_q_expr(2) p_q_expr(4) proj_add.simps)
+        have "proj_add ((x, y), l) (\<tau> (x', y'), l') =
+              Some (add (x, y) (x', y'),l + l')"
+          sorry
+        show ?thesis 
+          unfolding proj_add_class_def image_def dom_def 2
+          apply(simp  del: \<tau>.simps add.simps prod.simps  )
+          
+          sorry
+      next
+        case c
+        then show ?thesis sorry
+      qed        
+    next
+      case 3
       then show ?thesis sorry
     next
-    case 3
-      then show ?thesis sorry
-    next
-    case 4
+      case 4
       then show ?thesis sorry
     qed
 
 qed
-  unfolding proj_add_class_def image_def proj_add.simps
-  apply(simp del: ext_add.simps add.simps split: prod.splits)
-  using covering[OF assms(1,2)] assms
-  
-  
-  thm proj_add.simps
-  apply(simp add: proj_add.simps)
+
 
 end
 
