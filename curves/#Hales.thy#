@@ -924,14 +924,13 @@ proof -
       unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
     note case_dplus_0 = this
     {fix x0 y0 :: real
-    assume "\<delta>_minus x0 y0 = 0" 
+    assume "\<delta>_minus x0 y0 = 0" "x0 \<noteq> 0" "y0 \<noteq> 0"
     define q where "q = 1 / (x0 * y0 * x1 * y1)"
     define gb1 where "gb1 = q + t^2"
     define gb2 where "gb2 = -1 + t^2 * y1^4"
     define gb3 where "gb3 = x1^2 + y1^2"
     define gb4 where "gb4 = y0^2 + y1^2"
-    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"   
-    assume "x0 \<noteq> 0" "y0 \<noteq> 0"
+    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"      
     have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
                              q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
       unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
@@ -942,8 +941,8 @@ proof -
                              q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
       unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
     note case_dminus_0 = this
-    
-      have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+
+    have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
         sorry
       moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
         using \<open>p = (a1, b1)\<close> p_def by auto
@@ -1098,11 +1097,11 @@ function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<ti
 definition proj_add_class where
 "proj_add_class c1 c2 = (case_prod proj_add) ` ({x. proj_add_dom x} \<inter> (c1 \<times> c2))"
 *)
-definition p_delta where 
+definition p_delta :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> real" where 
   "p_delta p1 p2 = 
     delta (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
 
-definition p_delta' where 
+definition p_delta' :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> real" where 
   "p_delta' p1 p2 = 
     delta' (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
 
@@ -1329,6 +1328,47 @@ qed
 theorem well_defined:
   assumes "p \<in> e_proj" "q \<in> e_proj"
   shows "card (proj_add_class p q) = 1"
+proof -
+  from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
+  obtain x y l x' y' l' where 
+    p_q_expr: "(p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)}) \<and>
+     (x, y) \<in> e_aff" 
+    "(q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) \<and>
+     (x', y') \<in> e_aff" by blast
+  then consider
+           (1) "p = {((x, y), l)}" "q = {((x', y'), l')}" |
+           (2) "p = {((x, y), l)}" "q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}" |
+           (3) "p = {((x, y), l), (\<tau> (x, y), l + 1)}" "q = {((x', y'), l')}" |
+           (4) "p = {((x, y), l), (\<tau> (x, y), l + 1)}" "q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}" by argo 
+    then show ?thesis
+    proof(cases)
+      case 1
+      then have "proj_add_class p q = proj_add_class {((x, y), l)} {((x', y'), l')}"
+        by auto
+      then obtain v where v_expr: "proj_add ((x, y), l) ((x', y'), l') = Some v"
+        using covering[OF assms] unfolding proj_add_class_def by auto
+      have "(\<lambda>(x, y). proj_add x y) ` (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q) = 
+            {proj_add ((x, y), l) ((x', y'), l')}"
+        unfolding image_def dom_def 1 apply(simp add: v_expr)
+      proof -
+        have "(\<exists>a b ba. v = ((a, b), ba))" 
+          by (metis surjective_pairing)
+        then show "{y. y = Some v \<and> (\<exists>a b ba. v = ((a, b), ba))} = {Some v}" by simp
+      qed
+      then show ?thesis 
+        unfolding proj_add_class_def by auto
+    next
+      case 2
+      then show ?thesis sorry
+    next
+      case 3
+      then show ?thesis sorry
+    next
+      case 4
+      then show ?thesis sorry
+    qed
+
+qed
 
 
 end
