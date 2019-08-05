@@ -1210,6 +1210,11 @@ partial_function (option) proj_add ::
 definition "proj_add_class c1 c2 =
   ((case_prod (\<lambda> x y. the (proj_add x y))) ` (Map.dom (case_prod proj_add) \<inter> (c1 \<times> c2))) // gluing"
 
+lemma proj_add_to_class:
+  "{gluing `` {the (proj_add ((x,y),l) ((x',y'),l'))}} =
+    proj_add_class (gluing `` {((x,y),l)}) (gluing `` {((x',y'),l')})"
+  
+
 lemma rot_com:
   assumes "tr \<in> rotations"
   shows "tr \<circ> \<tau> = \<tau> \<circ> tr"
@@ -1898,62 +1903,22 @@ proof -
           then show ?thesis 
           proof(cases)
             case aaa
-            from aaa have "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = 
-                           Some (add (x, y) (\<tau> (x', y')), l+l'+1)" 
+            thm add_ext_add_2
+            from aaa have aaa_simp: 
+              "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = 
+               Some (add (x, y) (\<tau> (x', y')), l+l'+1)" 
               using proj_add.simps by simp
+            have "x' * y' \<noteq> x * y"
+              using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def
+              apply(simp add: t_nz cc divide_simps)
+              by(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1))
+            have "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
+              apply(simp add: divide_simps t_nz cc)
+              apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz c_eq_1)
+              using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def
+              apply(simp add: t_nz cc \<open>x' * y' \<noteq> x * y\<close>)
               
-            have "add (x, y) (\<tau> (x', y')) = 
-                  add (\<tau> (x, y)) (x', y')"
-              using inversion_invariance_1[OF z3 cc] by argo
-            also have "... = \<tau> (ext_add (x, y) (x', y'))"
-              using add_ext_add[OF z3 cc] by simp
-            finally have twist: "add (x, y) (\<tau> (x', y')) = 
-                                 \<tau> (ext_add (x, y) (x', y'))" by blast
-
-            have "add (x, y) (\<tau> (x', y')) \<in> e_aff"
-            proof -
-              define z1 where "z1 = (x,y)" 
-              obtain x1 y1 where z2_d: "\<tau> (x', y') = (x1,y1)" by fastforce
-              define z2 where "z2 = (x1,y1)"
-              define z3 where "z3 = add z1 z2"
-              obtain x2 y2 where z3_d: "z3 = (x2,y2)" by fastforce
-              have "delta x y x1 y1 \<noteq> 0"
-                using aaa z2_d unfolding p_delta_def by auto
-              then have dpm: "delta_minus x y x1 y1 \<noteq> 0" "delta_plus x y x1 y1 \<noteq> 0"
-                unfolding delta_def by auto
-              have "(x1,y1) \<in> e_aff"
-                unfolding z2_def z2_d[symmetric]
-                using \<open>\<tau> (x', y') \<in> e_aff\<close> by auto
-              have e_eq: "e x y \<equiv> 0" "e x1 y1 \<equiv> 0"
-                using \<open>(x,y) \<in> e_aff\<close> e_e'_iff  unfolding e_aff_def 
-                apply(simp,presburger)
-                using \<open>(x1,y1) \<in> e_aff\<close> e_e'_iff  unfolding e_aff_def 
-                by(simp,presburger)
-              have "e x2 y2 = 0" 
-                using add_closure[OF z1_def z2_def z3_d z3_def dpm e_eq] by simp
-              then show ?thesis 
-                sledgehammer
-            qed
-              using add_closure[OF _ _ _] ld_nz unfolding delta_def delta_minus_def delta_plus_def
-              
-              sorry
-            from aaa have "gluing `` {the (proj_add ((x, y), l) (\<tau> (x', y'), l' + 1))} =
-                           gluing `` {(add (x, y) (\<tau> (x', y')), l + l' + 1)}" by simp
-            also have "... = gluing `` {(\<tau> (add (x, y) (\<tau> (x', y'))), l + l')}"
-              apply(rule equiv_class_eq)
-              using eq_rel apply simp
-              unfolding gluing_def
-              apply(simp del: add.simps)
-              apply(intro conjI)
-                apply(simp add: divide_simps c_eq_1 cc t_nz)
-              unfolding e_aff_def e'_def
-                apply(simp)
-                apply(simp add: divide_simps t_nz cc z3)
-              
-              find_theorems "?r `` _ = ?r `` _"
-            have "gluing `` {((x, y), l)} = gluing `` {(\<tau> (x, y), l + 1)}" 
-              using gluing_inv[OF z3 \<open>(x,y) \<in> e_aff\<close>, of l] by blast
-            
+             
             then show ?thesis sorry
           next
             case bbb
