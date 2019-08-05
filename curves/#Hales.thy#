@@ -1595,23 +1595,43 @@ have x_expr: "x' = 1 \<or> x' = -1"
             unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
             unfolding quotient_def by auto
 *)
-  thm eq_rel
 
 lemma "(gluing `` {p}) // gluing = {gluing `` {p}}"
-  unfolding quotient_def 
 proof -
+  fix X
+  term gluing
+  assume "X \<in> (gluing `` {p}) // gluing"
+  then have "X \<in> {gluing `` {p}}"
+    using Image_iff[of _ gluing "{p}"]
+
+
+
   {fix x
   assume "x \<in> gluing `` {p}"
   then have "gluing `` {x} = gluing `` {p}" 
     by (metis (no_types, hide_lams) Image_singleton_iff eq_rel equiv_class_eq_iff)}
+  note equality = this
   then show "(\<Union>x\<in>gluing `` {p}. {gluing `` {x}}) = {gluing `` {p}}"
   proof -
-    have "(\<Union>x\<in>gluing `` {p}. {gluing `` {x}}) \<subseteq> {gluing `` {p}}"
+    have 1: "(\<Union>x\<in>gluing `` {p}. {gluing `` {x}}) \<subseteq> {gluing `` {p}}"
     proof
       fix y
       assume "y \<in> (\<Union>x\<in>gluing `` {p}. {gluing `` {x}})"
-      then obtain x where "y = gluing `` {x}" by blast
-      show "y \<in> {gluing `` {p}}"
+      then obtain x where x_expr: "y = gluing `` {x}" "x \<in> gluing `` {p}"
+        by blast
+      then show "y \<in> {gluing `` {p}}"
+        using equality[OF x_expr(2)] by auto
+    qed
+    have "(\<Union>x\<in>gluing `` {p}. {gluing `` {x}}) \<supseteq> {gluing `` {p}}"
+    proof
+      fix y
+      assume "y \<in> {gluing `` {p}}"
+      thm Image_iff
+        
+      then have "(y,p) \<in> gluing"
+      then show "y \<in> (\<Union>x\<in>gluing `` {p}. {gluing `` {x}})"
+        thm equality
+    qed
   qed
 qed
 
