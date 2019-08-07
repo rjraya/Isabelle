@@ -4,6 +4,9 @@ theory Hales
           
 begin
 
+nitpick_params [verbose, card = 1-20, max_potential = 0,
+                sat_solver = MiniSat_JNI, max_threads = 1, timeout = 600]
+
 section\<open>Edwards curves\<close>
 
 locale curve_addition =
@@ -1630,15 +1633,16 @@ proof -
 qed
 
 lemma add_cancel:
-  assumes "e x0 y0 = 0" 
+  assumes "e x0 y0 = 0" "e x1 y1 = 0" 
   assumes "delta x0 y0 x1 y1 \<noteq> 0" "delta x0 y0 x2 y2 \<noteq> 0" 
   assumes "add (x0,y0) (x1,y1) = add (x0,y0) (x2,y2)"
+  assumes "x0 \<noteq> 0" "y0 \<noteq> 0"
   shows "(x1,y1) = (x2,y2)"
 proof -
   have "delta x0 (-y0) x1 y1 \<noteq> 0"  
     using assms(2)
     unfolding delta_def delta_plus_def delta_minus_def by auto
-  have "delta_plus x0 y0 x0 y0 \<noteq> 0" 
+  have x0_rules: "delta_plus x0 y0 x0 y0 \<noteq> 0" 
     unfolding delta_plus_def
     apply(subst (1) mult.assoc,subst (2) mult.assoc,subst (1) mult.assoc)
     apply(subst power2_eq_square[symmetric])
@@ -1652,15 +1656,171 @@ proof -
     apply(simp add: c_eq_1)
     thm inverse
     sorry
-    
+
+  have s_rules: "d * x0 * y0 * x1 * y1 \<noteq> 1"
+                "1 + d * x0 * y0 * x1 * y1 \<noteq> 0"
+                "1 + d * x0 * y0 * x0 * y0 \<noteq> 0" 
+                "1 - d * x0 * y0 * x1 * y1 \<noteq> 0" 
+    using assms(3,5) x0_rules
+    unfolding delta_def delta_plus_def delta_minus_def 
+    by auto
   have "add (x0,-y0) (x0,y0) = (1,0)" 
     using inverse[OF assms(1) \<open>delta_plus x0 y0 x0 y0 \<noteq> 0\<close>] by fastforce
-  then have "(x1,y1) = add (add (x0,-y0) (x0,y0)) (x1,y1)"
+  then have 1: "(x1,y1) = add (add (x0,-y0) (x0,y0)) (x1,y1)"
     using neutral commutativity by simp
   also have "... = add (x0,-y0) (add (x0,y0) (x1,y1))"
-    using associativity[of _ _ _ _ _ _ x0 "-y0"  x0 y0 x1 y1,
-                        OF _ _ _ _ ]
-qed
+  proof(cases "delta x0 y0 x0 (-y0) = 0")
+    case True
+    then have "1 - d * x0 * y0 * x0 * y0 = 0" 
+      using \<open>delta_plus x0 (- y0) x0 y0 \<noteq> 0\<close>
+      unfolding delta_def delta_minus_def delta_plus_def 
+      by(simp add: s_rules(3))     
+    have "(x1,y1) = add (x0,-y0) (add (x0,y0) (x1,y1))"
+      apply(simp,safe,simp add: c_eq_1)
+      apply(simp add: divide_simps s_rules,safe,simp add: algebra_simps)
+      using assms(1,2) unfolding e_def apply(simp add: c_eq_1,algebra)
+      using \<open>delta_plus x0 (- y0) x0 y0 \<noteq> 0\<close> True \<open>1 - d * x0 * y0 * x0 * y0 = 0\<close> delta_plus_def apply auto[1]
+      apply(simp add: c_eq_1,simp add: divide_simps s_rules,safe)
+      using assms(1,2) unfolding e_def apply(simp add: c_eq_1,algebra)
+      using \<open>delta_plus x0 (- y0) x0 y0 \<noteq> 0\<close> True \<open>1 - d * x0 * y0 * x0 * y0 = 0\<close> delta_plus_def by auto
+    then show ?thesis using 1 by argo
+  next
+    case False
+    then have s_rules_2: "delta_minus x0 (- y0) x0 y0 \<noteq> 0"
+                       "delta_plus x0 (- y0) x0 y0 \<noteq> 0"
+                       "delta_minus x0 y0 x1 y1 \<noteq> 0"
+                       "delta_plus x0 y0 x1 y1 \<noteq> 0"
+                       "delta_minus (fst (add (x0, - y0) (x0, y0))) (snd (add (x0, - y0) (x0, y0))) x1 y1 \<noteq> 0"
+         "delta_plus (fst (add (x0, - y0) (x0, y0))) (snd (add (x0, - y0) (x0, y0))) x1 y1 \<noteq> 0"
+      using assms(3)
+      unfolding delta_def delta_plus_def delta_minus_def by auto
+    have e_rules: "e x0 (- y0) = 0" 
+      using assms(1) unfolding e_def by fastforce
+    show ?thesis
+    proof(cases "delta x0 (- y0) (fst (add (x0, y0) (x1, y1))) (snd (add (x0, y0) (x1, y1))) \<noteq> 0")
+      case True
+      then have s_rules_3: 
+        "delta_minus x0 (- y0) (fst (add (x0, y0) (x1, y1))) (snd (add (x0, y0) (x1, y1))) \<noteq> 0"
+        "delta_plus x0 (- y0) (fst (add (x0, y0) (x1, y1))) (snd (add (x0, y0) (x1, y1))) \<noteq> 0"
+        unfolding delta_def by auto
+      then show ?thesis 
+        using associativity[of _ _ _ _ _ _ x0 "-y0"  x0 y0 x1 y1,
+                        OF _ _ _ _ s_rules_2 s_rules_3 e_rules assms(1,2)]
+        by fastforce
+    next
+      case False
+      then consider
+        (1) "delta_minus x0 (- y0) (fst (add (x0, y0) (x1, y1)))
+             (snd (add (x0, y0) (x1, y1))) = 0" |
+        (2) "delta_plus x0 (- y0) (fst (add (x0, y0) (x1, y1)))
+             (snd (add (x0, y0) (x1, y1))) = 0" unfolding delta_def by fastforce
+      then show ?thesis
+      proof(cases)
+        case 1
+        then have "(x1,y1) = add (x0, - y0) (add (x0, y0) (x1, y1))"
+          unfolding delta_minus_def
+          apply(simp)
+          apply(rule conjI)
+           apply(simp add: c_eq_1)
+           apply(simp add: divide_simps s_rules)
+          apply(simp add: algebra_simps) 
+          using assms(1,2) unfolding e_def apply(simp add: c_eq_1)
+          
+          apply(simp add: divide_simps s_rules,safe) 
+             apply(simp add: algebra_simps)
+          defer 1
+             apply algebra
+            apply(simp add: divide_simps s_rules,safe) 
+          apply simp 
+          apply argo 
+          apply simp 
+             apply(simp add: divide_simps s_rules)
+            apply(simp add: divide_simps s_rules) 
+           apply(simp add: divide_simps s_rules d_nz assms(6,7),safe)
+            apply (simp add: s_rules(1) s_rules(2))
+           apply (simp add: s_rules(1) s_rules(2))          
+          
+          sorry
+      next
+        case 2
+        then have "(x1,y1) = add (x0, - y0) (add (x0, y0) (x1, y1))"
+          unfolding delta_plus_def
+           apply(simp)
+          apply(simp add: c_eq_1)
+          using assms(1,2) unfolding e_def apply(simp add: c_eq_1)
+          apply(simp add: divide_simps s_rules,safe) 
+          apply(argo,simp,argo,argo,fastforce,argo) 
+               apply(simp add: divide_simps s_rules)
+              apply(simp add: divide_simps s_rules)
+             apply(simp add: divide_simps s_rules)
+            apply(simp add: divide_simps s_rules)
+           apply algebra
+          apply(simp add: divide_simps s_rules d_nz assms(6,7)) 
+          apply(simp add: algebra_simps)
+          sledgehammer
+
+          sorry
+      qed
+       
+    qed
+    have "delta_plus x0 (- y0) (fst (add (x0, y0) (x1, y1))) (snd (add (x0, y0) (x1, y1))) \<noteq> 0"
+      unfolding delta_plus_def 
+      using assms(1,2) unfolding e_def 
+      apply(simp add: divide_simps s_rules) 
+      apply(simp add: c_eq_1 ) 
+      sorry
+    have "delta_minus x0 (- y0) (fst (add (x0, y0) (x1, y1))) (snd (add (x0, y0) (x1, y1))) \<noteq> 0"
+      unfolding delta_minus_def 
+      using assms(1,2) unfolding e_def 
+      apply(simp add: divide_simps s_rules)
+      apply(simp add: c_eq_1 )
+      sorry
+    
+    show ?thesis 
+      
+      sorry
+  qed
+  have "(x1,y1) = add (x0,-y0) (add (x0,y0) (x1,y1))"
+    apply(simp,safe)
+    apply(simp add: c_eq_1)
+     apply(simp add: divide_simps s_rules,safe)
+      apply(simp add: algebra_simps)
+    using assms(1,2) unfolding e_def apply(simp add: c_eq_1)
+      apply algebra
+     using \<open>delta_plus x0 (- y0) x0 y0 \<noteq> 0\<close> assms(5) curve_addition.delta_def curve_addition.delta_minus_def curve_addition.delta_plus_def s_rules(3) apply auto[1]
+     apply(simp add: c_eq_1) 
+     apply(simp add: divide_simps s_rules,safe)
+     using assms(1,2) unfolding e_def apply(simp add: c_eq_1)
+      apply algebra
+     using \<open>delta_plus x0 (- y0) x0 y0 \<noteq> 0\<close> assms(5) curve_addition.delta_def curve_addition.delta_minus_def curve_addition.delta_plus_def s_rules(3) by auto
+    try0
+  also have "... = add (x0,-y0) (add (x0,y0) (x1,y1))"
+    apply(simp)
+    apply(simp add: c_eq_1)
+    using assms(1,2) unfolding e_def apply(simp add: c_eq_1)
+    apply(simp add: divide_simps s_rules d_nz assms(6,7),safe)
+    apply algebra
+                  apply algebra
+                 apply(simp add: divide_simps s_rules d_nz assms(6,7))
+                 apply algebra
+
+    defer 1
+                 apply algebra
+                apply algebra
+               apply algebra
+             apply algebra
+
+            defer 1
+             defer 1
+             apply fastforce 
+           apply algebra
+
+          defer 1
+          defer 1
+           apply(simp add: divide_simps s_rules d_nz assms(6,7))
+         apply algebra
+        apply(simp add: divide_simps s_rules d_nz assms(6,7))         
+    sorry
 
 theorem well_defined:
   assumes "p \<in> e_proj" "q \<in> e_proj"
@@ -2022,10 +2182,7 @@ proof -
               using \<open>\<tau> (x', y') \<in> e_aff\<close> \<open>(x,y) \<in> e_aff\<close> unfolding e_aff_def e'_def
               apply(simp)
               sorry
-            have "fst (add (\<tau> (x, y)) (x', y')) \<noteq> 0"
-              apply(simp add: divide_simps t_nz cc z3)
-              apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz c_eq_1)
-              sorry
+  
             have "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
               apply(simp add: divide_simps t_nz cc)
               apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz c_eq_1)
