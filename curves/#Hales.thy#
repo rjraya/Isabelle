@@ -1266,9 +1266,8 @@ proof -
   note sub = this
   from sub[of c1 c2] sub[of c2 c1] 
   show ?thesis 
-    unfolding proj_add_class_def sledgehammer
-    apply(subst sub[of c2 c1] )
-    apply auto
+    unfolding proj_add_class_def 
+    by auto
 qed
 
 lemma rot_com:
