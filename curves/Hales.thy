@@ -470,6 +470,12 @@ definition e' where "e' x y = x^2 + y^2 - 1 - t^2 * x^2 * y^2"
 
 lemma c_d_pos: "d \<ge> 0" using t_intro by auto
 
+lemma delta_plus_self: "delta_plus x0 y0 x0 y0 \<noteq> 0" 
+    unfolding delta_plus_def
+    apply(subst (1) mult.assoc,subst (2) mult.assoc,subst (1) mult.assoc)
+    apply(subst power2_eq_square[symmetric])
+    using mult_nonneg_nonneg[OF c_d_pos zero_le_power2[of "x0*y0"]] by auto
+
 lemma t_nz: "t \<noteq> 0" using t_def t_ineq(2) by auto
 
 lemma d_nz: "d \<noteq> 0" using t_def t_nz by simp
@@ -500,6 +506,9 @@ fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where
   "\<tau> (x,y) = (1/(t*x),1/(t*y))"
 
 lemma tau_sq: "(\<tau> \<circ> \<tau>) (x,y) = (x,y)" by(simp add: t_nz)
+
+fun i :: "real \<times> real \<Rightarrow> real \<times> real" where 
+  "i (a,b) = (a,-b)" 
 
 fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
  "ext_add (x1,y1) (x2,y2) =
@@ -564,10 +573,6 @@ lemma rotation_invariance_4:
   "delta' x1 y1 (fst (\<rho> (x2,y2))) (snd (\<rho> (x2,y2))) = 
    - delta' x1 y1 x2 y2"
   by(simp add: delta'_def delta_x_def delta_y_def,argo)
-
-fun i :: "real \<times> real \<Rightarrow> real \<times> real" where 
-  "i (a,b) = (a,-b)" 
-
 
 lemma inverse_rule_1:
   "(\<tau> \<circ> i \<circ> \<tau>) (x,y) = i (x,y)" by (simp add: t_nz)
@@ -678,6 +683,16 @@ locale projective_curve =
 begin
   definition "e_aff = {(x,y). e' x y = 0}" 
   definition "e_circ = {(x,y). x \<noteq> 0 \<and> y \<noteq> 0 \<and> (x,y) \<in> e_aff}"
+
+  lemma ext_add_inverse:
+    assumes "(x,y) \<in> e_aff"
+    shows "ext_add (x,y) (i (x,y)) = (1,0)" 
+    using assms unfolding e_aff_def e'_def 
+    apply(simp) 
+  proof -
+    as
+
+  qed
 
   lemma "group (BijGroup (Reals \<times> Reals))"
     using group_BijGroup by blast
@@ -1022,16 +1037,55 @@ proof -
   qed
 
 lemma dichotomy_2:
-  assumes "p \<in> e_aff" "q \<in> e_aff" 
-  assumes "delta x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)" "((x1,y1),(x2,y2)) \<in> e_aff_0"
-  shows "q = i p"
+  assumes "add (x1,y1) (x2,y2) = (1,0)" 
+          "((x1,y1),(x2,y2)) \<in> e_aff_0"
+  shows "(x2,y2) = i (x1,y1)"
+  using assms unfolding delta_def delta_plus_def delta_minus_def 
+                        e_aff_0_def e_aff_def e'_def
+  apply(simp) 
+  apply(rule conjI)
+   defer 1
+  
   sorry
 
+lemma add_cancel_2:
+  assumes "add (x0,y0) (x1,y1) = add (x0,y0) (i (x0,y0))"
+          "((x0,y0),(x1,y1)) \<in> e_aff_0"
+  shows "(x1,y1) = i (x0,y0)"
+proof -
+  have "e x0 y0 = 0" 
+    using assms(2) unfolding e_aff_0_def e_aff_def
+    apply(simp)
+    using e_e'_iff by blast
+  have "add (x0, y0) (i (x0, y0)) = (1,0)"
+    using inverse[OF \<open>e x0 y0 = 0\<close> delta_plus_self] by fastforce
+  then have "add (x0,y0) (x1,y1) = (1,0)" using assms(1) by argo
+  then show ?thesis using dichotomy_2[OF _ assms(2)] by fast
+qed
+        
+
+
 lemma dichotomy_3:
-  assumes "p \<in> e_aff" "q \<in> e_aff" 
-  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "add (x1,y1) (x2,y2) = (1,0)" "((x1,y1),(x2,y2)) \<in> e_aff_1"
-  shows "q = i p"
+  assumes "delta' x1 y1 x2 y2 \<noteq> 0" 
+          "add (x1,y1) (x2,y2) = (1,0)" 
+          "((x1,y1),(x2,y2)) \<in> e_aff_1"
+  shows "(x2,y2) = i (x1,y1)"
   sorry
+
+lemma add_cancel_3:
+  assumes "ext_add (x0,y0) (x1,y1) = ext_add (x0,y0) (i (x0,y0))"
+          "((x0,y0),(x1,y1)) \<in> e_aff_0"
+  shows "(x1,y1) = i (x0,y0)"
+proof -
+  have "e x0 y0 = 0" 
+    using assms(2) unfolding e_aff_0_def e_aff_def
+    apply(simp)
+    using e_e'_iff by blast
+  have "ext_add (x0, y0) (i (x0, y0)) = (1,0)"
+    using ext_add_inverse 
+  then have "add (x0,y0) (x1,y1) = (1,0)" using assms(1) by argo
+  then show ?thesis using dichotomy_2[OF _ assms(2)] by fast
+qed
 
 lemma tau_idemp: "\<tau> \<circ> \<tau> = id"
   using t_nz comp_def by auto
@@ -1266,20 +1320,29 @@ proof -
   note sub = this
   from sub[of c1 c2] sub[of c2 c1] 
   show ?thesis 
-    unfolding proj_add_class_def sledgehammer
-    apply(subst sub[of c2 c1] )
-    apply auto
+   unfolding proj_add_class_def using subset_antisym by metis
 qed
 
-lemma rot_com:
+lemma rot_tau_com:
   assumes "tr \<in> rotations"
   shows "tr \<circ> \<tau> = \<tau> \<circ> tr"
   using assms unfolding rotations_def by(auto)
+
+lemma rot_com:
+  assumes "r \<in> rotations" "r' \<in> rotations"
+  shows "r' \<circ> r = r \<circ> r'" 
+  using assms unfolding rotations_def by force
 
 lemma rot_inv:
   assumes "r \<in> rotations"
   shows "\<exists> r' \<in> rotations. r' \<circ> r = id" 
   using assms unfolding rotations_def by force
+
+lemma rot_aff:
+  assumes "r \<in> rotations" "p \<in> e_aff"
+  shows "r p \<in> e_aff"
+  using assms unfolding rotations_def e_aff_def e'_def
+  by(auto simp add: semiring_normalization_rules(16))
 
 lemma group_lem:
   assumes "r' \<in> rotations" "r \<in> rotations"
@@ -1290,7 +1353,7 @@ proof -
   then have "i (x,y) = (r'' \<circ> \<tau> \<circ> r) (i (x, y))"
     using assms(3) by (simp,metis pointfree_idE)
   then have "i (x,y) = (\<tau> \<circ> r'' \<circ> r) (i (x, y))"
-    using rot_com[OF \<open>r'' \<in> rotations\<close>] by simp
+    using rot_tau_com[OF \<open>r'' \<in> rotations\<close>] by simp
   then show ?thesis using rot_comp[OF \<open>r'' \<in> rotations\<close> assms(2)] by auto    
 qed
 
@@ -1660,7 +1723,7 @@ have x_expr: "x' = 1 \<or> x' = -1"
 *)
 
 lemma eq_class_simp:
-  assumes "X \<in> e_aff_bit // gluing" "X \<noteq> {}"
+  assumes "X \<in> e_proj" "X \<noteq> {}"
   shows "X // gluing = {X}"
 proof
   {
@@ -1684,10 +1747,14 @@ proof(rule eq_class_simp)
   have "((x,y),l) \<in> e_aff_bit" 
     using assms unfolding e_aff_bit_def Bits_def 
     by (metis Bit_cases SigmaI image_eqI)
-  then show "gluing `` {((x, y), l)} \<in> e_aff_bit // gluing"
+  then have "gluing `` {((x, y), l)} \<in> e_aff_bit // gluing"
     by (simp add: quotientI)
   show "gluing `` {((x, y), l)} \<noteq> {}" 
-    using \<open>gluing `` {((x, y), l)} \<in> e_aff_bit // gluing\<close> e_proj_def e_proj_eq by fastforce
+    using \<open>gluing `` {((x, y), l)} \<in> e_aff_bit // gluing\<close> e_proj_def e_proj_eq 
+    by fastforce
+  show "gluing `` {((x, y), l)} \<in> e_proj"
+    using \<open>gluing `` {((x, y), l)} \<in> e_aff_bit // gluing\<close> unfolding e_proj_def
+    by blast
 qed
 
 lemma gluing_class:
@@ -1701,6 +1768,45 @@ proof -
     unfolding gluing_def Image_def
     apply(simp split: prod.splits add: e_circ_def \<open>\<tau> (x,y) \<in> e_aff\<close> assms del: \<tau>.simps \<rho>.simps,safe)
     by(auto simp del: \<tau>.simps, simp add: assms,simp add: \<open>\<tau> (x,y) \<in> e_aff\<close> del: \<tau>.simps)
+qed
+
+lemma proj_add_class_identity:
+  assumes "x \<in> e_proj"
+  shows "proj_add_class (gluing `` {((1, 0), 0)}) x = {x}"
+proof -
+  have "((1,0),0) \<in> e_aff_bit"
+    unfolding e_aff_bit_def e_aff_def e'_def Bits_def
+    using zero_bit_def by fastforce
+  have "(((1, 0), 0), ((1, 0), 0)) \<in> gluing"
+    using eq_rel \<open>((1,0),0) \<in> e_aff_bit\<close>
+    unfolding equiv_def refl_on_def by blast
+  have gluing_one: "gluing `` {((1, 0), 0)} = {((1,0),0)}"
+    unfolding Image_def apply(simp)
+    using gluing_char_zero \<open>(((1, 0), 0), ((1, 0), 0)) \<in> gluing\<close> by fast
+  { fix e1 e2 b
+    assume "((e1,e2),b) \<in> x"
+    then have "((e1,e2),b) \<in> e_aff_bit"
+      using assms unfolding e_proj_def
+      using eq_rel in_quotient_imp_subset by blast
+    have 1: "p_delta ((1,0),0) ((e1,e2),b) \<noteq> 0"
+      unfolding p_delta_def delta_def delta_plus_def delta_minus_def by auto
+    have 2: "(e1,e2) \<in> e_aff" "(1,0) \<in> e_aff" 
+      using \<open>((e1,e2),b) \<in> e_aff_bit\<close> \<open>((1,0),0) \<in> e_aff_bit\<close> unfolding e_aff_bit_def by blast+   
+    have "proj_add ((1,0),0) ((e1,e2),b) = Some ((e1,e2),b)"
+      using 1 2 by(simp add: proj_add.simps)
+  }
+  note sol = this
+  from sol have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter> {((1, 0), 0)} \<times> x) = {((1, 0), 0)} \<times> x"
+    using assms unfolding dom_def by fast
+  from sol have add_eq: "(\<lambda>(x, y). the (proj_add x y)) ` ({((1, 0), 0)} \<times> x) = 
+                x" by force
+  have "x \<noteq> {}"
+    using assms
+    by (metis e_proj_def empty_iff eq_rel equiv_class_self quotientE)
+  show ?thesis
+    apply(simp add: gluing_one)
+    unfolding proj_add_class_def
+    by(simp add: dom_eq add_eq eq_class_simp[OF assms \<open>x \<noteq> {}\<close>])    
 qed
 
 theorem well_defined:
@@ -1872,7 +1978,7 @@ proof -
               by(simp add: divide_simps t_nz cc y_expr \<open>y*y = 1\<close>)+
             then have v2_def: "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) =
                           Some (\<tau> (\<rho> (y*x',y*y')), l+l'+1)"
-              using v2 rot_com rotations_def by auto
+              using v2 rot_tau_com rotations_def by auto
             have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter>
                   {(((0, y), l), (x', y'), l'),
                    (((0, y), l), \<tau> (x', y'), l' + 1)}) = 
@@ -1924,7 +2030,7 @@ proof -
               by(simp add: divide_simps t_nz cc x_expr \<open>x*x = 1\<close>)+
             then have v2_def: "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) =
                           Some (\<tau> (x*x',x*y'), l+l'+1)"
-              using v2 rot_com rotations_def by auto
+              using v2 rot_tau_com rotations_def by auto
             have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter>
                   {(((x, 0), l), (x', y'), l'),
                    (((x, 0), l), \<tau> (x', y'), l' + 1)}) = 
@@ -2004,16 +2110,26 @@ proof -
             snd (add (x,y) (\<tau> (x',y'))) = 0 \<Longrightarrow>
             (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))"
             proof -
+              assume as: "fst (add (x,y) (\<tau> (x',y'))) = 0 \<or> 
+                      snd (add (x,y) (\<tau> (x',y'))) = 0"
               define r1 where "r1 = fst(add (x,y) (\<tau> (x',y')))"
               define r2 where "r2 = snd(add (x,y) (\<tau> (x',y')))"
               from closure_lem have "(r1,r2) \<in> e_aff" using r1_def r2_def by simp
-              {assume "r1 = 0"              
+              have cases: "r1 = 0 \<or> r2 = 0" 
+                using as r1_def r2_def by presburger
+              {assume "r1 = 0" 
               then have "r2 = 1 \<or> r2 = -1"
-                using \<open>(r1,r2) \<in> e_aff\<close> unfolding e_aff_def e'_def 
-                by(simp,algebra)  
-              then obtain g where r_expr: "g \<in> rotations" "(r1,r2) = g (1,0)" 
-                unfolding rotations_def using \<open>r1 = 0\<close> by force
-            
+                  using \<open>(r1,r2) \<in> e_aff\<close> unfolding e_aff_def e'_def 
+                  by(simp,algebra)}
+              note case1 = this
+              {assume "r2 = 0" 
+              then have "r1 = 1 \<or> r1 = -1"
+                  using \<open>(r1,r2) \<in> e_aff\<close> unfolding e_aff_def e'_def 
+                  by(simp,algebra)}
+              note case2 = this
+              from case1 case2 cases obtain g where r_expr: "g \<in> rotations" "(r1,r2) = g (1,0)"
+                unfolding rotations_def by force
+
               have e_eq: "e x y = 0"
                 using \<open>(x,y) \<in> e_aff\<close> e_e'_iff unfolding e_aff_def by simp
               have d_eq: "delta_plus x y x y \<noteq> 0"
@@ -2032,37 +2148,68 @@ proof -
                 apply(simp add: divide_simps)
                 apply(simp add: c_eq_1)+
                 by(simp add: algebra_simps divide_simps)
-              finally have "add (x,y) (\<tau> (x',y')) = add (x,y) ((g \<circ> i) (x,y))"
+              finally have add_eq: "add (x,y) (\<tau> (x',y')) = add (x,y) ((g \<circ> i) (x,y))"
                 by blast
-              then have "\<tau> (x',y') = (g \<circ> i) (x,y)"
-              proof -  
-                have "add (x,-y) (x,y) = (1,0)" 
-                  using inverse[OF \<open>e x y = 0\<close> \<open>delta_plus x y x y \<noteq> 0\<close>] by fastforce
-                then have "\<tau> (x',y') = add (add (x,-y) (x,y)) (\<tau> (x',y'))"
-                  using neutral commutativity by simp
-                then show ?thesis sorry 
+              obtain g' where "g' \<in> rotations" "g \<circ> g' = id"
+                using rot_inv[OF \<open>g \<in> rotations\<close>] rot_com[OF \<open>g \<in> rotations\<close>] by auto
+              then have "add (x,y) (g' (\<tau> (x',y'))) = add (x,y) (i (x,y))"
+              proof -
+                have 1: "g'(add (x, y) (\<tau> (x', y'))) = add (x, y) (g' (\<tau> (x', y')))"
+                  using \<open>g' \<in> rotations\<close> unfolding rotations_def 
+                  apply(auto)
+                  by(simp add: c_eq_1 divide_simps t_nz cc algebra_simps)+
+                have "g'(add (x,y) ((g \<circ> i) (x,y))) = add (x,y) ((g' \<circ> (g \<circ> i)) (x,y))"
+                  using \<open>g \<in> rotations\<close> \<open>g' \<in> rotations\<close> unfolding rotations_def
+                  by(metis \<open>g (add (x, y) (i (x, y))) = add (x, y) ((g \<circ> i) (x, y))\<close> \<open>g \<circ> g' = id\<close> \<open>g' \<in> rotations\<close> comp_apply pointfree_idE r_expr(1) rot_com)
+                also have "... = add (x,y) (i (x,y))"
+                  using \<open>g \<circ> g' = id\<close> rot_com[OF \<open>g \<in> rotations\<close> \<open>g' \<in> rotations\<close>] 
+                  by(simp del: add.simps add: pointfree_idE) 
+                finally have "g'(add (x,y) ((g \<circ> i) (x,y))) = add (x,y) (i (x,y))"
+                  by blast
+                then show ?thesis using add_eq 1 by presburger
               qed
-              then have ?thesis sorry}
-              then show ?thesis sorry
-              
-            qed    
-            have "snd (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
-              apply(simp add: divide_simps t_nz cc)
-              apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz)
-              apply(simp add: ring_distribs(1)[symmetric] d_nz) 
-              apply(rule conjI)
-              defer 1
-              using \<open>x' * y' \<noteq> - x * y\<close> apply(simp)
-              using \<open>\<tau> (x', y') \<in> e_aff\<close> \<open>(x,y) \<in> e_aff\<close> unfolding e_aff_def e'_def
-              apply(simp)
-              sorry
-  
-            have "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
-              apply(simp add: divide_simps t_nz cc)
-              apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz c_eq_1)
-              using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def
-              apply(simp add: t_nz cc \<open>x' * y' \<noteq> x * y\<close>)
-              sorry           
+              then have "g' (\<tau> (x', y')) = i (x,y)" 
+              proof -
+                define x2 where "x2 = fst(g' (\<tau> (x', y')))" 
+                define y2 where "y2 = snd(g' (\<tau> (x', y')))"
+                have 1: "delta x y x2 y2 \<noteq> 0" 
+                  unfolding delta_def delta_plus_def delta_minus_def x2_def y2_def
+                  using \<open>g' \<in> rotations\<close> unfolding rotations_def apply(auto)
+                  using \<open>x' * y' \<noteq> - x * y\<close> by(simp add: \<open>x' * y' \<noteq> x * y\<close> divide_simps cc t_nz 
+                                                algebra_simps power2_eq_square[symmetric] t_expr(1) d_nz)+
+                have "(x2,y2) \<in> e_aff" 
+                  using rot_aff[OF \<open>g' \<in> rotations\<close> \<open>\<tau> (x', y') \<in> e_aff\<close>]
+                  unfolding x2_def y2_def by simp
+                have "((x,y),(x2,y2)) \<in> e_aff_0"
+                  unfolding e_aff_0_def 
+                  using \<open>(x,y) \<in> e_aff\<close> \<open>(x2,y2) \<in> e_aff\<close> \<open>delta x y x2 y2 \<noteq> 0\<close> 
+                  by blast
+                then show ?thesis
+                  using add_cancel_2[OF _ \<open>((x,y),(x2,y2)) \<in> e_aff_0\<close>  ] 
+                  unfolding x2_def y2_def apply(simp del: \<tau>.simps add.simps)
+                  using \<open>add (x, y) (g' (\<tau> (x', y'))) = add (x, y) (i (x, y))\<close> by auto
+              qed
+              then have "\<tau> (x', y') = g (i (x,y))"   
+                by (metis \<open>g \<circ> g' = id\<close> pointfree_idE)
+              then have "(x',y') = \<tau> (g (i (x,y)))" 
+                by (metis pointfree_idE tau_idemp)
+              then have "False" 
+                using b(2) 
+                by (metis (no_types, hide_lams) \<open>\<tau> (x', y') = g (i (x, y))\<close> \<open>\<tau> (x', y') \<in> e_circ\<close> \<open>g' (\<tau> (x', y')) = i (x, y)\<close> \<open>g' \<in> rotations\<close> comp_apply group_add_class.minus_comp_minus i.simps i_circ id_apply r_expr(1) rot_circ tau_rot_sym)
+              then have "fst (add (x,y) (\<tau> (x',y'))) = 0 \<or> snd (add (x,y) (\<tau> (x',y'))) = 0 \<Longrightarrow>
+                         (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" by blast}
+            note case1 = this 
+             
+            then show ?thesis 
+              using case1 case2 
+              unfolding r2_def r1_def 
+              apply(simp del: \<tau>.simps add.simps) 
+              using \<open>fst (add (x, y) (\<tau> (x', y'))) = 0 \<or> snd (add (x, y) (\<tau> (x', y'))) = 0\<close> by blast              
+          qed             
+          then have 
+            "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
+            "snd (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
+            using b(2) e_circ_def p_q_expr(2) z3(1) z3(2) by blast+     
              
             then show ?thesis sorry
           next
@@ -2122,13 +2269,14 @@ proof(unfold_locales,simp_all)
 
   show comm: "\<And>x y. x \<in> e_proj \<Longrightarrow>
            y \<in> e_proj \<Longrightarrow> proj_addition x y = proj_addition y x"
-  proof -
-    fix x y
-    assume "x \<in> e_proj" "y \<in> e_proj"
-    
-    then show "proj_addition x y = proj_addition y x" 
-      unfolding proj_addition_def proj_add_class_def
-  qed
+    unfolding proj_addition_def using proj_add_class_comm by auto
+  
+  show id_1: "\<And>x. x \<in> e_proj \<Longrightarrow> proj_addition (gluing `` {((1, 0), 0)}) x = x"
+    unfolding proj_addition_def using proj_add_class_identity by simp
+  
+  show id_2: "\<And>x. x \<in> e_proj \<Longrightarrow> proj_addition x (gluing `` {((1, 0), 0)}) = x"
+     using comm id_1 one_in by simp
+ 
 qed
 
 end
