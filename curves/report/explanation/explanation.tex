@@ -1,0 +1,10 @@
+The proof is maintained on Github at \href{https://github.com/rjraya/Isabelle/blob/master/curves/Hales.thy}{this repository}.
+
+Once loaded in the editor, there are three sections. The first section formalises the plain affine elliptic curve group law. Second and third sections are dedicated to the projective group addition. The second section formalises the main preliminaries and the third formalises the group law properties of the addition for projective Edwards curves. The theorems and lemmas follow closely the nomenclature from \cite{hales2016group} and in a definitive version the corresponding numbering will be added to make it clearer. 
+
+The current state of the proof is as follows: we formalised the paper until page 14 where we had to stop since we could not compute the required Gröbner basis. Instead, some of the hand computations that were described in previous sections were implemented, but there remain some to be completed. This would essentially finish dichotomy. Lemmas 4.3.3 and 4.3.4 were also fully formalised. Finally, from theorem 4.4.1, which establishes the group law of projective Edwards curves, it would remain to finish the proofs of associativity and closure. These follow similar techniques to the ones shown previously.
+
+Pages 17-20, develop alternative proofs of previous theorems and formalise facts appearing in the motivation. There are no formalisations/Mathematica computations for this section in the original paper. Overall, we think that the full formalisation should contain the material presented until page 16 and that the last section is less important for practical purposes.
+
+
+

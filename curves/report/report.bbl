@@ -1,0 +1,553 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.0 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\datalist[entry]{nty/global//global/global}
+  \entry{baader1999term}{book}{}
+    \name{author}{2}{}{%
+      {{hash=BF}{%
+         family={Baader},
+         familyi={B\bibinitperiod},
+         given={Franz},
+         giveni={F\bibinitperiod},
+      }}%
+      {{hash=NT}{%
+         family={Nipkow},
+         familyi={N\bibinitperiod},
+         given={Tobias},
+         giveni={T\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Cambridge university press}%
+    }
+    \strng{namehash}{BFNT1}
+    \strng{fullhash}{BFNT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{title}{Term rewriting and all that}
+    \field{year}{1999}
+  \endentry
+
+  \entry{ballarin2010tutorial}{inproceedings}{}
+    \name{author}{1}{}{%
+      {{hash=BC}{%
+         family={Ballarin},
+         familyi={B\bibinitperiod},
+         given={Clemens},
+         giveni={C\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Universidad de La Rioja}%
+    }
+    \strng{namehash}{BC1}
+    \strng{fullhash}{BC1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{booktitle}{Contribuciones cient{\'\i}ficas en honor de Mirian
+  Andr{\'e}s G{\'o}mez}
+    \field{pages}{123\bibrangedash 140}
+    \field{title}{Tutorial to locales and locale interpretation}
+    \field{year}{2010}
+  \endentry
+
+  \entry{bartzia2014formal}{inproceedings}{}
+    \name{author}{2}{}{%
+      {{hash=BEI}{%
+         family={Bartzia},
+         familyi={B\bibinitperiod},
+         given={Evmorfia-Iro},
+         giveni={E\bibinithyphendelim I\bibinitperiod},
+      }}%
+      {{hash=SPY}{%
+         family={Strub},
+         familyi={S\bibinitperiod},
+         given={Pierre-Yves},
+         giveni={P\bibinithyphendelim Y\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{BEISPY1}
+    \strng{fullhash}{BEISPY1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{booktitle}{International Conference on Interactive Theorem Proving}
+    \field{pages}{77\bibrangedash 92}
+    \field{title}{A formal library for elliptic curves in the Coq proof
+  assistant}
+    \field{year}{2014}
+  \endentry
+
+  \entry{Elliptic_Curves_Group_Law-AFP}{article}{}
+    \name{author}{1}{}{%
+      {{hash=BS}{%
+         family={Berghofer},
+         familyi={B\bibinitperiod},
+         given={Stefan},
+         giveni={S\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{BS1}
+    \strng{fullhash}{BS1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{issn}{2150-914x}
+  \field{note}{\url{http://isa-afp.org/entries/Elliptic_Curves_Group_Law.html},
+  Formal proof development}
+    \field{title}{The Group Law for Elliptic Curves}
+    \field{journaltitle}{Archive of Formal Proofs}
+    \field{month}{02}
+    \field{year}{2017}
+  \endentry
+
+  \entry{bernstein2007faster}{inproceedings}{}
+    \name{author}{2}{}{%
+      {{hash=BDJ}{%
+         family={Bernstein},
+         familyi={B\bibinitperiod},
+         given={Daniel\bibnamedelima J},
+         giveni={D\bibinitperiod\bibinitdelim J\bibinitperiod},
+      }}%
+      {{hash=LT}{%
+         family={Lange},
+         familyi={L\bibinitperiod},
+         given={Tanja},
+         giveni={T\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{BDJLT1}
+    \strng{fullhash}{BDJLT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{booktitle}{International Conference on the Theory and Application of
+  Cryptology and Information Security}
+    \field{pages}{29\bibrangedash 50}
+    \field{title}{Faster addition and doubling on elliptic curves}
+    \field{year}{2007}
+  \endentry
+
+  \entry{bernstein2008twisted}{inproceedings}{}
+    \name{author}{5}{}{%
+      {{hash=BDJ}{%
+         family={Bernstein},
+         familyi={B\bibinitperiod},
+         given={Daniel\bibnamedelima J},
+         giveni={D\bibinitperiod\bibinitdelim J\bibinitperiod},
+      }}%
+      {{hash=BP}{%
+         family={Birkner},
+         familyi={B\bibinitperiod},
+         given={Peter},
+         giveni={P\bibinitperiod},
+      }}%
+      {{hash=JM}{%
+         family={Joye},
+         familyi={J\bibinitperiod},
+         given={Marc},
+         giveni={M\bibinitperiod},
+      }}%
+      {{hash=LT}{%
+         family={Lange},
+         familyi={L\bibinitperiod},
+         given={Tanja},
+         giveni={T\bibinitperiod},
+      }}%
+      {{hash=PC}{%
+         family={Peters},
+         familyi={P\bibinitperiod},
+         given={Christiane},
+         giveni={C\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{BDJ+1}
+    \strng{fullhash}{BDJBPJMLTPC1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{booktitle}{International Conference on Cryptology in Africa}
+    \field{pages}{389\bibrangedash 405}
+    \field{title}{Twisted edwards curves}
+    \field{year}{2008}
+  \endentry
+
+  \entry{costello2018montgomery}{article}{}
+    \name{author}{2}{}{%
+      {{hash=CC}{%
+         family={Costello},
+         familyi={C\bibinitperiod},
+         given={Craig},
+         giveni={C\bibinitperiod},
+      }}%
+      {{hash=SB}{%
+         family={Smith},
+         familyi={S\bibinitperiod},
+         given={Benjamin},
+         giveni={B\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{CCSB1}
+    \strng{fullhash}{CCSB1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{C}
+    \field{sortinithash}{C}
+    \field{number}{3}
+    \field{pages}{227\bibrangedash 240}
+    \field{title}{Montgomery curves and their arithmetic}
+    \field{volume}{8}
+    \field{journaltitle}{Journal of Cryptographic Engineering}
+    \field{year}{2018}
+  \endentry
+
+  \entry{das2008pairing}{inproceedings}{}
+    \name{author}{2}{}{%
+      {{hash=DMPL}{%
+         family={Das},
+         familyi={D\bibinitperiod},
+         given={M\bibnamedelima Prem\bibnamedelima Laxman},
+         giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod\bibinitdelim
+  L\bibinitperiod},
+      }}%
+      {{hash=SP}{%
+         family={Sarkar},
+         familyi={S\bibinitperiod},
+         given={Palash},
+         giveni={P\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{DMPLSP1}
+    \strng{fullhash}{DMPLSP1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{D}
+    \field{sortinithash}{D}
+    \field{booktitle}{International Conference on Pairing-Based Cryptography}
+    \field{pages}{192\bibrangedash 210}
+    \field{title}{Pairing computation on twisted Edwards form elliptic curves}
+    \field{year}{2008}
+  \endentry
+
+  \entry{edwards2007normal}{article}{}
+    \name{author}{1}{}{%
+      {{hash=EH}{%
+         family={Edwards},
+         familyi={E\bibinitperiod},
+         given={Harold},
+         giveni={H\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{EH1}
+    \strng{fullhash}{EH1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{E}
+    \field{sortinithash}{E}
+    \field{number}{3}
+    \field{pages}{393\bibrangedash 422}
+    \field{title}{A normal form for elliptic curves}
+    \field{volume}{44}
+    \field{journaltitle}{Bulletin of the American mathematical society}
+    \field{year}{2007}
+  \endentry
+
+  \entry{hales2016group}{article}{}
+    \name{author}{1}{}{%
+      {{hash=HT}{%
+         family={Hales},
+         familyi={H\bibinitperiod},
+         given={Thomas},
+         giveni={T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{HT1}
+    \strng{fullhash}{HT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{H}
+    \field{sortinithash}{H}
+    \field{title}{The group law for Edwards curves}
+    \field{journaltitle}{arXiv preprint arXiv:1610.05278}
+    \field{year}{2016}
+  \endentry
+
+  \entry{kasper2011fast}{inproceedings}{}
+    \name{author}{1}{}{%
+      {{hash=KE}{%
+         family={K{\"a}sper},
+         familyi={K\bibinitperiod},
+         given={Emilia},
+         giveni={E\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{KE1}
+    \strng{fullhash}{KE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{K}
+    \field{sortinithash}{K}
+    \field{booktitle}{International Conference on Financial Cryptography and
+  Data Security}
+    \field{pages}{27\bibrangedash 39}
+    \field{title}{Fast elliptic curve cryptography in OpenSSL}
+    \field{year}{2011}
+  \endentry
+
+  \entry{kocher1999differential}{inproceedings}{}
+    \name{author}{3}{}{%
+      {{hash=KP}{%
+         family={Kocher},
+         familyi={K\bibinitperiod},
+         given={Paul},
+         giveni={P\bibinitperiod},
+      }}%
+      {{hash=JJ}{%
+         family={Jaffe},
+         familyi={J\bibinitperiod},
+         given={Joshua},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=JB}{%
+         family={Jun},
+         familyi={J\bibinitperiod},
+         given={Benjamin},
+         giveni={B\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{KPJJJB1}
+    \strng{fullhash}{KPJJJB1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{K}
+    \field{sortinithash}{K}
+    \field{booktitle}{Annual International Cryptology Conference}
+    \field{pages}{388\bibrangedash 397}
+    \field{title}{Differential power analysis}
+    \field{year}{1999}
+  \endentry
+
+  \entry{maletzky2018grobner}{inproceedings}{}
+    \name{author}{2}{}{%
+      {{hash=MA}{%
+         family={Maletzky},
+         familyi={M\bibinitperiod},
+         given={Alexander},
+         giveni={A\bibinitperiod},
+      }}%
+      {{hash=IF}{%
+         family={Immler},
+         familyi={I\bibinitperiod},
+         given={Fabian},
+         giveni={F\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{MAIF1}
+    \strng{fullhash}{MAIF1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{M}
+    \field{sortinithash}{M}
+    \field{booktitle}{International Conference on Intelligent Computer
+  Mathematics}
+    \field{pages}{178\bibrangedash 193}
+    \field{title}{Gr{\"o}bner Bases of Modules and Faug{\`e}re’s $F_4$
+  Algorithm in Isabelle/HOL}
+    \field{year}{2018}
+  \endentry
+
+  \entry{paulson2006defining}{article}{}
+    \name{author}{1}{}{%
+      {{hash=PLC}{%
+         family={Paulson},
+         familyi={P\bibinitperiod},
+         given={Lawrence\bibnamedelima C},
+         giveni={L\bibinitperiod\bibinitdelim C\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {ACM}%
+    }
+    \strng{namehash}{PLC1}
+    \strng{fullhash}{PLC1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{P}
+    \field{sortinithash}{P}
+    \field{number}{4}
+    \field{pages}{658\bibrangedash 675}
+    \field{title}{Defining functions on equivalence classes}
+    \field{volume}{7}
+    \field{journaltitle}{ACM Transactions on Computational Logic (TOCL)}
+    \field{year}{2006}
+  \endentry
+
+  \entry{techreport}{report}{}
+    \name{author}{1}{}{%
+      {{hash=RR}{%
+         family={Raya},
+         familyi={R\bibinitperiod},
+         given={Rodrigo},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{RR1}
+    \strng{fullhash}{RR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{R}
+    \field{sortinithash}{R}
+    \field{note}{Semester project report}
+    \field{title}{Verifying Elliptic Curves using Welder}
+    \verb{url}
+    \verb https://github.com/rjraya/WelderToolbox/blob/master/vec/documents/rep
+    \verb ort.pdf
+    \endverb
+    \list{institution}{2}{%
+      {Laboratory of Automatic Reasoning}%
+      {Analysis, EPFL}%
+    }
+    \field{type}{techreport}
+    \field{year}{2017}
+    \field{urlday}{14}
+    \field{urlmonth}{07}
+    \field{urlyear}{2019}
+  \endentry
+
+  \entry{russinoff2017computationally}{article}{}
+    \name{author}{1}{}{%
+      {{hash=RDM}{%
+         family={Russinoff},
+         familyi={R\bibinitperiod},
+         given={David\bibnamedelima M},
+         giveni={D\bibinitperiod\bibinitdelim M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{RDM1}
+    \strng{fullhash}{RDM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{R}
+    \field{sortinithash}{R}
+    \field{title}{A computationally surveyable proof of the group properties of
+  an elliptic curve}
+    \field{journaltitle}{arXiv preprint arXiv:1705.01226}
+    \field{year}{2017}
+  \endentry
+
+  \entry{silverman1992rational}{book}{}
+    \name{author}{2}{}{%
+      {{hash=SJH}{%
+         family={Silverman},
+         familyi={S\bibinitperiod},
+         given={Joseph\bibnamedelima H},
+         giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod},
+      }}%
+      {{hash=TJT}{%
+         family={Tate},
+         familyi={T\bibinitperiod},
+         given={John\bibnamedelima Torrence},
+         giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{SJHTJT1}
+    \strng{fullhash}{SJHTJT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{S}
+    \field{sortinithash}{S}
+    \field{title}{Rational points on elliptic curves}
+    \field{volume}{9}
+    \field{year}{1992}
+  \endentry
+
+  \entry{thery2007proving}{article}{}
+    \name{author}{1}{}{%
+      {{hash=TL}{%
+         family={Th{\'e}ry},
+         familyi={T\bibinitperiod},
+         given={Laurent},
+         giveni={L\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{TL1}
+    \strng{fullhash}{TL1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{T}
+    \field{sortinithash}{T}
+    \field{title}{Proving the group law for elliptic curves formally}
+    \field{year}{2007}
+  \endentry
+
+  \entry{wenzel2019isabelle}{misc}{}
+    \true{moreauthor}
+    \name{author}{1}{}{%
+      {{hash=WM}{%
+         family={Wenzel},
+         familyi={W\bibinitperiod},
+         given={Makarius},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{WM+1}
+    \strng{fullhash}{WM+1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{W}
+    \field{sortinithash}{W}
+    \field{title}{The isabelle/isar reference manual}
+    \field{year}{2019}
+  \endentry
+\enddatalist
+\endinput

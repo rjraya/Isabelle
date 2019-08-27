@@ -3,6 +3,7 @@ theory Hales
           "HOL-Library.Bit" 
           
 begin
+declare [[quick_and_dirty=true]]
 
 nitpick_params [verbose, card = 1-20, max_potential = 0,
                 sat_solver = MiniSat_JNI, max_threads = 1, timeout = 600]
@@ -309,7 +310,7 @@ proof -
   define e2 where "e2 = e x2 y2"
   have "r = d^2 * y1^2 * y2^2 * x2^2 * e1 + (1 - d * y1^2) * delta x1 y1 x2 y2 - d * y1^2 * e2"
     unfolding r_def e1_def e2_def delta_def delta_plus_def delta_minus_def e_def
-    by algebra 
+    by algebra
   then have "r = 0" 
     using assms e1_def e2_def by simp
   then have cases: "(1 - c*d*y1^2*y2^2) = 0 \<or> (1 - d*y1^2*x2^2) = 0" 
@@ -468,6 +469,8 @@ begin
 definition t where "t = sqrt(d)"
 definition e' where "e' x y = x^2 + y^2 - 1 - t^2 * x^2 * y^2"
 
+
+
 lemma c_d_pos: "d \<ge> 0" using t_intro by auto
 
 lemma delta_plus_self: "delta_plus x0 y0 x0 y0 \<noteq> 0" 
@@ -487,14 +490,13 @@ lemma e_e'_iff: "e x y = 0 \<longleftrightarrow> e' x y = 0"
 
 lemma t_sq_n1: "t^2 \<noteq> 1" using t_ineq(1) t_def by simp
  
-text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
-     which cannot be a group\<close>
+text\<open>The case \<^text>\<open>t^2 = 1\<close> corresponds to a product of intersecting lines which cannot be a group\<close>
 
 lemma t_2_1_lines:
   "t^2 = 1 \<Longrightarrow> e' x y = - (1 - x^2) * (1 - y^2)" 
   unfolding e'_def by algebra
 
-text\<open>The case t = 0 corresponds to a circle which has been treated before\<close>
+text\<open>The case \<^text>\<open>t = 0\<close> corresponds to a circle which has been treated before\<close>
 
 lemma t_0_circle:
   "t = 0 \<Longrightarrow> e' x y = x^2 + y^2 - 1" 
@@ -684,8 +686,23 @@ end
 locale projective_curve =
  ext_curve_addition
 begin
-  definition "e_aff = {(x,y). e' x y = 0}" 
-  definition "e_circ = {(x,y). x \<noteq> 0 \<and> y \<noteq> 0 \<and> (x,y) \<in> e_aff}"
+
+definition "e_aff = {(x,y). e' x y = 0}" 
+
+definition "e_circ = {(x,y). x \<noteq> 0 \<and> y \<noteq> 0 \<and> (x,y) \<in> e_aff}"
+
+definition "Bits = range Bit"
+
+definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
+ "e_aff_bit = e_aff \<times> Bits"
+
+definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). 
+               ((x0,y0) \<in> e_aff \<and> (x1,y1) \<in> e_aff) \<and>
+               (((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
+                ((x0,y0) \<in> e_aff \<and> x0 = x1 \<and> y0 = y1 \<and> l = j))}"
+
+definition e_proj where "e_proj = e_aff_bit // gluing"
 
   lemma "group (BijGroup (Reals \<times> Reals))"
     using group_BijGroup by blast
@@ -733,8 +750,8 @@ then have f6: "\<forall>r. (r = 0 \<or> bb) \<or> 1 / t / r \<noteq> a"
   then show "b = 0"
     using f9 f8 f7 f3 a2 a1 by (metis divide_eq_0_iff t_nz)
 qed
-  
-lemma "\<rho> \<in> carrier (BijGroup 
+
+lemma "\<rho> \<in> carrier (BijGroup
             ((Reals - {0}) \<times> (Reals - {0})))"
     unfolding BijGroup_def
     apply(simp)
@@ -1104,10 +1121,17 @@ proof -
 qed
 
 
-
+definition "e_aff = {(x,y). e' x y = 0}" 
 definition "Bits = range Bit"
 definition e_aff_bit :: "((real \<times> real) \<times> bit) set" where
  "e_aff_bit = e_aff \<times> Bits"
+definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)) set" where
+  "gluing = {(((x0,y0),l),((x1,y1),j)). 
+               ((x0,y0) \<in> e_aff \<and> (x1,y1) \<in> e_aff) \<and>
+               (((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
+                ((x0,y0) \<in> e_aff \<and> x0 = x1 \<and> y0 = y1 \<and> l = j))}"
+definition e_proj where "e_proj = e_aff_bit // gluing"
+
 
 lemma eq_rel: "equiv e_aff_bit gluing"
   unfolding equiv_def
@@ -1225,7 +1249,7 @@ definition p_delta' :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<
   "p_delta' p1 p2 = 
     delta' (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
 
-partial_function (option) proj_add :: 
+definition proj_add ::
   "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> ((real \<times> real) \<times> bit) option" where
   "
   proj_add p1 p2 =  
@@ -1240,72 +1264,6 @@ partial_function (option) proj_add ::
         )
     )
   "
-
-lemma proj_add_inv:
-  assumes "(x0,y0) \<in> e_aff"
-  shows "proj_add ((x0,y0),l) (i (x0,y0),l) = Some ((1,0),0)"
-proof -
-  consider (1) "x0 = 0" | (2) "y0 = 0" | (3) "x0 \<noteq> 0" "y0 \<noteq> 0" by fast
-  then show ?thesis
-  proof(cases)
-    case 1
-    from assms 1 have "y0 = 1 \<or> y0 = -1" unfolding e_aff_def e'_def by(simp,algebra) 
-    then consider (a) "y0 = 1" | (b) "y0 = -1" by blast
-    then show ?thesis  
-    proof(cases)
-      case a
-      then show ?thesis using 1 
-        apply(simp add: proj_add.simps) 
-        unfolding p_delta'_def delta'_def delta_x_def p_delta_def delta_def delta_minus_def delta_plus_def
-        apply(simp add: c_eq_1)
-        unfolding e_aff_def e'_def by(simp)
-    next
-      case b
-      then show ?thesis using 1
-        apply(simp add: proj_add.simps) 
-        unfolding p_delta'_def delta'_def delta_x_def p_delta_def delta_def delta_minus_def delta_plus_def
-        apply(simp add: c_eq_1)
-        unfolding e_aff_def e'_def by(simp)
-    qed
-  next
-    case 2
-    from assms 2 have "x0 = 1 \<or> x0 = -1" unfolding e_aff_def e'_def by(simp,algebra) 
-    then consider (a) "x0 = 1" | (b) "x0 = -1" by blast
-    then show ?thesis  
-    proof(cases)
-      case a
-      then show ?thesis using 2
-        apply(simp add: proj_add.simps) 
-        unfolding p_delta'_def delta'_def delta_x_def p_delta_def delta_def delta_minus_def delta_plus_def
-        apply(simp add: c_eq_1)
-        unfolding e_aff_def e'_def by(simp)
-    next
-      case b
-      then show ?thesis using 2
-        apply(simp add: proj_add.simps) 
-        unfolding p_delta'_def delta'_def delta_x_def p_delta_def delta_def delta_minus_def delta_plus_def
-        apply(simp add: c_eq_1)
-        unfolding e_aff_def e'_def by(simp)
-    qed
-  next
-    case 3
-    have s_eaff: "(x0,-y0) \<in> e_aff" using assms unfolding e_aff_def e'_def by simp
-    from 3 show ?thesis (* TODO: correct *)
-      apply(simp add: proj_add.simps) 
-      using delta_plus_self
-      unfolding p_delta_def delta_def p_delta'_def delta'_def delta_x_def delta_y_def delta_plus_def delta_minus_def      
-      apply(simp add: assms c_eq_1,safe)
-      unfolding e_aff_def e'_def apply(simp add: t_expr)
-          apply(simp add: field_simps power2_eq_square)
-         apply(simp add: t_expr)
-         apply(simp add: field_simps power2_eq_square)
-      using assms s_eaff unfolding e_aff_def e'_def apply(simp add: t_expr )
-      apply (simp add: power2_eq_square)
-      apply (smt mult_cancel_left1 semiring_normalization_rules(16) semiring_normalization_rules(18) t_expr(1) t_sq_n1)
-       using assms s_eaff unfolding e_aff_def e'_def apply(simp add: t_expr )
-       using assms s_eaff unfolding e_aff_def e'_def by(simp add: t_expr )
-  qed
-qed
 
 lemma proj_add_comm:
   "proj_add ((x0,y0),l) ((x1,y1),j) = proj_add ((x1,y1),j) ((x0,y0),l)"
@@ -1325,40 +1283,26 @@ proof -
   proof(cases)
     case 1
     then show ?thesis 
-      by(simp add: commutativity delta_equiv proj_add.simps del: add.simps ext_add.simps)  
+      by(simp add: commutativity delta_equiv proj_add_def del: add.simps ext_add.simps)  
   next
     case 2
     then show ?thesis 
-      by(simp add: commutativity ext_add_comm delta_equiv proj_add.simps del: add.simps ext_add.simps)  
+      by(simp add: commutativity ext_add_comm delta_equiv proj_add_def del: add.simps ext_add.simps)  
   next
     case 3
     then show ?thesis 
-      using "3" proj_add.simps delta_equiv(1) delta_equiv(2) by auto
+      using "3" proj_add_def delta_equiv(1) delta_equiv(2) by auto
   qed    
 qed
 
 
 definition "proj_add_class c1 c2 =
   (((case_prod (\<lambda> x y. the (proj_add x y))) ` 
-   (Map.dom (case_prod proj_add) \<inter> (c1 \<times> c2))) 
-   // gluing)"
+    (Map.dom (case_prod proj_add) \<inter> (c1 \<times> c2))) 
+    // gluing)"
 
-lemma proj_add_class_inv:
-  assumes "x \<in> e_proj"
-  shows "(\<exists> y. y \<in> e_proj \<and> proj_add_class x y = {gluing `` {((1, 0), 0)}})"  
-  unfolding proj_add_class_def
-proof -
-  obtain x0 y0 l where "x = gluing `` {((x0,y0),l)}"
-    using assms 
-    by (metis e_proj_def prod.exhaust_sel quotientE)
-  have "x = {((x0,y0),l)} \<or> x = {((x0,y0),l),(\<tau> (x0,y0),l+1)}"
-    using e_proj_eq 
-    by (smt Image_singleton_iff \<open>x = gluing `` {((x0, y0), l)}\<close> assms doubleton_eq_iff e_proj_def eq_rel equiv_class_eq_iff equiv_class_self insertI1 gluing_char singletonD)
-  define y where "y = gluing `` {((x0,-y0),l)}"
-  have "y = {((x0,-y0),l)} \<or> x = {((x0,-y0),l),(\<tau> (x0,-y0),l+1)}"
-   
-  
-qed
+definition "proj_addition c1 c2 = the_elem(proj_add_class c1 c2)"
+
 
 lemma proj_add_class_comm:
   "proj_add_class c1 c2 = proj_add_class c2 c1"
@@ -1551,7 +1495,7 @@ proof -
       from 2 have "delta x y x'' y'' \<noteq> 0"
         unfolding e_aff_0_def using x''_def y''_def by simp 
       then obtain v where add_some: "proj_add ((x,y),l) ((x'',y''),l'+1) = Some v"
-        using proj_add.simps[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
+        using proj_add_def[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
         unfolding p_delta_def 
         using \<open>\<tau> (x', y') \<in> e_aff\<close> fst_conv x''_def y''_def by auto
       have in_set: "(((x,y),l),((x'',y''),l'+1)) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
@@ -1572,7 +1516,7 @@ proof -
       from 3 have "delta' x y x'' y'' \<noteq> 0"
         unfolding e_aff_1_def using x''_def y''_def by simp 
       then obtain v where add_some: "proj_add ((x,y),l) ((x'',y''),l'+1) = Some v"
-        using proj_add.simps[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
+        using proj_add_def[of "((x,y),l)" "((x'',y''),l'+1)"] p_q_expr
         unfolding p_delta'_def 
         using \<open>\<tau> (x', y') \<in> e_aff\<close> fst_conv x''_def y''_def 
         by (metis prod.collapse snd_conv)
@@ -1593,7 +1537,7 @@ proof -
     then have "delta x y x' y' \<noteq> 0" 
       unfolding e_aff_0_def by simp
     then obtain v where add_some: "proj_add ((x,y),l) ((x',y'),l') = Some v"
-      using proj_add.simps[of "((x,y),l)" "((x',y'),l')"] p_q_expr
+      using proj_add_def[of "((x,y),l)" "((x',y'),l')"] p_q_expr
       unfolding p_delta_def by auto
     then have in_set: "(((x,y),l),((x',y'),l')) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
       unfolding dom_def using p_q_expr by fast
@@ -1605,7 +1549,7 @@ proof -
     then have "delta' x y x' y' \<noteq> 0" 
       unfolding e_aff_1_def by simp
     then obtain v where add_some: "proj_add ((x,y),l) ((x',y'),l') = Some v"
-      using proj_add.simps[of "((x,y),l)" "((x',y'),l')"] p_q_expr
+      using proj_add_def[of "((x,y),l)" "((x',y'),l')"] p_q_expr
       unfolding p_delta'_def by fastforce
     then have in_set: "(((x,y),l),((x',y'),l')) \<in> (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q)"
       unfolding dom_def using p_q_expr by fast
@@ -1879,7 +1823,7 @@ proof -
     have 2: "(e1,e2) \<in> e_aff" "(1,0) \<in> e_aff" 
       using \<open>((e1,e2),b) \<in> e_aff_bit\<close> \<open>((1,0),0) \<in> e_aff_bit\<close> unfolding e_aff_bit_def by blast+   
     have "proj_add ((1,0),0) ((e1,e2),b) = Some ((e1,e2),b)"
-      using 1 2 by(simp add: proj_add.simps)
+      using 1 2 by(simp add: proj_add_def)
   }
   note sol = this
   from sol have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter> {((1, 0), 0)} \<times> x) = {((1, 0), 0)} \<times> x"
@@ -2050,7 +1994,7 @@ proof -
         then have "delta x y x' y' = 0" "delta' x y x' y' = 0"
           using wd_d_nz wd_d'_nz a by auto 
         then have one_none: "proj_add ((x, y), l) ((x', y'), l') = None"
-          using proj_add.simps unfolding p_delta_def p_delta'_def by auto
+          using proj_add_def unfolding p_delta_def p_delta'_def by auto
         have "(dom (\<lambda>(x, y). proj_add x y) \<inter> {((x, y), l)} \<times> {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) \<noteq> {}"
           using covering[OF assms] unfolding 2 proj_add_class_def by blast
         then have s_simp: 
@@ -2085,10 +2029,10 @@ proof -
             apply(simp add: divide_simps t_sq_n1 t_nz,safe)
             by (simp add: power_mult_distrib t_sq_n1)
           have v1: "proj_add ((x, y), l) ((0, y'), l') = Some ((- (c * y * y'), x * y'), l + l')"
-            apply(simp add: proj_add.simps \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
+            apply(simp add: proj_add_def \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
             using b aa unfolding e_aff_0_def by simp
           have v2: "proj_add ((x, y), l) (\<tau> (0, y'), l' + 1) = None"
-            apply(simp add: proj_add.simps \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
+            apply(simp add: proj_add_def \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
             by(simp add: \<open>(0, 1 / (t * y')) \<notin> e_aff\<close>)
           have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter>
                   {(((x, y), l), (0, y'), l'),
@@ -2114,10 +2058,10 @@ proof -
             apply(simp add: divide_simps t_sq_n1 t_nz,safe)
             by (simp add: power_mult_distrib t_sq_n1)
           have v1: "proj_add ((x, y), l) ((x', 0), l') = Some ((x * x', y * x'), l + l')"
-            apply(simp add: proj_add.simps \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
+            apply(simp add: proj_add_def \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
             using b bb unfolding e_aff_0_def by simp
           have v2: "proj_add ((x, y), l) (\<tau> (x', 0), l' + 1) = None"
-            apply(simp add: proj_add.simps \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
+            apply(simp add: proj_add_def \<open>(x,y) \<in> e_aff\<close> p_delta_def d_0_nz)
             by(simp add: \<open>(1 / (t * x'),0) \<notin> e_aff\<close>)
           have dom_eq: "(dom (\<lambda>(x, y). proj_add x y) \<inter>
                   {(((x, y), l), (x', 0), l'),
@@ -2161,7 +2105,7 @@ proof -
               using z1 by simp
             then have v2: "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = 
                        Some (add (x, y) (\<tau> (x', y')), l+l'+1)"
-              using proj_add.simps p_delta_def 
+              using proj_add_def p_delta_def 
               using \<open>\<tau> (x', y') \<in> e_aff\<close> p_q_expr(2) by auto 
             have "add (x, y) (\<tau> (x', y')) = \<rho> (y*(fst (\<tau> (x', y'))),y*(snd (\<tau> (x', y'))))"
               by(simp add: z1, simp add: c_eq_1)
@@ -2213,7 +2157,7 @@ proof -
               using z2 by simp
             then have v2: "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = 
                        Some (add (x, y) (\<tau> (x', y')), l+l'+1)"
-              using proj_add.simps p_delta_def 
+              using proj_add_def p_delta_def 
               using \<open>\<tau> (x', y') \<in> e_aff\<close> p_q_expr(2) by auto 
             have "add (x, y) (\<tau> (x', y')) = (x*(fst (\<tau> (x', y'))),x*(snd (\<tau> (x', y'))))"
               by(simp add: z2)
@@ -2263,7 +2207,7 @@ proof -
             from aaa have aaa_simp: 
               "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = 
                Some (add (x, y) (\<tau> (x', y')), l+l'+1)" 
-              using proj_add.simps by simp
+              using proj_add_def by simp
             have "x' * y' \<noteq> - x * y" 
               using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def
               apply(simp add: t_nz cc divide_simps)
@@ -2752,11 +2696,7 @@ proof(unfold_locales,simp_all)
   
   show id_2: "\<And>x. x \<in> e_proj \<Longrightarrow> proj_addition x (gluing `` {((1, 0), 0)}) = x"
      using comm id_1 one_in by simp
-
-  show "e_proj \<subseteq> Units \<lparr>carrier = e_proj, mult = proj_addition, one = gluing `` {((1, 0), 0)}\<rparr>"
-    unfolding Units_def apply(simp)
-   
-qed
+   oops
 
 end
 

@@ -1,0 +1,15 @@
+The development of formal proofs of the group law of elliptic curves is very old. However, most of the works we are aware of focus on the group law for elliptic curves in Weierstrass form. Proofs varied largely on the theoretical complexity of the arguments used. For instance, in \cite{bartzia2014formal}, the authors develop a formal library for elliptic curves and the group law is shown establishing an isomorphism between the elliptic curve and its Picard group of divisors. Simpler arguments exist. For instance, \cite{thery2007proving} provides a more practical approach based on computationally intensive reasoning techniques rather than in sophisticated mathematical concepts. Here the author already points out one of the main challenges that elliptic curve verification presents to a modern theorem prover: 
+
+\begin{displayquote}
+To translate this 7 page long paper proof in a theorem prover was a real challenge. In fact, the proof relies on some non-trivial computations that the author advises to check using a computer algebra system such as CoCoA. The main difficulty has been to find an effective way to cope with these computations inside our proof system. 
+\end{displayquote}
+
+The author of this report conducted a similar case study two years ago \cite{techreport} following closely \cite{russinoff2017computationally}. This experience made him realise that the problem of verifying elliptic curves was not trivial at all and in fact, constitutes an ideal experiment to test the health of a theorem prover since it is both simple to understand and difficult to implement. Far are the times in which some textbooks could summarise the question as follows \cite{silverman1992rational}:
+
+\begin{displayquote}
+Of course, there are an awful lot of special cases to consider, such as when one of the points is the negative of the other or two of the points coincide. But in a few days you will be able to check associativity using these formulas. So we need say nothing more about the proof of the associative law!
+\end{displayquote}
+
+There is already an entry on the Archive of Formal Proofs that formalizes elliptic curves in Weierstrass form \cite{Elliptic_Curves_Group_Law-AFP}. Nevertheless, there is much less work done on elliptic curves in Edwards form. This can be explained by their relative novelty as they were first proposed in 2007 by Harold Edwards \cite{edwards2007normal}. 
+
+Despite this, we find a similar situation to that encountered with Weierstrass curves. On the one hand, there exist proofs whose mathematical content is quite deep. For instance,  Edwards himself proposed an approach based on differential equations in connection with previous work by Euler and Gauss. Another approach is to build a so called rational equivalence between curves in Edwards form and curves in Weierstrass form \cite{das2008pairing} and then transfer the group properties from one to the other. A more practical approach has more recently been proposed and partially mechanized by Hales \cite{edwards2007normal}. In the present work, this last approach was followed.

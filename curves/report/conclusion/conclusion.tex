@@ -1,0 +1,18 @@
+During the spring semester of 2017, I worked in developing a proof of the group law of Weierstrass elliptic curves. The system at hand was called Welder and allowed the user to reason with the basic rules of natural deduction. There were no tactics or any specialized tools to assist in proving. As it may be understood we did not go very far in our formalisation. We formalised part of the basics theorems about field theory and some of the basic proofs of the group law of the corresponding curve.
+
+On the other hand, the pedagogical benefit of this experience can be hardly contested. We learnt that theorem proving is hard (too hard indeed). However, at the same time we did experiment the joy of problem solving. Nowadays, the mathematics student is surrounded with such a great quantity of information and materials that he can find solutions to his problems without thinking the solution by himself. He can also mistake wrong proofs for right ones without noticing. Theorem proving solves this by focusing the attention of the student. Otherwise work would not progress. I believe this is a valuable virtue of theorem proving.
+
+A second benefit of this experience was that I was forced to do research on the methodologies that existed in order to improve the proving experience. I spent the summer holidays of 2017 reading the book Term rewriting and all that \cite{baader1999term}. It was this experience which ultimately encouraged me to come to the Technical University of Munich and learn Isabelle. 
+
+If I learnt something during my experience with Welder was that proving correct the group law of an elliptic curve was a great benchmark to test the health of a proving engine. In much less time, Isabelle let me prove the group law of a large class of affine elliptic curves. We did actually prove more than what was made in the original paper by Hales, since we did not just verify the polynomials identities obtained through the proof but we did show the complete proving process. 
+
+On the section of projective curves, while we did find a lot more difficulties, these reduced to the use of particular theories and techniques of proving in the system. It should be noted that these proofs were not formalised at all in previous work and the only existing certificate was the Mathematica computations provided. I believe that with sufficient cooperation between the different researchers we have been in contact to, it should not take much development time to finish all the details. 
+
+Future work could tackle the implementation of algorithms for elliptic curve cryptography in Isabelle/HOL. Apparently, this was a student project proposal at the Chair of Software Reliability and Theoretical Computer Science which was never assigned. For this purpose, it could also be interesting to formalise the Montgomery family of elliptic curves since their combination with Edwards curves has been proposed to provide more robust implementations  \cite{costello2018montgomery}.
+
+
+
+
+
+
+
