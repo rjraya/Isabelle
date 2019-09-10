@@ -67,12 +67,12 @@ Module[{poly, gby, pry},
     gby, {x0, y0, x1, y1}]];
 
 (* dichotomy 2 *)
-plus[z1, iota[z2]] // Simplify;
+plus[z1, iota[z2]] // Simplify
 
 gb = GroebnerBasis[{e1, e2, q x1 x2 y1 y2 - 1, 
     x1 y2 + x2 y1, (x1 x2 - y1 y2) - 1 + t^2 x1 x2 y1 y2}, {x1, y1, 
     x2, y2, q}];
-Remainder[{x1 - x2, y1 + y2}, gb, {x1, y1, x2, y2}];
+Remainder[{x1 - x2, y1 + y2}, gb, {x1, y1, x2, y2}]
 
 (* this has a denominator with 2.
 Must assume char ne 2 here. In char 2, image of plusB does not
@@ -116,6 +116,9 @@ prassoc[i1_, i2_, i3_, i4_] := Module[{},
 
 Table[prassoc[i1, i2, i3, i4], {i1, 0, 1}, {i2, 0, 1}, {i3, 0, 
   1}, {i4, 0, 1}];
+
+
+
 
 
 
