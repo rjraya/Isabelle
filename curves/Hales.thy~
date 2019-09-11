@@ -113,7 +113,7 @@ proof -
   ultimately have "prod = 0" using prod_eq_1 by simp
   then show "e x3 y3 = 0" using prod_eq_2 by simp
 qed
-
+                      
 lemma associativity: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = add (x1,y1) (x2,y2)" "z3' = add (x2,y2) (x3,y3)"
@@ -190,11 +190,11 @@ proof -
     by algebra
 
   have simp1gx: "
-    (x1' * x3 - c * y1' * y3) * local.delta_minus x1 y1 x3' y3' *
-    (local.delta x1 y1 x2 y2 * local.delta x2 y2 x3 y3) = 
-    ((x1 * x2 - c * y1 * y2) * x3 * local.delta_plus x1 y1 x2 y2 -
-     c * (x1 * y2 + y1 * x2) * y3 * local.delta_minus x1 y1 x2 y2) *
-    (local.delta_minus x2 y2 x3 y3 * local.delta_plus x2 y2 x3 y3 -
+    (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' *
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+    ((x1 * x2 - c * y1 * y2) * x3 * delta_plus x1 y1 x2 y2 -
+     c * (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
+    (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 -
      d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
   "
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
@@ -204,11 +204,11 @@ proof -
     by(simp add: divide_simps assms(5-8))
 
   have simp2gx:
-    "(x1 * x3' - c * y1 * y3') * local.delta_minus x1' y1' x3 y3 *
-    (local.delta x1 y1 x2 y2 * local.delta x2 y2 x3 y3) = 
-    (x1 * (x2 * x3 - c * y2 * y3) * local.delta_plus x2 y2 x3 y3 -
-     c * y1 * (x2 * y3 + y2 * x3) * local.delta_minus x2 y2 x3 y3) *
-    (local.delta_minus x1 y1 x2 y2 * local.delta_plus x1 y1 x2 y2 -
+    "(x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 *
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+    (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 -
+     c * y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) *
+    (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 -
      d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply((subst delta_minus_def[symmetric])+,(subst delta_plus_def[symmetric])+)
@@ -375,7 +375,7 @@ next
   {fix x1 y1 x2 y2 x3 y3 
    assume "e x1 y1 = 0" "e x2 y2 = 0" "e x3 y3 = 0" 
    then have "delta x1 y1 x2 y2 \<noteq> 0" "delta x2 y2 x3 y3 \<noteq> 0"
-     using assms delta_non_zero by blast+
+     using assms(1,2) delta_non_zero by blast+
    fix x1' y1' x3' y3'
    assume "(x1',y1') = add (x1,y1) (x2,y2)"
           "(x3',y3') = add (x2,y2) (x3,y3)"
@@ -3732,6 +3732,106 @@ proof -
 
 
 definition "proj_addition c1 c2 = the_elem(proj_add_class c1 c2)"
+
+definition t  where
+  "t g = image (\<lambda> p. (g (fst p), snd p))"
+
+lemma
+  assumes "g \<in> rotations"
+  shows "proj_addition (t g (gluing `` {(p1,l)})) (gluing `` {(p2,j)}) =
+         t g (proj_addition (gluing `` {(p1,l)}) (gluing `` {(p2,j)}))"
+proof -
+  assume as: "g = \<rho>"
+  have ?thesis
+    apply(simp add: as)
+    unfolding t_def image_def
+    apply(standard) 
+    (is "?A \<subseteq> ?B")
+  proof -
+
+  qed
+qed
+
+(* in the appropiate localizations means we can use delta \<noteq> 0 *)
+lemma associative_lemmas:
+  assumes "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "(x3,y3) \<in> e_aff"
+  shows "add (add (x1,y1) (x2,y2)) (x3,y3) = add (x1,y1) (add (x2,y2) (x3,y3))"
+proof -
+  define e1 where "e1 = e' x1 y1" 
+  define e2 where "e2 = e' x2 y2" 
+  define e3 where "e3 = e' x3 y3"
+  
+  define Delta_add where "Delta_add = (delta x1 y1 x2 y2)^2 * (delta x2 y2 x3 y3)^2 * 
+                                      delta (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) x3 y3 *
+                                      delta x1 y1 (fst (add (x2,y2) (x3,y3))) (snd (add (x2,y2) (x3,y3)))"
+
+  define x1'_add where "x1'_add = fst(add (x1, y1) (x2, y2))"
+  define y1'_add where "y1'_add = snd(add (x1, y1) (x2, y2))"
+  define x2'_add where "x2'_add = fst(add (x2, y2) (x3, y3))"
+  define y2'_add where "y2'_add = snd(add (x2, y2) (x3, y3))"
+
+  {assume "x1 = 0 \<or> y1 = 0 \<or> x2 = 0 \<or> y2 = 0" 
+  then have "fst(add (add (x1,y1) (x2,y2)) (x3,y3)) = fst(add (x1,y1) (add (x2,y2) (x3,y3)))"
+    using assms unfolding e_aff_def e'_def 
+    apply(simp)
+    apply(simp add: c_eq_1)
+    apply(safe)
+    by(simp add: divide_simps,algebra)+}
+  assume as: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0"
+
+   
+  define add_fst_eq where
+    "add_fst_eq = t^2*x2*y2*(-1+t^4*x1^2*x2^2*y1^2*y2^2-t^2*x1*x2^2*x3*y1*y3-t^2*x1^2*x2*x3*y2*y3+t^2*x2*x3*y1^2*y2*y3+t^2*x1*x3*y1*y2^2*y3)*(-1-t^2*x1*x2*x3^2*y1*y2-t^2*x1*x2^2*x3*y1*y3+t^2*x1*x3*y1*y2^2*y3+t^2*x1*x2*y1*y2*y3^2+t^4*x2^2*x3^2*y2^2*y3^2)*(x1^2*x2*x3*y1-x1^2*x2*x3^3*y1-x1*x3*y1^2*y2+t^2*x1^3*x2^2*x3*y1^2*y2+x1*x3^3*y1^2*y2-t^2*x1^3*x2^2*x3^3*y1^2*y2-t^2*x1^2*x2*x3*y1^3*y2^2+t^2*x1^2*x2*x3^3*y1^3*y2^2-x1*x2*x3^2*y3+x1^3*x2*x3^2*y3+x1*x2*y1^2*y3-t^2*x1^3*x2^3*x3^2*y1^2*y3+x1^2*y1*y2*y3-x3^2*y1*y2*y3-t^2*x1^2*x2^2*y1^3*y2*y3+x3^2*y1^3*y2*y3-t^2*x1^3*x2*y1^2*y2^2*y3+t^4*x1^3*x2^3*x3^2*y1^2*y2^2*y3-t^2*x1^2*x3^2*y1^3*y2^3*y3+t^4*x1^2*x2^2*x3^2*y1^3*y2^3*y3-x2*x3*y1*y3^2+t^2*x1^2*x2^3*x3^3*y1*y3^2+x2*x3*y1^3*y3^2-t^2*x1^2*x2^3*x3*y1^3*y3^2+x1*x3*y2*y3^2-x1^3*x3*y2*y3^2-t^2*x1*x2^2*x3^3*y2*y3^2+t^2*x1^3*x2^2*x3^3*y2*y3^2+t^2*x2*x3^3*y1*y2^2*y3^2-t^4*x1^2*x2^3*x3^3*y1*y2^2*y3^2+t^4*x1^2*x2^3*x3*y1^3*y2^2*y3^2-t^2*x2*x3^3*y1^3*y2^2*y3^2+t^2*x1^3*x3*y1^2*y2^3*y3^2-t^4*x1^3*x2^2*x3*y1^2*y2^3*y3^2-t^2*x1*x3^3*y1^2*y2^3*y3^2+t^4*x1*x2^2*x3^3*y1^2*y2^3*y3^2-x1*x2*y1^2*y3^3+t^2*x1*x2^3*x3^2*y1^2*y3^3-x1^2*y1*y2*y3^3+t^2*x2^2*x3^2*y1*y2*y3^3+t^2*x1^2*x2^2*y1^3*y2*y3^3-t^2*x2^2*x3^2*y1^3*y2*y3^3+t^2*x1*x2*x3^2*y2^2*y3^3-t^2*x1^3*x2*x3^2*y2^2*y3^3+t^2*x1^3*x2*y1^2*y2^2*y3^3-t^4*x1*x2^3*x3^2*y1^2*y2^2*y3^3+t^2*x1^2*x3^2*y1*y2^3*y3^3-t^4*x1^2*x2^2*x3^2*y1*y2^3*y3^3)"
+
+  have "add_fst_eq * Delta_add = 1"
+    unfolding add_fst_eq_def Delta_add_def delta_def delta_plus_def delta_minus_def
+    sorry
+    
+  have "add_fst_eq = Delta_add*(fst(add (add (x1,y1) (x2,y2)) (x3,y3)) - fst(add (x1,y1) (add (x2,y2) (x3,y3))))"
+    unfolding add_fst_eq_def Delta_add_def delta_def delta_plus_def delta_minus_def
+    using assms unfolding e_aff_def e'_def
+    apply(simp)
+    apply(simp add: t_expr c_eq_1)
+    apply(simp add:  divide_simps as d_nz)  
+    apply(safe) 
+    apply(simp add: algebra_simps) 
+    apply(simp add: t_expr c_eq_1,safe)
+                        defer 1
+    apply(simp add: t_expr c_eq_1)
+    apply(simp add: algebra_simps)
+    defer 1 
+  have "\<exists> r1 r2 r3. add_fst_eq = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding add_fst_eq_def e1_def e2_def e3_def e'_def
+    apply(simp)
+    apply(simp add: t_expr) 
+  assume as: "delta_plus x1 y1 x2 y2 \<noteq> 0" "delta_minus x1 y1 x2 y2 \<noteq> 0"
+         "delta_plus x2 y2 x3 y3 \<noteq> 0" "delta_minus x2 y2 x3 y3 \<noteq> 0"
+         "delta_plus (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) x3 y3 \<noteq> 0"
+         "delta_minus (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) x3 y3 \<noteq> 0"
+         "delta_plus x1 y1 (fst (add (x2,y2) (x3,y3))) (fst (add (x2,y2) (x3,y3))) \<noteq> 0"
+  then have as1: "1 + d * x1 * y1 * x2 * y2 \<noteq> 0"
+            "d * x1 * y1 * x2 * y2 \<noteq> 1"
+            "1 + d * x2 * y2 * x3 * y3 \<noteq> 0"
+            "d * x2 * y2 * x3 * y3 \<noteq> 1"
+            "1 + d * fst (add (x1, y1) (x2, y2)) * snd (add (x1, y1) (x2, y2)) * x3 * y3 \<noteq> 0"
+    "1 - d * fst (add (x1, y1) (x2, y2)) * snd (add (x1, y1) (x2, y2)) * x3 * y3 \<noteq> 0"
+    "1 + d * x1 * y1 * fst (add (x2, y2) (x3, y3)) * fst (add (x2, y2) (x3, y3)) \<noteq> 0"
+    unfolding delta_def delta_plus_def delta_minus_def 
+    by(auto)
+  have "fst(add (add (x1,y1) (x2,y2)) (x3,y3)) - fst(add (x1,y1) (add (x2,y2) (x3,y3))) = 1"
+    apply(simp)
+    
+  have "(\<exists> q1 q2 q3.
+              fst(add (add (x1,y1) (x2,y2)) (x3,y3)) - fst(add (x1,y1) (add (x2,y2) (x3,y3))) =
+              q1 * e1 + q2 * e2 + q3 * e3)"
+    unfolding delta_def delta_plus_def delta_minus_def e_aff_def e'_def e1_def e2_def e3_def
+    apply(simp)
+    apply(simp add: c_eq_1 t_expr)
+    apply(simp add: divide_simps d_nz power2_eq_square as1) 
+    apply(simp add: as1 )
+    apply(simp add: algebra_simps as1)
+    try0
+qed
 
 lemma projective_group_law:
   shows "comm_group \<lparr>carrier = e_proj, mult = proj_addition, one = gluing `` {((1,0),0)}\<rparr>" 
