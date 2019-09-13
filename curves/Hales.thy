@@ -1479,7 +1479,6 @@ next
     using e_proj_elim_1 assms by simp
 qed
 
-
 lemma e_proj_eq:
   assumes "p \<in> e_proj"
   shows "\<exists> x y l. (p = {((x,y),l)} \<or> p = {((x,y),l),(\<tau> (x,y),l+1)}) \<and> (x,y) \<in> e_aff"        
@@ -1504,6 +1503,7 @@ proof -
   qed    
   then show ?thesis using p_simp by auto
 qed
+
 
 lemma rot_comp:
   assumes "t1 \<in> rotations" "t2 \<in> rotations"
@@ -1534,7 +1534,7 @@ definition p_delta' :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<
   "p_delta' p1 p2 = 
     delta' (fst (fst p1)) (snd (fst p1)) (fst (fst p2)) (snd (fst p2))"
 
-partial_function (option) proj_add :: 
+partial_function (option) proj_add ::
   "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> ((real \<times> real) \<times> bit) option" where
   "
   proj_add p1 p2 =  
@@ -2431,35 +2431,55 @@ lemma well_defined_1:
   assumes "p = {((x, y), l)}" "q = {((x', y'), l')}" "p \<in> e_proj" "q \<in> e_proj"
   shows "the_elem (proj_add_class p q) \<in> e_proj"
 proof -
+  have as: "(x,y) \<in> e_aff" "(x',y') \<in> e_aff"
+    using assms e_proj_eq by(blast)+
+  then have zeros: "x = 0 \<or> y = 0" "x' = 0 \<or> y' = 0"
+    using e_proj_elim_1 assms by presburger+
   from assms have "proj_add_class p q = proj_add_class {((x, y), l)} {((x', y'), l')}" by auto
   then obtain xc yc ll where v_expr: "proj_add ((x, y), l) ((x', y'), l') = Some ((xc,yc),ll)"
     using covering[OF assms(3-4)] unfolding proj_add_class_def by auto
-  thm e_proj_elim_1 
-  have "{((xc,yc),ll)} \<in> e_proj"
-    sledgehammer
-  then have "xc \<noteq> 0" 
-    apply(simp)
-  have s_map: "(\<lambda>(x, y). the (proj_add x y)) ` (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q) = {v}"
-    unfolding image_def dom_def assms(1-2) apply(simp add: v_expr)
-  proof -
-    have "(\<exists>a b ba. v = ((a, b), ba))" 
-      by (metis surjective_pairing)
-    then show "{y. y = v \<and> (\<exists>a b ba. v = ((a, b), ba))} = {v}" by simp
-  qed
-  then have proj_eq: "proj_add_class p q = {gluing `` {v}}"
+  then consider (1) "(xc,yc) = add (x,y) (x',y')" "p_delta ((x, y), l) ((x', y'), l') \<noteq> 0" |
+                (2) "(xc,yc) = ext_add (x,y) (x',y')"  "p_delta ((x, y), l) ((x', y'), l') = 0" 
+    using proj_add.simps by (metis (no_types, lifting) fst_conv not_None_eq option.inject)
+  then have "(xc,yc) \<in> e_aff"
+  proof(cases)
+    case 1
+    then show ?thesis 
+      apply(cases "delta x y x' y' \<noteq> 0")
+      using as add_closure e_e'_iff unfolding delta_def e_aff_def apply(simp)
+      apply(simp)
+      unfolding e'_def apply(simp add: c_eq_1 t_expr) 
+      using delta_minus_def delta_plus_def zeros(2) by auto[1]    
+  next
+    case 2
+    then have "delta' x y x' y' = 0"
+      using delta'_def delta_x_def delta_y_def zeros(1) zeros(2) by auto
+    from 2 have "delta x y x' y' = 0" 
+      unfolding p_delta_def by(simp)
+    then show ?thesis 
+      using 2                           
+      by (metis \<open>delta' x y x' y' = 0\<close> fst_conv not_None_eq p_delta'_def proj_add.simps snd_conv v_expr)
+  qed     
+   
+  have s_map: "(\<lambda>(x, y). the (proj_add x y)) ` (dom (\<lambda>(x, y). proj_add x y) \<inter> p \<times> q) = {((xc,yc),ll)}"
+    unfolding image_def dom_def assms(1-2) by(simp add: v_expr) 
+  then have proj_eq: "proj_add_class p q = {gluing `` {((xc,yc),ll)}}"
     by (simp add: proj_add_class_def singleton_quotient)
-  show "card (proj_add_class p q) = 1" 
-    by(simp add: proj_eq)
+
+  have "{((xc, yc), ll)} // gluing = {gluing `` {((xc,yc),ll)}}"
+    by (simp add: singleton_quotient)
   then show "the_elem (proj_add_class p q) \<in> e_proj"
-    apply(simp add: proj_eq) 
-qed
+    unfolding proj_add_class_def 
+    apply(simp add: s_map) 
+    by (simp add: \<open>(xc, yc) \<in> e_aff\<close> e_points)
+qed  
 
 lemma well_defined_2:
   assumes "p = {((x, y), l)}" "q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}" 
           "(x,y) \<in> e_aff" "(x',y') \<in> e_aff" "p \<in> e_proj" "q \<in> e_proj"
-  shows "card (proj_add_class p q) = 1"
+  shows "the_elem (proj_add_class p q) \<in> e_proj"
 proof -
-consider
+    consider
         (a) "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" |
         (b) "((x, y), x', y') \<in> e_aff_0" "\<not> ((x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" |
         (c) "((x, y), x', y') \<in> e_aff_1" "\<not> ((x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" "((x, y), x', y') \<notin> e_aff_0"
@@ -2479,10 +2499,10 @@ consider
             {((x, y), l)} \<times> {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) 
            = {(((x, y), l),(\<tau> (x', y'), l' + 1))}" 
           using one_none by auto
-        show "card(proj_add_class p q) = 1"
+        show ?thesis
           unfolding proj_add_class_def assms(1,2)
-          apply(subst s_simp)
-          unfolding quotient_def by auto
+          apply(subst s_simp) 
+          using a assms(1,5) e_circ_def e_proj_elim_1  by auto
       next
         case b
         then have ld_nz: "delta x y x' y' \<noteq> 0" 
@@ -2519,7 +2539,7 @@ consider
           show ?thesis 
             unfolding assms(1,2) apply(simp add: aa t_nz del: \<tau>.simps)
             unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
-            unfolding quotient_def by auto
+            using aa assms(2,4,6) e_proj_elim_2 by blast
         next
           case bb
           have x_expr: "x' = 1 \<or> x' = -1"
@@ -2548,7 +2568,7 @@ consider
           show ?thesis 
             unfolding assms(1,2) apply(simp add: bb t_nz del: \<tau>.simps)
             unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
-            unfolding quotient_def by auto
+            using assms(2,4,6) bb e_proj_elim_2 by blast
         next
           case cc
           
@@ -2616,8 +2636,8 @@ consider
               unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
               apply(subst z1[symmetric])+
               apply(subst v1_def,subst v2_def,simp del: \<tau>.simps \<rho>.simps)
-              apply(subst eq)   
-              using eq_class_image rho_aff by fastforce
+              apply(subst eq)  
+              using e_points eq_class_image rho_aff by auto
           next
             case z2
             then have x_expr: "x = 1 \<or> x = -1"
@@ -2668,8 +2688,8 @@ consider
               unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
               apply(subst z2[symmetric])+
               apply(subst v1_def,subst v2_def,simp del: \<tau>.simps \<rho>.simps)
-              apply(subst eq)   
-              using eq_class_image rho_aff by fastforce
+              apply(subst eq)  
+              by (simp add: e_points eq_class_image rho_aff)
           next
             case z3    
             consider
@@ -2716,7 +2736,6 @@ consider
               then show ?thesis 
                 unfolding e_aff_def using e_e'_iff z3_d z3_def z2_d by simp
             qed      
-
                          
             have add_nz: 
               "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
@@ -2776,8 +2795,8 @@ consider
             using v1 by auto
             then show ?thesis 
               unfolding assms(1,2) proj_add_class_def 
-              apply(simp add: dom_eq del: \<tau>.simps)
-              unfolding quotient_def by simp
+              apply(simp add: dom_eq del: \<tau>.simps) 
+              using assms(1,3,5) e_proj_elim_1 z3(1,2) by blast
           qed
         qed
       qed       
@@ -2817,7 +2836,7 @@ consider
           show ?thesis 
             unfolding assms(1,2) apply(simp add: aa t_nz del: \<tau>.simps)
             unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
-            unfolding quotient_def by auto
+            using aa assms(2,4,6) e_proj_elim_2 by blast
         next
           case bb
           have x_expr: "x' = 1 \<or> x' = -1"
@@ -2846,7 +2865,7 @@ consider
           show ?thesis 
             unfolding assms(1,2) apply(simp add: bb t_nz del: \<tau>.simps)
             unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
-            unfolding quotient_def by auto
+            using assms(2,4,6) bb e_proj_elim_2 by blast
         next
           case cc    
           have "delta x y x' y' = 0" 
@@ -2915,8 +2934,8 @@ consider
               unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
               apply(subst z1[symmetric])+
               apply(subst v1_def,subst v2_def,simp del: \<tau>.simps \<rho>.simps)
-              apply(subst eq)   
-              using eq_class_image rho_aff by fastforce
+              apply(subst eq)
+              using e_points eq_class_image rho_aff by auto
           next
             case z2
             then have x_expr: "x = 1 \<or> x = -1"
@@ -2967,8 +2986,8 @@ consider
               unfolding proj_add_class_def apply(simp add: dom_eq del: \<tau>.simps)
               apply(subst z2[symmetric])+
               apply(subst v1_def,subst v2_def,simp del: \<tau>.simps \<rho>.simps)
-              apply(subst eq)   
-              using eq_class_image rho_aff by fastforce
+              apply(subst eq) 
+              by (simp add: e_points eq_class_image rho_aff)
           next
             case z3    
             consider
@@ -3015,7 +3034,6 @@ consider
               then show ?thesis 
                 unfolding e_aff_def using e_e'_iff z3_d z3_def z2_d by simp
             qed      
-
                          
             have add_nz: 
               "fst (add (x, y) (\<tau> (x', y'))) \<noteq> 0"
@@ -3049,7 +3067,8 @@ consider
               using aaa_simp v1 by auto          
             show ?thesis
               unfolding assms(1,2) proj_add_class_def apply(simp add: dom_eq proj_eq del: add.simps \<tau>.simps ext_add.simps)
-              unfolding quotient_def using def_gl_eq by simp 
+              unfolding quotient_def using def_gl_eq 
+              using assms(1,3,5) e_proj_elim_1 z3(1) z3(2) by blast
           next
             case bbb
             have "{((x, y), l)}  // gluing = {{((x, y), l)} }"
@@ -3093,7 +3112,7 @@ consider
               by (simp add: singleton_quotient)            
             then show ?thesis
               unfolding assms(1,2) proj_add_class_def apply(simp add: dom_eq proj_eq del: add.simps \<tau>.simps ext_add.simps)
-              unfolding quotient_def by force
+              using assms(1,3,5) e_proj_elim_1 z3(1) z3(2) by auto
           next
             case ccc
             from ccc have aaa_simp:
@@ -3106,7 +3125,7 @@ consider
             then show ?thesis 
               unfolding assms(1,2) proj_add_class_def 
               apply(simp add: dom_eq del: \<tau>.simps)
-              unfolding quotient_def by simp
+              using assms(1,3,5) e_proj_elim_1 z3(1,2) by blast
           qed
         qed
       qed    
@@ -3115,7 +3134,7 @@ consider
 
 theorem well_defined:
   assumes "p \<in> e_proj" "q \<in> e_proj"
-  shows "card (proj_add_class p q) = 1"
+  shows "the_elem (proj_add_class p q) \<in> e_proj"
 proof -
   from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
   obtain x y l x' y' l' where 
@@ -3232,16 +3251,27 @@ proof -
         have in_list: "(((x, y), l), \<tau> (x', y'), l' + 1) \<in> dom (\<lambda>(x, y). proj_add x y)"
              "((\<tau> (x, y), l + 1), (x', y'), l') \<in> dom (\<lambda>(x, y). proj_add x y)"
           using dom_ne out_list ex_eq by(fastforce)+ 
-        have s_simp: 
+        have dom_eq: 
           "(dom (\<lambda>(x, y). proj_add x y) \<inter> 
             {((x, y), l), (\<tau> (x, y), l + 1)} \<times> {((x', y'), l'), (\<tau> (x', y'), l' + 1)}
            = {(((x, y), l),(\<tau> (x', y'), l'+1)),((\<tau> (x, y), l+1),((x', y'), l'))})" 
           using in_list out_list by simp
-
-        show "card(proj_add_class p q) = 1"
+        have "proj_add_class p q \<noteq> {}" 
+          by (simp add: assms(1) assms(2) covering)
+        then have add_eq: "((\<lambda>(x, y). the (proj_add x y)) `
+               {(((x, y), l), \<tau> (x', y'), l' + 1), ((\<tau> (x, y), l + 1), (x', y'), l')} ) = 
+             {the (proj_add ((x, y), l) (\<tau> (x', y'), l' + 1))}" 
+          using ex_eq unfolding proj_add_class_def 4 by auto
+        then obtain v where "proj_add ((x, y), l) (\<tau> (x', y'), l' + 1) = Some v"
+          using in_list(1) by auto
+        from ex_eq have "fst (fst (the (proj_add ((x, y), l) (\<tau> (x', y'), l' + 1)))) = 0 \<or> 
+                         snd (fst (the (proj_add ((x, y), l) (\<tau> (x', y'), l' + 1)))) = 0"
+          apply(simp)
+        show "the_elem (proj_add_class p q) \<in> e_proj"
           unfolding proj_add_class_def 4
-          apply(subst s_simp)
-          unfolding quotient_def using ex_eq by force
+          apply(subst dom_eq, subst add_eq) 
+          thm e_proj_elim_1
+          unfolding quotient_def using ex_eq  by force
       next
         case b
         then have ld_nz: "delta x y x' y' \<noteq> 0" 
