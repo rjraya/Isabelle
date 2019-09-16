@@ -63,30 +63,6 @@ polyassoc =
   PolynomialReduce[{gxpoly, gypoly}, {e1, e2, e3}, {x1, y1, x2, y2, 
       x3, y3}] // Simplify // Expand;
 
-(*completeness identity*)
-
-complete = {d^2 y1^2 y2^2 x2^2 e1 + (1 - d y1^2) delta[x1, y1, x2, 
-      y2] - d y1^2 e2, (1 - c d y1^2 y2^2) (1 - d y1^2 x2^2)};
-
-completereduce = complete // Factor
-
-(*group addition and family of hyperbolas*)
-
-hyp[{x_, y_}] := x y + p (x + 1) + q y;
-
-subpq = First[
-   Solve[{hyp[{x1, y1}] == 0, hyp[{x2, y2}] == 0}, {p, q}] // 
-    Simplify];
-
-iota[{x_, y_}] := {x, -y};
-
-hypsum = delta[x1, y1, x2, 
-     y2]*(y1 (1 + x2) - 
-      y2 (1 + x1))*(hyp[iota[plus[{x1, y1}, {x2, y2}]]] /. subpq) // 
-   Factor;
-
-hypreduce = PolynomialReduce[hypsum, {e1, e2}, {x1, y1, x2, y2}];
-
 (* convert to HOL Light *)
 
 Clear[ToHOL];
