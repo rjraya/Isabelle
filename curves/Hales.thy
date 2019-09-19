@@ -5537,52 +5537,41 @@ proof -
       have fs: "proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)} =
              {(add (x1, y1) (\<tau> (x2, y2)), 1)}"
         by (metis (no_types, lifting) "1"(1) \<open>(x2, y2) \<in> e_aff\<close> \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> a add_cancel_right_left assms(1) e_proj_elim_2 g1_expr g_expr(1) g_expr(2) proj_add_eqs_4(1) projective_curve.proj_addition_def projective_curve_axioms)
-      have add_in: "{(add (x1, y1) (\<tau> (x2, y2)), 1)} \<in> e_proj"
-        by (metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> assms(1) assms(2) fs g1_expr g2_expr gluing_class in_aff(1) in_aff(2) proj_addition_def projective_curve.well_defined_4 projective_curve_axioms x1nz(1) x1nz(2))
-      then have con1: "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0"
-                      "(fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) \<in> e_aff"
-         apply(metis e_class e_proj_elim_1 eq_class_simp insert_not_empty prod.collapse singleton_quotient the_elem_eq)
-        using add_in e_proj_eq by fastforce
-      have i_in: "{(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} \<in> e_proj"
-        using assms(3) g2'_expr by auto
-      have con2: "(fst (\<tau> (x2,y2)), snd (\<tau> (x2,y2))) \<in> e_aff"
-        using taus(1) by auto
-
-      have conm: "p_delta (add (x1, y1) (\<tau> (x2, y2)),0) (\<tau> (x2, y2),1) \<noteq> 0"
-        using a unfolding p_delta_def delta_def delta_plus_def delta_minus_def
-        apply(simp del: add.simps \<tau>.simps) 
-        using con1(1) by auto
-
-      have conm1: "\<not> ((fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) \<in> e_circ \<and>
-      (\<exists>g\<in>symmetries.
-          (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2))) =
-          (g \<circ> i) (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2))))))"
-        unfolding e_circ_def 
-        using con1(1) by blast
-      have "(add (x1, y1) (\<tau> (x2, y2)), \<tau> (x2, y2)) \<in> e_aff_0"
-        unfolding e_aff_0_def
-        using con1(2) con2 conm p_delta_def by auto
-      then have conm2: "((fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))), fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2)))
-  \<in> e_aff_0" by simp
-      from proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-      have "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<Longrightarrow>
-  the_elem (proj_add_class {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)}) =
-  {(add (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) (\<tau> (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2)))),
-    1),
-   (\<tau> (add (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2))))
-        (\<tau> (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2))))),
-    0)}"
-        sledgehammer
-      from proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-           proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-      have "the_elem (proj_add_class {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)}) =
-            {(add (add (x1, y1) (\<tau> (x2, y2))) (i (x2, y2)), 1),(\<tau> (add (add (x1, y1) (\<tau> (x2, y2))) (i (x2, y2))), 0)}"
-        using  proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-               proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-               con1(1) 
-        apply(simp add: tau_idemp del: add.simps \<tau>.simps)
-        thm proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-        
+      have nz: "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0"
+           "fst (i (x2,y2)) \<noteq> 0" "snd (i (x2,y2)) \<noteq> 0"
+         apply(smt \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add_cancel_right_left assms(1) e_class e_proj_elim_2 eq_class_simp fs g1_expr in_aff(2) insert_not_empty prod.collapse proj_addition_def projective_curve.e_proj_elim_1 projective_curve_axioms singleton_quotient the_elem_eq well_defined_4)
+         using \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> by auto 
+      then have circ_cond: "(add (x1, y1) (\<tau> (x2, y2))) \<notin> e_circ"
+        using e_circ_def by auto
+      have aff_cond: "add (x1, y1) (\<tau> (x2, y2)) \<in> e_aff" "i (x2, y2) \<in> e_aff"
+        apply(metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add_cancel_right_left assms(1) e_class e_proj_elim_2 eq_class_simp fs g1_expr in_aff(2) insert_not_empty proj_addition_def singleton_quotient the_elem_eq well_defined_4)
+        using in_aff(3) by auto
+      have delta_cond: "delta (fst (add (x1, y1) (\<tau> (x2, y2)))) (snd (add (x1, y1) (\<tau> (x2, y2))))
+                  (fst (i (x2, y2))) (snd (i (x2, y2))) \<noteq> 0"
+        using \<open>fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0\<close> c_eq_1 mult_1 delta_def delta_minus_def delta_plus_def by auto
+      have e_0_cond: "(add (x1, y1) (\<tau> (x2, y2)),i (x2, y2)) \<in> e_aff_0"
+        unfolding e_aff_0_def using aff_cond delta_cond by auto
+      have proj_cond: "{(add (x1, y1) (\<tau> (x2, y2)), 1)} \<in> e_proj" "{(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} \<in> e_proj"
+        using \<open>fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0\<close> aff_cond(1) e_proj_elim_1 apply force
+        using e_proj_elim_2 assms(3) g2'_expr by argo
+      have "proj_addition {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} =
+            {(add (add (x1, y1) (\<tau> (x2, y2))) (\<tau> (i (x2, y2))), 0), (\<tau> (add (add (x1, y1) (\<tau> (x2, y2))) (\<tau> (i (x2, y2)))), 1)}"
+      proof(cases "fst (add (x1, y1) (\<tau> (x2, y2))) = 0")
+        case True
+        then show ?thesis 
+          unfolding proj_addition_def
+          using proj_add_eqs_2(4) aff_cond circ_cond proj_cond e_0_cond nz(2,3)
+          sledgehammer
+          by (smt add.commute add_cancel_right_left bit_add_self prod.collapse)
+          by (smt \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add.commute add_cancel_right_left bit_add_self i.simps prod.collapse)
+          apply(simp add: algebra_simps t_nz )
+          sorry
+      next
+        case False
+        then show ?thesis sorry
+      qed
+        thm proj_add_eqs_2(4) proj_add_eqs_2(5)
+        thm 1 a
         
       show "proj_addition (proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)})
                   {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} = {((x1, y1), 0), (\<tau> (x1, y1), 1)}"
