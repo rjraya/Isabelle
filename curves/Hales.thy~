@@ -5170,7 +5170,7 @@ proof -
     oops
 
 (* in the appropiate localizations means we can use delta \<noteq> 0 *)
-lemma associative_lemmas:
+lemma add_add_assoc:
   assumes "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "(x3,y3) \<in> e_aff"
   assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta x2 y2 x3 y3 \<noteq> 0"
           "delta (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) x3 y3 \<noteq> 0"
@@ -5500,7 +5500,7 @@ lemma
   shows "proj_addition (proj_addition (gluing `` {((x1,y1),0)}) (gluing `` {((x2,y2),0)})) (gluing `` {(i (x2,y2),0)}) = 
          gluing `` {((x1,y1),0)}"
 proof -
-  have in_aff: "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "i (x2,y2) \<in> e_aff"
+  have in_aff: "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "i (x2,y2) \<in> e_aff" 
     using assms(1,2,3) e_class by auto
   then consider (1) "(x1,y1) \<in> e_circ" "(\<exists>g\<in>symmetries. (x2,y2) = (g \<circ> i) (x1,y1))" 
                     "((x1,y1), (x2,y2)) \<notin> e_aff_0" "((x1,y1), (x2,y2)) \<notin> e_aff_1" |
@@ -5513,7 +5513,7 @@ proof -
     then have g1_expr: "gluing `` {((x1,y1),0)} = {((x1,y1),0), (\<tau> (x1,y1),1)}"
       using e_proj_elim_2 \<open>(x1,y1) \<in> e_aff\<close> gluing_class by force    
     from 1 obtain g where g_expr: "g \<in> symmetries" "(x2,y2) = (g \<circ> i) (x1,y1)" by blast
-    then have "x2 \<noteq> 0" "y2 \<noteq> 0"
+    then have x2nz: "x2 \<noteq> 0" "y2 \<noteq> 0"
       using x1nz unfolding symmetries_def apply(simp_all)
       by(safe,(simp add: t_nz)+)
     then have g2_expr: "gluing `` {((x2,y2),0)} = {((x2,y2),0), (\<tau> (x2,y2),1)}"
@@ -5521,10 +5521,11 @@ proof -
     have g2'_expr: "gluing `` {(i (x2,y2),0)} = {(i (x2,y2),0), (\<tau> (i (x2,y2)),1)}"
       using e_proj_elim_2 \<open>i (x2,y2) \<in> e_aff\<close> gluing_class assms(3) 
       by (simp add: \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close>)
-    have taus: "\<tau> (x2,y2) \<in> e_aff" "fst (\<tau> (x2,y2)) \<noteq> 0" "snd (\<tau> (x2,y2)) \<noteq> 0" 
+    have taus: "\<tau> (x2,y2) \<in> e_aff" "\<tau> (i (x2,y2)) \<in> e_aff" "fst (\<tau> (x2,y2)) \<noteq> 0" "snd (\<tau> (x2,y2)) \<noteq> 0" 
       apply(metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> assms(2) e_class gluing_inv)
+      apply (metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add.inverse_inverse add.inverse_neutral assms(3) e_class gluing_inv i.simps)
       by(simp add: \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> t_nz)+
-
+      
     consider (a) "p_delta ((x1, y1), 0) (\<tau> (x2, y2), 1) \<noteq> 0" |
              (b) "p_delta' ((x1, y1), 0) (\<tau> (x2, y2), 1) \<noteq> 0"
                  "p_delta ((x1, y1), 0) (\<tau> (x2, y2), 1) = 0" |
@@ -5537,76 +5538,89 @@ proof -
       have fs: "proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)} =
              {(add (x1, y1) (\<tau> (x2, y2)), 1)}"
         by (metis (no_types, lifting) "1"(1) \<open>(x2, y2) \<in> e_aff\<close> \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> a add_cancel_right_left assms(1) e_proj_elim_2 g1_expr g_expr(1) g_expr(2) proj_add_eqs_4(1) projective_curve.proj_addition_def projective_curve_axioms)
-      have add_in: "{(add (x1, y1) (\<tau> (x2, y2)), 1)} \<in> e_proj"
-        by (metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> assms(1) assms(2) fs g1_expr g2_expr gluing_class in_aff(1) in_aff(2) proj_addition_def projective_curve.well_defined_4 projective_curve_axioms x1nz(1) x1nz(2))
-      then have con1: "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0"
-                      "(fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) \<in> e_aff"
-         apply(metis e_class e_proj_elim_1 eq_class_simp insert_not_empty prod.collapse singleton_quotient the_elem_eq)
-        using add_in e_proj_eq by fastforce
-      have i_in: "{(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} \<in> e_proj"
-        using assms(3) g2'_expr by auto
-      have con2: "(fst (\<tau> (x2,y2)), snd (\<tau> (x2,y2))) \<in> e_aff"
-        using taus(1) by auto
+      have nz: "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0"
+           "fst (i (x2,y2)) \<noteq> 0" "snd (i (x2,y2)) \<noteq> 0"
+         apply(smt \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add_cancel_right_left assms(1) e_class e_proj_elim_2 eq_class_simp fs g1_expr in_aff(2) insert_not_empty prod.collapse proj_addition_def projective_curve.e_proj_elim_1 projective_curve_axioms singleton_quotient the_elem_eq well_defined_4)
+         using \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> by auto 
+      then have circ_cond: "(add (x1, y1) (\<tau> (x2, y2))) \<notin> e_circ"
+        using e_circ_def by auto
+      have aff_cond: "add (x1, y1) (\<tau> (x2, y2)) \<in> e_aff" "i (x2, y2) \<in> e_aff"
+        apply(metis \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> add_cancel_right_left assms(1) e_class e_proj_elim_2 eq_class_simp fs g1_expr in_aff(2) insert_not_empty proj_addition_def singleton_quotient the_elem_eq well_defined_4)
+        using in_aff(3) by auto
+      have delta_cond: "delta (fst (add (x1, y1) (\<tau> (x2, y2)))) (snd (add (x1, y1) (\<tau> (x2, y2))))
+                  (fst (i (x2, y2))) (snd (i (x2, y2))) \<noteq> 0"
+        using \<open>fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0\<close> c_eq_1 mult_1 delta_def delta_minus_def delta_plus_def by auto
+      have e_0_cond: "(add (x1, y1) (\<tau> (x2, y2)),i (x2, y2)) \<in> e_aff_0"
+        unfolding e_aff_0_def using aff_cond delta_cond by auto
+      have proj_cond: "{(add (x1, y1) (\<tau> (x2, y2)), 1)} \<in> e_proj" "{(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} \<in> e_proj"
+        using \<open>fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<or> snd (add (x1, y1) (\<tau> (x2, y2))) = 0\<close> aff_cond(1) e_proj_elim_1 apply force
+        using e_proj_elim_2 assms(3) g2'_expr by argo
 
-      have conm: "p_delta (add (x1, y1) (\<tau> (x2, y2)),0) (\<tau> (x2, y2),1) \<noteq> 0"
-        using a unfolding p_delta_def delta_def delta_plus_def delta_minus_def
-        apply(simp del: add.simps \<tau>.simps) 
-        using con1(1) by auto
+      have add_assoc: "add (add (x1, y1) (\<tau> (x2, y2))) (\<tau> (i (x2, y2))) = (x1,y1)"
+        apply(subst (3) prod.collapse[symmetric])
+        apply(subst (9) prod.collapse[symmetric])
+        apply(subst add_add_assoc)
+        apply (simp add: in_aff(1))
+        using taus(1) apply force
+        apply(simp add: taus del: \<tau>.simps i.simps)
+        using a p_delta_def apply simp
+           defer 1
+        unfolding delta_def delta_plus_def delta_minus_def 
+        using add.commute add_cancel_right_left c_eq_1 fst_def i.simps nz(1) apply force
+        apply simp 
+        using delta_plus_self e_aff_def e_e'_iff inverse taus(2) apply fastforce
+        using g_expr a unfolding symmetries_def p_delta_def 
+                                 delta_def delta_plus_def delta_minus_def   
+           apply(simp) 
+           apply(safe)      
+        apply(simp_all add: t_nz)
+        by argo+
 
-      have conm1: "\<not> ((fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) \<in> e_circ \<and>
-      (\<exists>g\<in>symmetries.
-          (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2))) =
-          (g \<circ> i) (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2))))))"
-        unfolding e_circ_def 
-        using con1(1) by blast
-      have "(add (x1, y1) (\<tau> (x2, y2)), \<tau> (x2, y2)) \<in> e_aff_0"
-        unfolding e_aff_0_def
-        using con1(2) con2 conm p_delta_def by auto
-      then have conm2: "((fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))), fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2)))
-  \<in> e_aff_0" by simp
-      from proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-      have "fst (add (x1, y1) (\<tau> (x2, y2))) = 0 \<Longrightarrow>
-  the_elem (proj_add_class {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)}) =
-  {(add (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2)))) (\<tau> (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2)))),
-    1),
-   (\<tau> (add (fst (add (x1, y1) (\<tau> (x2, y2))), snd (add (x1, y1) (\<tau> (x2, y2))))
-        (\<tau> (fst (\<tau> (x2, y2)), snd (\<tau> (x2, y2))))),
-    0)}"
-        sledgehammer
-      from proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-           proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-      have "the_elem (proj_add_class {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)}) =
-            {(add (add (x1, y1) (\<tau> (x2, y2))) (i (x2, y2)), 1),(\<tau> (add (add (x1, y1) (\<tau> (x2, y2))) (i (x2, y2))), 0)}"
-        using  proj_add_eqs_2(4)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-               proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-               con1(1) 
-        apply(simp add: tau_idemp del: add.simps \<tau>.simps)
-        thm proj_add_eqs_2(5)[OF _ _ con1(2) con2(1) add_in i_in conm2 conm1 taus(2) taus(3)]
-        
-        
+      have proj_simp: "proj_addition {(add (x1, y1) (\<tau> (x2, y2)), 1)} {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} =
+            {(add (add (x1, y1) (\<tau> (x2, y2))) (\<tau> (i (x2, y2))), 0), (\<tau> (add (add (x1, y1) (\<tau> (x2, y2))) (\<tau> (i (x2, y2)))), 1)}"
+      proof(cases "fst (add (x1, y1) (\<tau> (x2, y2))) = 0")
+        case True
+        show ?thesis 
+          unfolding proj_addition_def
+          apply(subst proj_add_eqs_2(4)) 
+          apply force 
+                    apply auto[1]
+          using aff_cond circ_cond proj_cond e_0_cond x2nz apply simp_all
+
+          apply(simp add: c_eq_1 divide_simps t_nz power2_eq_square[symmetric] algebra_simps t_expr d_nz)
+           using g_expr a unfolding symmetries_def p_delta_def 
+                                 delta_def delta_plus_def delta_minus_def   
+           apply(simp)
+           apply(safe)
+           unfolding e_aff_def e'_def
+           apply(simp add: t_nz x1nz)
+           apply(simp add: divide_simps t_nz x1nz algebra_simps) 
+          
+          sorry
+      next
+        case False
+        then have hyp: "snd (add (x1, y1) (\<tau> (x2, y2))) = 0" using nz(1) by blast
+        then show ?thesis 
+          using proj_add_eqs_2(5)[OF _ _ _ _ _ _ _ _ nz(2-3) hyp] aff_cond circ_cond proj_cond e_0_cond
+          sorry
+      qed
+
       show "proj_addition (proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)})
                   {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} = {((x1, y1), 0), (\<tau> (x1, y1), 1)}"
         apply(simp add: fs del: \<tau>.simps i.simps)
-        unfolding proj_addition_def e_circ_def
-        using proj_add_eqs_2(3)
-        sorry
+        by(simp add: proj_simp add_assoc del: \<tau>.simps i.simps)
     next
       case b
-      then show ?thesis sorry
+      thm proj_add_eqs_2(9) proj_add_eqs_2(10)
+      then have "False" sorry
+      then show "proj_addition (proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)}) {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} =
+                {((x1, y1), 0), (\<tau> (x1, y1), 1)}" by argo
     next
       case c
-      then show ?thesis sorry
+      
+      then show "proj_addition (proj_addition {((x1, y1), 0), (\<tau> (x1, y1), 1)} {((x2, y2), 0), (\<tau> (x2, y2), 1)}) {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)} =
+                {((x1, y1), 0), (\<tau> (x1, y1), 1)} " sorry
     qed
-
-      thm g1_expr
-      thm proj_add_eqs(2)[of]
-      using g_expr unfolding symmetries_def
-      apply(simp)
-      apply(safe)
-      find_theorems "symmetries"
-             apply(simp)
-      unfolding proj_addition_def
-      sorry
   next
     case 2
     then show ?thesis sorry
