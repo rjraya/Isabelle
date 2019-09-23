@@ -5872,7 +5872,7 @@ proof -
          apply(subst assoc1)
          using delta_plus_self e_aff_def e_e'_iff in_aff(2) inverse split_conv by fastforce
     next
-      case b
+      case b     
       then have gl_eqs: "gluing `` {((x1, y1), 0)} = {((x1, y1), 0)}"
                 "gluing `` {((x2, y2), 0)} = {((x2, y2), 0), (\<tau> (x2,y2),1)}"
                 "gluing `` {(i (x2, y2), 0)} = {(i (x2, y2), 0),(\<tau> (i (x2,y2)),1)}"
@@ -5905,21 +5905,37 @@ proof -
           using 2 b e_circ_def by force+
       qed
 
+      
+
+
       have "fst (add (x1, y1) (\<tau> (x2, y2))) \<noteq>  0" "snd (add (x1, y1) (\<tau> (x2, y2))) \<noteq>  0"
         using b deltas unfolding delta_def delta_plus_def delta_minus_def
         apply(simp_all add: t_nz divide_simps algebra_simps)
         apply(simp_all add: c_eq_1 t_nz power2_eq_square[symmetric] t_expr d_nz) 
         using assms(1) e_aff_y0 e_class t_expr(1) t_nz by fastforce+
 
-      have "delta (fst (add (x1, y1) (\<tau> (x2, y2)))) (fst (add (x1, y1) (\<tau> (x2, y2)))) (fst (i (x2,y2))) (snd (i (x2,y2))) = 0"
-        using b deltas unfolding delta_def delta_plus_def delta_minus_def
-        apply(simp add: t_nz)
-        apply(simp add: algebra_simps c_eq_1)
-        apply(simp add:  algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-        apply(simp_all add: t_nz divide_simps algebra_simps d_nz) 
-        sledgehammer
-        apply(simp_all add: c_eq_1 t_nz power2_eq_square[symmetric] t_expr d_nz) 
-      thm proj_add_eqs_4(4)
+      consider (a) "p_delta (add (x1, y1) (\<tau> (x2, y2)), 0) (i (x2, y2), 1) \<noteq> 0" |
+             (b) "p_delta' (add (x1, y1) (\<tau> (x2, y2)), 0) (i (x2, y2), 1) \<noteq> 0"
+                 "p_delta (add (x1, y1) (\<tau> (x2, y2)), 0) (i (x2, y2), 1) = 0" |
+             (c) "p_delta' (add (x1, y1) (\<tau> (x2, y2)), 0) (i (x2, y2), 1) = 0"
+                 "p_delta (add (x1, y1) (\<tau> (x2, y2)), 0) (i (x2, y2), 1) = 0" by blast
+      then have "the_elem
+                  (proj_add_class {(add (x1, y1) (\<tau> (x2, y2)), 1), (\<tau> (add (x1, y1) (\<tau> (x2, y2))), 0)}
+                                  {(i (x2, y2), 0), (\<tau> (i (x2, y2)), 1)}) =
+                 {((x1, y1), 0)}"
+      proof(cases)
+        case a
+        then show ?thesis 
+          using 2
+          sorry
+      next
+        case b
+        then show ?thesis sorry
+      next
+        case c
+        then show ?thesis sorry
+      qed
+      thm proj_add_eqs_4(3)
       thm b
       show ?thesis 
         unfolding proj_addition_def
