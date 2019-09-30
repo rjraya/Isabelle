@@ -4908,55 +4908,16 @@ proof -
           using \<open>add (\<rho> (x, y)) (\<tau> (x', y')) = \<rho> (add (x, y) (\<tau> (x', y')))\<close> by auto
       next
         case z3    
-
-        consider
-          (aaa) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l)\<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (bbb) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l) \<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (ccc) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0
-                \<or> fst ((x, y), l) \<notin> e_aff \<or> fst (\<tau> (x', y'), l' + 1) \<notin> e_aff" 
-          by(simp add: proj_add.simps,blast) 
-        then show ?thesis 
-        proof(cases)
-          case aaa            
-          have eq1: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l'), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l'+1)}"
-          using proj_add_eqs_2(6)[OF assms b ecirc(2,3) z3] aaa unfolding proj_addition_def assms by linarith         
-          (* new part *)
-          have eq2_assumps: "{(\<rho> (x, y), l)} \<in> e_proj" "(\<rho> (x, y), x', y') \<in> e_aff_0"
-                            " \<not> (\<rho> (x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<rho> (x, y))))"
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) apply auto[1]
-            using b unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo) 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-          have eq2: "proj_addition {(\<rho> (x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
-                     {(add (\<rho> (x, y)) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (\<rho> (x, y)) (\<tau> (x', y'))), l + l')}"
-            using proj_add_eqs_2(6) eq2_assumps z3 aaa 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) by auto
-  
-          show ?thesis
-            unfolding assms 
-            apply(simp add: eq1 del: \<tau>.simps)
-            apply(simp add: tf_def del: \<tau>.simps add.simps \<rho>.simps)
-            apply(simp add: eq2 del: \<tau>.simps add.simps \<rho>.simps)
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by blast          
-          next
-            case bbb
-            then have "False"
-              using assms(1) assms(3) e_proj_elim_1 z3(1) z3(2) by auto
-            then show ?thesis by simp
-          next
-            case ccc
-            then have "False" 
-              using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-            then show ?thesis by simp
-          qed
-        qed
-      qed       
+        then have "False"
+          using proj_add_eqs_2(6) z3 b cc assms by blast
+        then show ?thesis by blast
+      qed qed
     next
       case c
       then have ld_nz: "delta' x y x' y' \<noteq> 0" 
         unfolding e_aff_1_def by auto    
       then have "False" 
-        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(9) by blast
+        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(7) by blast
       then show ?thesis by blast
     qed    
 
@@ -4995,8 +4956,6 @@ proof -
         using cc \<tau>_circ by blast
       then have "\<tau> (x', y') \<in> e_aff"
         unfolding e_circ_def by force
-
-      
 
         have helper: "add (\<rho> (x, y)) (\<tau> (x', y')) = add (x, y) (\<tau> (\<rho> (x', y')))"
         proof -
@@ -5105,80 +5064,9 @@ proof -
           using helper by argo
       next
         case z3    
-        
-          
-        consider
-          (aaa) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l)\<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (bbb) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l) \<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (ccc) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0
-                \<or> fst ((x, y), l) \<notin> e_aff \<or> fst (\<tau> (x', y'), l' + 1) \<notin> e_aff" 
-          by(simp add: proj_add.simps,blast) 
-        then show ?thesis 
-        proof(cases)
-          case aaa            
-          have eq1: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l'), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l'+1)}"
-          using proj_add_eqs_2(6)[OF assms b ecirc(2,3) z3] aaa unfolding proj_addition_def assms by linarith         
-          (* new part *)
-          have eq2_assumps: "{(\<rho> (x, y), l)} \<in> e_proj" "(\<rho> (x, y), x', y') \<in> e_aff_0"
-                            " \<not> (\<rho> (x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<rho> (x, y))))"
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) apply auto[1]
-            using b unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo) 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-          have eq2: "proj_addition {(\<rho> (x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
-                     {(add (\<rho> (x, y)) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (\<rho> (x, y)) (\<tau> (x', y'))), l + l')}"
-            using proj_add_eqs_2(6) eq2_assumps z3 aaa 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) by auto
-
-        have "tf \<rho> {((x', y'), l'), (\<tau> (x', y'), l' + 1)} \<in> e_proj"
-          using rho_preserv_e_proj 
-          by (metis assms(2) assms(4) ecirc(2) ecirc(3) gluing_class in_aff(2))
-        then have assumps: "{(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} \<in> e_proj"
-                           "((x, y),\<rho> (x', y')) \<in> e_aff_0"
-                           "(x, y) \<in> e_circ"
-                           "\<not> (\<exists>g\<in>symmetries. (- y', x') = (g \<circ> i) (x, y))"
-          unfolding tf_def apply force
-          using in_aff ld_nz unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo)
-          using z3 in_aff unfolding e_circ_def apply fastforce
-          unfolding symmetries_def 
-          apply(simp add: algebra_simps divide_simps t_nz z3)
-          using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(2) by auto
-
-
-        have eq3: "proj_addition {((x, y), l)} {(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} =
-                   {(add (x, y) (\<tau> (\<rho> (x', y'))), l + l' + 1), (\<tau> (add (x, y) (\<tau> (\<rho> (x', y')))), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_eqs_2(5))
-          apply blast
-          apply auto[1]
-          using assms(1,3) apply blast
-          using assumps apply blast
-          using assumps apply auto[1]
-          using assumps apply argo
-          using ecirc apply simp
-          using ecirc apply simp
-          using z3 apply blast+
-          using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def 
-           apply(simp add: algebra_simps) 
-          using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by blast
-
-  
-          show ?thesis
-            unfolding assms 
-            apply(simp add: assms tf_def del: \<tau>.simps add.simps \<rho>.simps)
-            apply(simp add: eq2 eq3 del: \<tau>.simps add.simps \<rho>.simps)
-            using helper by argo
-          next
-            case bbb
-            then have "False"
-              using assms(1) assms(3) e_proj_elim_1 z3(1) z3(2) by auto
-            then show ?thesis by simp
-          next
-            case ccc
-            then have "False" 
-              using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-            then show ?thesis by simp
-          qed
+          then have "False"
+            using proj_add_eqs_2(6) z3 b cc assms by blast
+          then show ?thesis by simp
         qed
       qed       
     next
@@ -5186,7 +5074,7 @@ proof -
       then have ld_nz: "delta' x y x' y' \<noteq> 0" 
         unfolding e_aff_1_def by auto    
       then have "False" 
-        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(9) by blast
+        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(7) by blast
       then show ?thesis by blast
     qed    
   qed   
@@ -5830,7 +5718,7 @@ proof -
           by(simp add: tf_def tau_idemp_explicit lem del: \<tau>.simps add.simps)
 
         have helper: "add (x, y) (x', y') = \<tau> (add (x, y) (\<tau> (x', y')))" 
-          using proj_add_eqs_2(11) assms assumps z2 cc circ b by blast
+          using proj_add_eqs_2(9) assms assumps z2 cc circ b by blast
 
         show ?thesis
           unfolding assms
@@ -5838,80 +5726,9 @@ proof -
           using helper by force
       next
         case z3    
-        consider
-          (aaa) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l)\<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (bbb) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l) \<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (ccc) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0
-                \<or> fst ((x, y), l) \<notin> e_aff \<or> fst (\<tau> (x', y'), l' + 1) \<notin> e_aff" 
-          by(simp add: proj_add.simps,blast) 
-        then show ?thesis 
-        proof(cases)
-          case aaa      
-          have lem: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l'), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l'+1)}"
-            unfolding proj_addition_def
-            apply(subst proj_add_eqs_2(6))
-            using assms b z3 aaa cc by blast+
-          have eq1: "tf \<tau> (proj_addition {((x', y'), l'), (\<tau> (x', y'), l' + 1)} {((x, y), l)}) = 
-                   {(\<tau> (add (x, y) (\<tau> (x', y'))), l + l'), (add (x, y) (\<tau> (x', y')), l + l'+1)}"
-            unfolding proj_addition_def
-            apply(subst proj_add_class_comm)
-            apply(subst proj_addition_def[symmetric])
-            apply(subst lem)
-            by(simp add: tf_def)
-          (* new part *)
-          have assumps: "((x, y), \<tau> (x', y')) \<in> e_aff_0"
-                      "{(\<tau> (x', y'), l'), ((x', y'), l' + 1)} \<in> e_proj"
-          using b(1) zeros t_nz z3 taus in_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply simp
-          by (metis e_points in_aff(2) prod.collapse remove_tau tau_idemp_explicit tau_preserv_e_proj taus)
-        have lem: "proj_addition {((x, y), l)} {(\<tau> (x', y'), l'), ((x', y'), l' + 1)} =
-                   {(add (x, y) (x', y'), l + l' + 1), (\<tau> (add (x, y) (x', y')), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_eqs_2(6))
-          apply blast 
-          defer 1
-          using assms apply fast
-          using assumps apply blast
-          using assumps apply fastforce
-          using circ apply blast
-          using zeros t_nz apply auto[1]
-          using zeros t_nz apply auto[1]
-          using z3 apply simp      
-          using z3 apply simp  
-          using assumps in_aff tau_idemp_explicit z3 zeros(3) apply linarith
-           apply(subst \<tau>.simps[symmetric])+
-            apply(subst tau_idemp_explicit)+
-          apply auto[1] 
-           apply(subst \<tau>.simps[symmetric])+
-           apply(subst tau_idemp_explicit)+
-          using z3(1) z3(2) zeros(3) by auto
-        have eq2: "proj_addition (tf \<tau> {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) {((x, y), l)} =
-                   {(add (x, y) (x', y'), l + l' + 1), (\<tau> (add (x, y) (x', y')), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_class_comm)
-          apply(subst proj_addition_def[symmetric])
-          by(simp add: tf_def tau_idemp_explicit lem del: \<tau>.simps add.simps)
-
-        have helper: "add (x, y) (x', y') = \<tau> (add (x, y) (\<tau> (x', y')))" 
-          using proj_add_eqs_2(11) assms assumps z3 cc circ b by blast
-  
-          show ?thesis
-            unfolding assms 
-            apply(simp add: eq1 del: \<tau>.simps)
-            apply(simp add: tf_def del: \<tau>.simps add.simps \<rho>.simps)
-            apply(simp add: eq2 del: \<tau>.simps add.simps \<rho>.simps)
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by blast          
-          next
-            case bbb
-            then have "False"
-              using proj_add_eqs_2(7) assms e_proj_elim_1 z3 by auto
-            then show ?thesis by simp
-          next
-            case ccc
-            then have "False" 
-              using proj_add_eqs_2(8) assms e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-            then show ?thesis by simp
-          qed
+        then have "False"
+          using proj_add_eqs_2(6) z3 cc b assms by blast
+        then show ?thesis by simp
         qed
       qed       
     next
@@ -5919,239 +5736,390 @@ proof -
       then have ld_nz: "delta' x y x' y' \<noteq> 0" 
         unfolding e_aff_1_def by auto    
       then have "False" 
-        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(9) by blast
-      then show ?thesis by blast
-    qed    
-
-  consider
-      (a) "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" |
-      (b) "((x, y), x', y') \<in> e_aff_0" "\<not> ((x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" |
-      (c) "((x, y), x', y') \<in> e_aff_1" "\<not> ((x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" "((x, y), x', y') \<notin> e_aff_0"
-      using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>] by fast
-  then show "proj_addition (tf \<rho> p) q = proj_addition p (tf \<rho> q)"
-  proof(cases)
-    case a
-    have "False"
-      using a assms proj_add_eqs_2(1) by blast
-    then show ?thesis by simp
-  next
-    case b
-    then have ld_nz: "delta x y x' y' \<noteq> 0" unfolding e_aff_0_def by auto    
-    consider 
-      (aa) "x' = 0" |
-      (bb) "y' = 0" |
-      (cc) "x' \<noteq> 0" "y' \<noteq> 0" by blast
-    then show ?thesis
-    proof(cases)
-      case aa
-      then have "False" using assms(2,4) e_proj_elim_2 in_aff(2) by blast
-      then show ?thesis by simp
-    next
-      case bb
-      then have "False" using assms(2,4) e_proj_elim_2 in_aff(2) by blast
-      then show ?thesis by simp
-    next
-      case cc
-      have ecirc: "(x',y') \<in> e_circ" "x' \<noteq> 0" "y' \<noteq> 0"
-        unfolding e_circ_def using cc \<open>(x',y') \<in> e_aff\<close> by blast+
-      then have "\<tau> (x', y') \<in> e_circ" 
-        using cc \<tau>_circ by blast
-      then have "\<tau> (x', y') \<in> e_aff"
-        unfolding e_circ_def by force
-
-      
-
-        have helper: "add (\<rho> (x, y)) (\<tau> (x', y')) = add (x, y) (\<tau> (\<rho> (x', y')))"
-        proof -
-          have f1: "\<forall>r p ra. add (\<rho> (ra, r)) p = \<rho> (add (ra, r) p)"
-            using rotation_invariance_1 by auto
-          have "\<rho> \<in> rotations"
-            by (simp add: rotations_def)
-          then show ?thesis
-            using f1 by (metis comp_apply curve_addition.commutativity prod.collapse rot_tau_com)
-        qed
-
-      consider 
-        (z1) "x = 0" |
-        (z2) "y = 0" |
-        (z3) "x \<noteq> 0" "y \<noteq> 0" by blast
-      then show ?thesis
-      proof(cases)
-        case z1
-        have eq1: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l')}"
-          using proj_add_eqs_2(4)[OF assms b ecirc(2,3) z1] unfolding proj_addition_def assms by blast           
-        (* new part *)
-        have eq2_assumps: "{(\<rho> (x, y), l)} \<in> e_proj" "(\<rho> (x, y), x', y') \<in> e_aff_0"
-                          " \<not> (\<rho> (x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<rho> (x, y))))"
-          using e_proj_elim_1 in_aff(3) z1 apply auto[1]
-          using b unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo) 
-          by (simp add: e_circ_def z1)
-        have eq2: "proj_addition {(\<rho> (x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
-                   {(add (\<rho> (x, y)) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (\<rho> (x, y)) (\<tau> (x', y'))), l + l')}"
-          using proj_add_eqs_2(5) eq2_assumps ecirc z1 assms(2) assms(4) proj_addition_def by auto
-
-        have "tf \<rho> {((x', y'), l'), (\<tau> (x', y'), l' + 1)} \<in> e_proj"
-          using rho_preserv_e_proj 
-          by (metis assms(2) assms(4) ecirc(2) ecirc(3) gluing_class in_aff(2))
-        then have assumps: "{(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} \<in> e_proj"
-                           "((x, y),\<rho> (x', y')) \<in> e_aff_0"
-                           "(x, y) \<notin> e_circ"
-          unfolding tf_def apply force
-          using in_aff ld_nz unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo)
-          using z1 unfolding e_circ_def by fastforce
-
-        have eq3: "proj_addition {((x, y), l)} {(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} =
-                   {(add (x, y) (\<tau> (\<rho> (x', y'))), l + l' + 1), (\<tau> (add (x, y) (\<tau> (\<rho> (x', y')))), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_eqs_2(4))
-          apply blast
-          apply auto[1]
-          using assms(1,3) apply blast
-          using assumps apply blast
-          using assumps apply auto[1]
-          using assumps apply argo
-          using ecirc apply simp
-          using ecirc apply simp
-          using z1 apply blast
-          by force
-
-        show ?thesis
-          unfolding assms 
-          apply(simp add: tf_def del: \<tau>.simps add.simps \<rho>.simps)
-          apply(simp add: eq2 eq3 del: \<tau>.simps add.simps \<rho>.simps) 
-          using helper by argo
-      next
-        case z2
-        have eq1: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l')}"
-          using proj_add_eqs_2(5)[OF assms b ecirc(2,3) z2] unfolding proj_addition_def assms by blast           
-        (* new part *)
-        have eq2_assumps: "{(\<rho> (x, y), l)} \<in> e_proj" "(\<rho> (x, y), x', y') \<in> e_aff_0"
-                          " \<not> (\<rho> (x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<rho> (x, y))))"
-          using e_proj_elim_1 in_aff(3) z2 apply auto[1]
-          using b unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo) 
-          by (simp add: e_circ_def z2)
-        have eq2: "proj_addition {(\<rho> (x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
-                   {(add (\<rho> (x, y)) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (\<rho> (x, y)) (\<tau> (x', y'))), l + l')}"
-          using proj_add_eqs_2(5) eq2_assumps ecirc z2 assms(2) assms(4) proj_addition_def 
-          by (simp add: proj_add_eqs_2(5) proj_add_eqs_2(4))
-
-        have "tf \<rho> {((x', y'), l'), (\<tau> (x', y'), l' + 1)} \<in> e_proj"
-          using rho_preserv_e_proj 
-          by (metis assms(2) assms(4) ecirc(2) ecirc(3) gluing_class in_aff(2))
-        then have assumps: "{(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} \<in> e_proj"
-                           "((x, y),\<rho> (x', y')) \<in> e_aff_0"
-                           "(x, y) \<notin> e_circ"
-          unfolding tf_def apply force
-          using in_aff ld_nz unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo)
-          using z2 unfolding e_circ_def by fastforce
-
-        have eq3: "proj_addition {((x, y), l)} {(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} =
-                   {(add (x, y) (\<tau> (\<rho> (x', y'))), l + l' + 1), (\<tau> (add (x, y) (\<tau> (\<rho> (x', y')))), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_eqs_2(5))
-          apply blast
-          apply auto[1]
-          using assms(1,3) apply blast
-          using assumps apply blast
-          using assumps apply auto[1]
-          using assumps apply argo
-          using ecirc apply simp
-          using ecirc apply simp
-          using z2 apply blast
-          by force
-
-        show ?thesis
-          apply(simp add: assms tf_def del: \<tau>.simps add.simps \<rho>.simps)
-          apply(simp add: eq2 eq3 del: \<tau>.simps add.simps \<rho>.simps) 
-          using helper by argo
-      next
-        case z3    
-
-        consider
-          (aaa) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l)\<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (bbb) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0 \<and> fst ((x, y), l) \<in> e_aff \<and> fst (\<tau> (x', y'), l' + 1) \<in> e_aff" |
-          (ccc) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0
-                \<or> fst ((x, y), l) \<notin> e_aff \<or> fst (\<tau> (x', y'), l' + 1) \<notin> e_aff" 
-          by(simp add: proj_add.simps,blast) 
-        then show ?thesis 
-        proof(cases)
-          case aaa            
-          have eq1: "proj_addition {((x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
-              {(add (x, y) (\<tau> (x', y')), l + l'), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l'+1)}"
-          using proj_add_eqs_2(6)[OF assms b ecirc(2,3) z3] aaa unfolding proj_addition_def assms by linarith         
-          (* new part *)
-          have eq2_assumps: "{(\<rho> (x, y), l)} \<in> e_proj" "(\<rho> (x, y), x', y') \<in> e_aff_0"
-                            " \<not> (\<rho> (x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<rho> (x, y))))"
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) apply auto[1]
-            using b unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo) 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-          have eq2: "proj_addition {(\<rho> (x, y), l)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
-                     {(add (\<rho> (x, y)) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (\<rho> (x, y)) (\<tau> (x', y'))), l + l')}"
-            using proj_add_eqs_2(6) eq2_assumps z3 aaa 
-            using assms(1) assms(3) e_proj_elim_1 in_aff(1) by auto
-
-        have "tf \<rho> {((x', y'), l'), (\<tau> (x', y'), l' + 1)} \<in> e_proj"
-          using rho_preserv_e_proj 
-          by (metis assms(2) assms(4) ecirc(2) ecirc(3) gluing_class in_aff(2))
-        then have assumps: "{(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} \<in> e_proj"
-                           "((x, y),\<rho> (x', y')) \<in> e_aff_0"
-                           "(x, y) \<in> e_circ"
-                           "\<not> (\<exists>g\<in>symmetries. (- y', x') = (g \<circ> i) (x, y))"
-          unfolding tf_def apply force
-          using in_aff ld_nz unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def apply(simp,argo)
-          using z3 in_aff unfolding e_circ_def apply fastforce
-          unfolding symmetries_def 
-          apply(simp add: algebra_simps divide_simps t_nz z3)
-          using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(2) by auto
-
-
-        have eq3: "proj_addition {((x, y), l)} {(\<rho> (x', y'), l'), (\<rho> (\<tau> (x', y')), l' + 1)} =
-                   {(add (x, y) (\<tau> (\<rho> (x', y'))), l + l' + 1), (\<tau> (add (x, y) (\<tau> (\<rho> (x', y')))), l + l')}"
-          unfolding proj_addition_def
-          apply(subst proj_add_eqs_2(6))
-          apply blast
-          apply auto[1]
-          using assms(1,3) apply blast
-          using assumps apply blast
-          using assumps apply auto[1]
-          using assumps apply argo
-          using ecirc apply simp
-          using ecirc apply simp
-          using z3 apply blast+
-          using aaa unfolding p_delta_def delta_def delta_plus_def delta_minus_def e_aff_def e'_def 
-           apply(simp add: algebra_simps) 
-          using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by blast
-
-  
-          show ?thesis
-            unfolding assms 
-            apply(simp add: assms tf_def del: \<tau>.simps add.simps \<rho>.simps)
-            apply(simp add: eq2 eq3 del: \<tau>.simps add.simps \<rho>.simps)
-            using helper by argo
-          next
-            case bbb
-            then have "False"
-              using assms(1) assms(3) e_proj_elim_1 z3(1) z3(2) by auto
-            then show ?thesis by simp
-          next
-            case ccc
-            then have "False" 
-              using assms(1) assms(3) e_proj_elim_1 in_aff(1) z3(1) z3(2) by auto
-            then show ?thesis by simp
-          qed
-        qed
-      qed       
-    next
-      case c
-      then have ld_nz: "delta' x y x' y' \<noteq> 0" 
-        unfolding e_aff_1_def by auto    
-      then have "False" 
-        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(9) by blast
+        using assms(1) assms(2) assms(3) assms(4) c(1) c(2) c(3) proj_add_eqs_2(7) by blast
       then show ?thesis by blast
     qed    
   qed     
+
+lemma remove_add_tau_4:
+  assumes "p = {((x, y), l), (\<tau> (x, y), l + 1)}"
+          "q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}"
+          "p \<in> e_proj" "q \<in> e_proj"  
+  shows "proj_addition (tf \<tau> p) q = tf \<tau> (proj_addition p q)"
+proof -
+  from e_proj_eq[OF assms(3)] e_proj_eq[OF assms(4)]
+  have in_aff: "(x, y) \<in> e_aff" "(x', y') \<in> e_aff" 
+    using assms(1) assms(3) e_aff_bit_def e_proj_def eq_rel in_quotient_imp_subset apply force
+    using assms(2) assms(4) e_aff_bit_def e_proj_def eq_rel in_quotient_imp_subset by force
+  have nz: "x \<noteq> 0" "y \<noteq> 0" "x' \<noteq> 0" "y' \<noteq> 0" 
+    using assms e_proj_elim_2 in_aff apply fastforce   
+    using assms e_proj_elim_2  in_aff apply fastforce  
+    using assms(2) assms(4) e_proj_elim_2 in_aff apply fastforce
+    using assms(2) assms(4) e_proj_elim_2 in_aff by fastforce    
+  have in_circ: "(x,y) \<in> e_circ" "(x',y') \<in> e_circ"
+    by(auto simp add: in_aff \<open>x \<noteq> 0\<close> \<open>y \<noteq> 0\<close> \<open>x' \<noteq> 0\<close> \<open>y' \<noteq> 0\<close> e_circ_def) 
+        
+  have taus: "(\<tau> (x', y')) \<in> e_aff" "(\<tau> (x, y)) \<in> e_aff" "\<tau> (x', y') \<in> e_circ"
+    using \<open>(x', y') \<in> e_circ\<close> \<tau>_circ e_circ_def apply auto[1]        
+    using \<tau>_circ e_circ_def in_circ apply auto[1]
+    using \<tau>_circ in_circ by blast
+
+  have rho_aff: "\<rho> (x,y) \<in> e_aff" 
+    using \<open>(x,y) \<in> e_aff\<close> unfolding e_aff_def e'_def by(simp,argo) 
+  have rho_circ: "\<rho> (x,y) \<in> e_circ"
+    using \<open>(x,y) \<in> e_circ\<close> rho_aff unfolding e_circ_def by simp
+
+  have tf_e_proj: "tf \<rho> {((x, y), l), (\<tau> (x, y), l + 1)} \<in> e_proj"
+        using rho_preserv_e_proj 
+        by (metis e_points gluing_class in_aff(1) nz(1) nz(2))
+  
+  consider
+    (a) "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" |
+    (b) "((x, y), x', y') \<in> e_aff_0" "\<not> ((\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" |
+    (c) "((x, y), x', y') \<in> e_aff_1" "\<not> ((\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y)))" "((x, y), x', y') \<notin> e_aff_0"
+    using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>] \<open>(x,y) \<in> e_circ\<close> by blast
+  then show ?thesis 
+  proof(cases)
+    case a
+      then obtain g where sym_expr: "g \<in> symmetries" "(x', y') = (g \<circ> i) (x, y)" by auto        
+      consider (1) "p_delta ((x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0" |
+               (2) "p_delta' ((x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0" "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0" |
+               (3) "p_delta ((x, y), l) (\<tau> (x', y'), l'+1) = 0"
+                   "p_delta' ((x, y), l) (\<tau> (x', y'), l'+1) = 0" 
+        using proj_add.simps by blast
+      then show ?thesis
+      proof(cases)
+        case 1       
+        
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+               {(add (x, y) (\<tau> (x', y')), l + l' + 1)}"
+          using proj_add_eqs_4(1) assms 1 sym_expr in_circ(1) unfolding proj_addition_def by blast
+        then have eq1: "tf \<tau> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                        {(\<tau> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding tf_def image_def by simp
+
+        from a have helper: "d * x * x' * y * y' = -1 \<or> d * x * x' * y * y' = 1"
+          unfolding symmetries_def
+          apply(safe)
+          by(simp_all add: nz t_nz t_expr power2_eq_square[symmetric] d_nz)
+
+        have assumps: "{(\<tau> (x, y), l), (\<tau> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+                      "{((x', y'), l'), (\<tau> (x', y'), l' + 1)} \<in> e_proj"
+                      "(\<tau> (x,y), x', y') \<in> e_aff_0"
+                      "\<not> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (\<tau> (x,y)))"
+                      "p_delta (\<tau> (x,y), l) (\<tau> (x', y'), l' + 1) = 0"
+                      "p_delta' (\<tau> (x,y), l) (\<tau> (x', y'), l' + 1) = 0"
+          apply(metis \<tau>.simps e_points in_aff(1) projective_curve.tau_preserv_e_proj projective_curve_axioms remove_tau tau_idemp_explicit taus(2))
+          using assms(2) assms(4) apply auto
+          using taus in_aff 1 unfolding e_aff_0_def p_delta_def delta_def delta_plus_def delta_minus_def          
+          apply(simp add: t_nz nz divide_simps algebra_simps) 
+           apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
+          defer 1
+          using 1 d_n1 nz unfolding p_delta_def delta_def delta_plus_def delta_minus_def
+           apply(simp add: t_nz nz algebra_simps divide_simps power2_eq_square[symmetric] t_expr d_nz)
+            apply (metis (no_types, hide_lams) helper power2_minus power_one semiring_normalization_rules(18))
+          using 1 d_n1 nz unfolding 
+              p_delta_def delta_def delta_plus_def delta_minus_def
+              p_delta'_def delta'_def delta_x_def delta_y_def
+           apply(simp add: t_nz nz algebra_simps divide_simps power2_eq_square[symmetric] t_expr d_nz)
+          
+          sorry
+        have "proj_addition {(\<tau> (x, y), l), (\<tau> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+              {(\<tau> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          thm proj_add_eqs_4(6)
+          unfolding proj_addition_def 
+          apply(subst proj_add_eqs_4(6))
+                apply fastforce
+               apply blast
+          using assumps apply blast+
+          using assumps apply simp
+          using assumps apply auto[1]                              
+          using assumps apply simp
+          using assumps 
+          apply auto[1]
+          apply blast
+          using assumps apply blast
+          using assms apply blast
+          using rho_circ a symmetries_def apply auto[1]
+          using assumps apply simp
+          by (metis \<rho>.simps prod.collapse rotation_invariance_1)
+        then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                        {(\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding tf_def by force
+        show ?thesis
+          using assms eq1 eq2 by argo
+      next
+        case 2
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+               {(ext_add (x, y) (\<tau> (x', y')), l + l' + 1)}"
+          using proj_add_eqs_4(2) assms 2 sym_expr in_circ(1) unfolding proj_addition_def by blast
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                        {(\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding tf_def image_def by simp
+  
+        then have assumps: "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+                           "p_delta' (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0"
+                           "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+          using 2 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+            apply(simp add: t_nz nz divide_simps algebra_simps)
+          using 2 unfolding p_delta'_def delta'_def delta_x_def delta_y_def 
+            apply(simp add: t_nz nz divide_simps algebra_simps)
+          using tf_e_proj unfolding tf_def by simp
+  
+        have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+              {(\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding assms tf_def proj_addition_def image_def
+          apply(subst proj_add_eqs_4(2))
+          apply auto[1]
+          apply blast
+          using assumps apply blast
+          using assms apply blast
+          using rho_circ a symmetries_def apply auto[1]
+          using assumps apply simp
+          using assumps apply simp
+          by (metis \<rho>.simps prod.collapse rotation_invariance_2)
+        then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                        {(\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding tf_def by force
+        show ?thesis
+          using assms eq1 eq2 by argo
+      next
+        case 3
+        have "False" using proj_add_eqs_4(3) a 3 assms by blast
+        then show ?thesis by simp
+      qed         
+    next
+      case b
+      then have ld_nz: "delta x y x' y' \<noteq> 0" 
+        unfolding e_aff_0_def by auto    
+      then have "p_delta (\<tau> (x, y), l+1) (\<tau> (x', y'), l'+1) \<noteq> 0" 
+        unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+        by(simp add: t_nz nz algebra_simps power2_eq_square[symmetric] t_expr d_nz power_one_over)
+      have v1: "proj_add ((x, y), l) ((x', y'), l') = Some (add (x, y) (x', y'), l + l')"
+        using ld_nz p_delta_def proj_add.simps \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close> by simp
+      have v2: "proj_add (\<tau> (x, y), l+1) (\<tau> (x', y'), l'+1) = Some (add (\<tau> (x, y)) (\<tau> (x', y')), l + l')"
+        using \<open>p_delta (\<tau> (x, y), l + 1) (\<tau> (x', y'), l' + 1) \<noteq> 0\<close> proj_add.simps taus(1) taus(2) by auto
+      have v1_eq_v2: "Some (add (x, y) (x', y'), l + l') = Some (add (\<tau> (x, y)) (\<tau> (x', y')), l + l')"
+        using inversion_invariance_1 nz tau_idemp 
+        by (simp add: c_eq_1 t_nz)
+      consider
+        (1) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0" |
+        (2) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0" 
+              "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0"|
+        (3) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> 
+               p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0" 
+        by(simp add: proj_add.simps,blast)        
+      then show ?thesis 
+      proof(cases)
+        case 1         
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+               {(add (x, y) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (x, y) (\<tau> (x', y'))), l + l')}"
+          using proj_add_eqs_4(4) assms 1 b  unfolding proj_addition_def by blast
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                        {(\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1), (\<rho> (\<tau> (add (x, y) (\<tau> (x', y')))), l + l')}"
+          unfolding tf_def by simp
+        have assumps: 
+            "(\<rho> (x,y), x', y') \<in> e_aff_0"
+            "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0"
+             "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+          using b(1) rho_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def apply(simp,argo)
+          using 1 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+           apply(simp add: t_nz nz divide_simps algebra_simps)
+          using tf_e_proj unfolding tf_def by auto
+        have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+              {(\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1), (\<rho> (\<tau> (add (x, y) (\<tau> (x', y')))), l + l')}"
+          unfolding assms tf_def proj_addition_def image_def
+          apply(subst proj_add_eqs_4(4))
+          apply auto[1]
+          apply blast
+          using assumps apply blast
+          using assms apply blast
+          using assumps apply simp
+          using rho_circ b symmetries_def apply auto[1]
+          using assumps apply simp
+          proof -
+          have f1: "\<forall>p r ra. add (\<rho> (ra, r)) p = \<rho> (add (ra, r) p)"
+            using rotation_invariance_1 by force
+            have "\<forall>p. \<tau> (\<rho> p) = \<rho> (\<tau> p)"
+              by auto
+            then show "{(add (- y, x) (\<tau> (x', y')), l + l' + 1), (\<tau> (add (- y, x) (\<tau> (x', y'))), l + l')} = {(\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1), (\<rho> (\<tau> (add (x, y) (\<tau> (x', y')))), l + l')}"
+              using f1 by (metis (full_types) \<rho>.simps)
+          qed
+          
+        then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                        {(\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1), (\<rho> (\<tau> (add (x, y) (\<tau> (x', y')))), l + l')}"
+          unfolding tf_def by force
+        show ?thesis
+          using assms eq1 eq2 by argo
+      next
+        case 2
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+               {(add (x, y) (x', y'), l + l'), (ext_add (x, y) (\<tau> (x', y')), l + l'+1)}"
+          using proj_add_eqs_4(5) assms 2 b  unfolding proj_addition_def by presburger
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                        {(\<rho> (add (x, y) (x', y')), l + l'), (\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l'+1)}"
+          unfolding tf_def by simp
+        have assumps: 
+            "(\<rho> (x,y), x', y') \<in> e_aff_0"
+            "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+            "p_delta' (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0"
+             "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+          using b(1) rho_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def apply(simp,argo)
+          using 2 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+            apply(simp add: t_nz nz divide_simps algebra_simps)
+          using 2 unfolding p_delta'_def delta'_def delta_x_def delta_y_def 
+           apply(simp add: t_nz nz divide_simps algebra_simps)
+          using tf_e_proj unfolding tf_def by auto
+        have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+              {(\<rho> (add (x, y) (x', y')), l + l'), (\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l'+1)}"
+          unfolding assms tf_def proj_addition_def image_def
+          apply(subst proj_add_eqs_4(5))
+          apply auto[1]
+          apply blast
+          using assumps apply blast
+          using assms apply blast
+          using assumps apply simp
+          using rho_circ b symmetries_def apply auto[1]
+          using assumps apply simp
+          using assumps apply simp
+          by (metis (mono_tags, hide_lams) \<rho>.simps prod.collapse rotation_invariance_1 rotation_invariance_2)
+        then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                        {(\<rho> (add (x, y) (x', y')), l + l'), (\<rho> (ext_add (x, y) (\<tau> (x', y'))), l + l'+1)}"
+          unfolding tf_def by force
+        show ?thesis
+          using assms eq1 eq2 by argo
+      next
+        case 3
+          have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+               {(add (x, y) (x', y'), l + l')}"
+          using proj_add_eqs_4(6) assms 3 b  unfolding proj_addition_def by blast
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                        {(\<rho> (add (x, y) (x', y')), l + l')}"
+          unfolding tf_def by simp
+        have assumps: 
+            "(\<rho> (x,y), x', y') \<in> e_aff_0"
+            "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+            "p_delta' (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+             "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+          using b(1) rho_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def apply(simp,argo)
+          using 3 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+            apply(simp add: t_nz nz divide_simps algebra_simps)
+          using 3 unfolding p_delta'_def delta'_def delta_x_def delta_y_def 
+           apply(simp add: t_nz nz divide_simps algebra_simps)
+          using tf_e_proj unfolding tf_def by auto
+        have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+              {(\<rho> (add (x, y) (x', y')), l + l')}"
+          unfolding assms tf_def proj_addition_def image_def
+          apply(subst proj_add_eqs_4(6))
+          apply auto[1]
+          apply blast
+          using assumps apply blast
+          using assms apply blast
+          using assumps apply simp
+          using rho_circ b symmetries_def apply auto[1]
+          using assumps apply simp
+          using assumps apply simp
+          by (metis (mono_tags, hide_lams) \<rho>.simps prod.collapse rotation_invariance_1)
+        then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                        {(\<rho> (add (x, y) (x', y')), l + l')}"
+          unfolding tf_def by force
+        show ?thesis
+          using assms eq1 eq2 by argo
+      qed
+    next
+      case c
+
+      consider
+        (1) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0" |
+        (2) "p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) \<noteq> 0" 
+              "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0"|
+        (3) "p_delta ((x, y), l) (\<tau> (x', y'), l' + 1) = 0 \<and> 
+               p_delta' ((x, y), l) (\<tau> (x', y'), l' + 1) = 0" 
+        by(simp add: proj_add.simps,blast)        
+      then show ?thesis 
+      proof(cases)
+        case 1   
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+             {(ext_add (x, y) (x', y'), l + l'), (add (x, y) (\<tau> (x', y')), l + l' + 1)}"
+        using proj_add_eqs_4(7) assms 1 c unfolding proj_addition_def by blast
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                      {(\<rho> (ext_add (x, y) (x', y')), l + l'), (\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+          unfolding tf_def by simp
+      have assumps: 
+          "(\<rho> (x,y), x', y') \<in> e_aff_1"
+          "(\<rho> (x,y), x', y') \<notin> e_aff_0"
+          "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) \<noteq> 0"
+           "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+        using c(1) rho_aff unfolding e_aff_1_def delta'_def delta_x_def delta_y_def apply(simp,argo)
+        using c(3) rho_aff in_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def apply(simp,argo)
+        using 1 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+          apply(simp add: t_nz nz divide_simps algebra_simps)
+        using tf_e_proj unfolding tf_def by auto
+      have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+            {(\<rho> (ext_add (x, y) (x', y')), l + l'), (\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+        unfolding assms tf_def proj_addition_def image_def
+        apply(subst proj_add_eqs_4(7))
+        apply auto[1]
+        apply blast
+        using assumps apply blast
+        using assms apply blast
+        using assumps apply simp
+        using rho_circ c symmetries_def apply auto[1]
+        using assumps apply simp
+        using assumps apply simp 
+        by (metis (mono_tags, hide_lams) \<rho>.simps prod.collapse rotation_invariance_1 rotation_invariance_2)
+      then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                      {(\<rho> (ext_add (x, y) (x', y')), l + l'), (\<rho> (add (x, y) (\<tau> (x', y'))), l + l' + 1)}"
+        unfolding tf_def by force
+      show ?thesis
+        using assms eq1 eq2 by argo
+      next
+        case 2
+        have "False" using proj_add_eqs_4(8) 2 assms c by blast
+        then show ?thesis by simp
+      next
+        case 3
+        have "proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} =
+             {(ext_add (x, y) (x', y'), l + l')}"
+        using proj_add_eqs_4(9) assms 3 c unfolding proj_addition_def by blast
+        then have eq1: "tf \<rho> (proj_addition {((x, y), l), (\<tau> (x, y), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)}) =
+                      {(\<rho> (ext_add (x, y) (x', y')), l + l')}"
+          unfolding tf_def by simp
+      have assumps: 
+          "(\<rho> (x,y), x', y') \<in> e_aff_1"
+          "(\<rho> (x,y), x', y') \<notin> e_aff_0"
+          "p_delta (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+          "p_delta' (\<rho> (x, y), l) (\<tau> (x', y'), l'+1) = 0"
+           "{(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} \<in> e_proj"
+        using c(1) rho_aff unfolding e_aff_1_def delta'_def delta_x_def delta_y_def apply(simp,argo)
+        using c(3) rho_aff in_aff unfolding e_aff_0_def delta_def delta_plus_def delta_minus_def apply(simp,argo)
+        using 3 unfolding p_delta_def delta_def delta_plus_def delta_minus_def 
+          apply(simp add: t_nz nz divide_simps algebra_simps)
+        using 3 unfolding p_delta'_def delta'_def delta_x_def delta_y_def 
+          apply(simp add: t_nz nz divide_simps algebra_simps)
+        using tf_e_proj unfolding tf_def by auto
+      have "proj_addition {(\<rho> (x, y), l), (\<rho> (\<tau> (x, y)), l + 1)} {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+            {(\<rho> (ext_add (x, y) (x', y')), l + l')}"
+        unfolding assms tf_def proj_addition_def image_def
+        apply(subst proj_add_eqs_4(9))
+        apply auto[1]
+        apply blast
+        using assumps apply blast
+        using assms apply blast
+        using assumps apply simp
+        using rho_circ c symmetries_def apply auto[1]
+        using assumps apply simp
+        using assumps apply simp 
+        using assumps apply simp 
+        by (metis (mono_tags, hide_lams) \<rho>.simps prod.collapse rotation_invariance_2)
+      then have eq2: "proj_addition (tf \<rho> ({((x, y), l), (\<tau> (x, y), l + 1)})) {((x', y'), l'), (\<tau> (x', y'), l' + 1)} = 
+                      {(\<rho> (ext_add (x, y) (x', y')), l + l')}"
+        unfolding tf_def by force
+      show ?thesis
+        using assms eq1 eq2 by argo
+      qed 
+    qed 
+  qed
 
 lemma remove_add_tau:
   assumes "p \<in> e_proj" "q \<in> e_proj" "(tf \<tau> p) \<in> e_proj"
@@ -6174,8 +6142,7 @@ proof -
     next
       case 2 then show ?thesis using remove_add_tau_2 assms by blast
     next
-      case 3 then show ?thesis
-                   using proj_add_eqs_2
+      case 3 then show ?thesis using remove_add_tau_3 assms by blast
     next
       case 4 then show ?thesis using remove_add_rho_4 assms by blast
     qed

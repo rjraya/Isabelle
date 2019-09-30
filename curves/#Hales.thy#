@@ -1508,7 +1508,7 @@ lemma rot_comp:
   shows "t1 \<circ> t2 \<in> rotations"
   using assms unfolding rotations_def by auto
 
-
+thm e_aff_def
   
 (*
 function proj_add :: "(real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit \<Rightarrow> (real \<times> real) \<times> bit" where
@@ -4548,7 +4548,7 @@ proof -
     next
       case 4 then show ?thesis using assms(1,2) p_q_expr(2,4) proj_add_class_comm well_defined_4 by auto      
     qed
-qed     
+  qed     
 
 definition tf  where
   "tf g = image (\<lambda> p. (g (fst p), snd p))"
@@ -4556,7 +4556,11 @@ definition tf  where
 lemma tf_comp:
   "tf g (tf f s) = tf (g \<circ> f) s"
   unfolding tf_def by force
-                                                                                                                              
+
+definition tf' where
+  "tf' = image (\<lambda> p. (fst p, (snd p)+1))"
+  
+
 lemma rho_preserv_e_proj:
   assumes "gluing `` {((x, y), l)} \<in> e_proj"
   shows "tf \<rho> (gluing `` {((x, y), l)}) \<in> e_proj"
