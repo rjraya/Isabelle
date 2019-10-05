@@ -452,6 +452,9 @@ next
     qed
   qed
 qed
+
+  
+
 end
 
 section\<open>Projective curves\<close>
@@ -500,8 +503,6 @@ text\<open>The case t = 0 corresponds to a circle which has been treated before\
 lemma t_0_circle:
   "t = 0 \<Longrightarrow> e' x y = x^2 + y^2 - 1" 
   unfolding e'_def by auto
-
-
 
 fun \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where 
   "\<rho> (x,y) = (-y,x)"
@@ -1231,7 +1232,7 @@ lemma inverse_generalized:
   assumes "e' a b = 0" 
   shows "add (a,b) (a,-b) = (1,0)" 
   using assms 
-  apply(simp)
+  apply(simp) thm add.simps
   unfolding e'_def
   apply(simp add: t_expr c_eq_1)
   using c_d_pos 
@@ -1240,6 +1241,9 @@ lemma inverse_generalized:
   by (simp add: mult.commute mult.left_commute power2_eq_square)
 
 section \<open>Projective addition\<close>
+
+thm coherence
+
 
 definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)) set" where
   "gluing = {(((x0,y0),l),((x1,y1),j)). 
@@ -2123,6 +2127,135 @@ proof -
     then show ?thesis 
       unfolding proj_add_class_def 
       using add_some in_set by blast
+  qed
+qed
+
+lemma covering_with_deltas:
+  assumes "(gluing `` {((x,y),l)}) \<in> e_proj" "(gluing `` {((x',y'),l')}) \<in> e_proj"
+  shows "delta x y x' y' \<noteq> 0 \<or> delta' x y x' y' \<noteq> 0 \<or>
+         delta x y (fst (\<tau> (x',y'))) (snd (\<tau> (x',y'))) \<noteq> 0 \<or>
+         delta' x y (fst (\<tau> (x',y'))) (snd (\<tau> (x',y'))) \<noteq> 0"
+proof -
+  define p where "p = (gluing `` {((x,y),l)})"
+  define q where "q = (gluing `` {((x',y'),l')})"
+  have "p \<in> e_aff_bit // gluing"
+    using assms(1) p_def unfolding e_proj_def by blast
+  from e_proj_eq[OF assms(1)] e_proj_eq[OF assms(2)]
+  have
+    p_q_expr: "p = {((x, y), l)} \<or> p = {((x, y), l), (\<tau> (x, y), l + 1)} " 
+    "q = {((x', y'), l')} \<or> q = {((x', y'), l'), (\<tau> (x', y'), l' + 1)}"
+    "(x,y) \<in> e_aff" "(x',y') \<in> e_aff" 
+    using p_def q_def 
+    using assms(1) gluing_cases_explicit apply auto[1]
+    using assms(2) gluing_cases_explicit q_def apply auto[1] 
+    using assms(1) e_aff_bit_def e_proj_def eq_rel gluing_cases_explicit in_quotient_imp_subset apply fastforce
+    using assms(2) e_aff_bit_def e_proj_def eq_rel gluing_cases_explicit in_quotient_imp_subset by fastforce
+
+  then have gluings: "p = (gluing `` {((x,y),l)})" 
+                     "q = (gluing `` {((x',y'),l')})"
+    using p_def q_def by simp+
+  consider 
+     "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. (x', y') = (g \<circ> i) (x, y))" 
+   | "((x, y), x', y') \<in> e_aff_0" 
+   | "((x, y), x', y') \<in> e_aff_1"
+    using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>(x',y') \<in> e_aff\<close>] by blast
+  then show ?thesis 
+  proof(cases)
+    case 1
+    then obtain r where eq: "(x',y') = (\<tau> \<circ> r) (i (x,y))" "r \<in> rotations"
+      unfolding symmetries_def rotations_def by force
+    then have "\<tau> \<in> G" unfolding G_def by auto
+    have "i (x,y) \<in> e_circ"
+      using 1 unfolding e_circ_def e_aff_def e'_def by auto
+    then have "(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ" 
+      using i_circ rho_circ rot_circ \<tau>_circ eq(2) by auto
+    have "\<tau> (x',y') \<noteq> (\<tau> \<circ> r \<circ> i) (x,y)"
+      unfolding eq(1) 
+      using g_no_fp[OF \<open>\<tau> \<in> G\<close> \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close>] 
+      apply(simp)
+      by (metis \<tau>.simps c_eq_1 d_nz divide_divide_eq_left fst_conv id_apply mult.assoc mult_cancel_right1 power2_eq_square semiring_normalization_rules(11) t_expr(1) t_sq_n1)
+    have "\<tau> (x',y') \<in> e_aff" 
+      using \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq e_circ_def \<tau>_circ by auto
+    
+    have "\<tau> (x',y') \<in> e_circ" 
+      using \<tau>_circ \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq(1) by auto 
+    then have "(\<tau> (x',y'),l'+1) \<in> (gluing `` {((x',y'),l')})"
+      unfolding gluing_def Image_def 
+      apply(simp split: prod.splits del: \<tau>.simps,safe)
+      apply (simp add: p_q_expr(4))
+      using \<open>\<tau> (x', y') \<in> e_aff\<close> apply auto[1]
+      using \<open>(\<tau> \<circ> r \<circ> i) (x, y) \<in> e_circ\<close> eq(1) by auto
+    then have sc: "(gluing `` {((x',y'),l')}) = (gluing `` {(\<tau> (x',y'),l'+1)})"
+      by (meson Image_singleton_iff eq_rel equiv_class_eq_iff)
+    have "proj_add_class p q =
+          proj_add_class (gluing `` {((x,y),l)}) (gluing `` {((x',y'),l')})"
+      using gluings by simp
+    also have "... = 
+          proj_add_class (gluing `` {((x,y),l)}) (gluing `` {(\<tau> (x',y'),l'+1)})"
+      using sc by simp
+    finally have eq_simp: "proj_add_class p q = proj_add_class (gluing `` {((x,y),l)}) (gluing `` {(\<tau> (x',y'),l'+1)})"
+      by blast
+
+    consider
+      (a) "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. \<tau> (x', y') = (g \<circ> i) (x, y))" 
+    | (b) "((x, y), \<tau> (x', y')) \<in> e_aff_0" 
+    | (c) "((x, y), \<tau> (x', y')) \<in> e_aff_1"
+      using dichotomy_1[OF \<open>(x,y) \<in> e_aff\<close> \<open>\<tau> (x', y') \<in> e_aff\<close>] by blast  
+    then show ?thesis
+    proof(cases)
+      case a
+      define q' where "q' = \<tau> (x',y')"
+      from a have "(x, y) \<in> e_circ \<and> (\<exists>g\<in>symmetries. q' = (g \<circ> i) (x, y))"
+        by(simp add: q'_def)  
+      then obtain r' where eq1: "q' = (\<tau> \<circ> r') (i (x,y))" "r' \<in> rotations"
+        unfolding symmetries_def rotations_def by force
+      then have "\<tau> (x',y') = (\<tau> \<circ> r') (i (x,y))" 
+        by(simp add: q'_def)  
+      then have "(x',y') = (r' \<circ> i) (x,y)" 
+        using tau_sq apply(simp del: \<tau>.simps) by (metis surj_pair)
+      then have "(r' \<circ> i) (x,y) = (\<tau> \<circ> r) (i (x, y))"
+        using eq by simp
+      then obtain r'' where eq2: "i (x,y) = (\<tau> \<circ> r'') (i (x,y))" "r'' \<in> rotations"
+        using group_lem[OF \<open>r' \<in> rotations\<close> \<open>r \<in> rotations\<close>] by blast
+      have "\<tau> \<circ> r'' \<in> G" 
+        using G_def \<open>r'' \<in> rotations\<close> rotations_def 
+        apply(simp) 
+        using G_def \<open>(r' \<circ> i) (x, y) = (\<tau> \<circ> r) (i (x, y))\<close> symmetries_def tau_rot_sym by auto
+      have "i (x,y) \<in> e_circ" 
+        using \<open>i (x, y) \<in> e_circ\<close> by auto
+      have "\<tau> \<circ> r'' \<noteq> id"
+        using sym_not_id[OF \<open>r'' \<in> rotations\<close>] by blast
+      then have "False"
+        using g_no_fp[OF \<open>\<tau> \<circ> r'' \<in> G\<close> \<open>i (x,y) \<in> e_circ\<close> eq2(1)[symmetric]]
+        by blast
+      then show ?thesis by blast
+    next
+      case b
+      define x'' where "x'' = fst (\<tau> (x',y'))"
+      define y'' where "y'' = snd (\<tau> (x',y'))"
+      from b have "delta x y x'' y'' \<noteq> 0"
+        unfolding e_aff_0_def using x''_def y''_def by simp 
+      then show ?thesis
+        unfolding x''_def y''_def by blast
+    next
+      case c
+      define x'' where "x'' = fst (\<tau> (x',y'))"
+      define y'' where "y'' = snd (\<tau> (x',y'))"
+      from c have "delta' x y x'' y'' \<noteq> 0"
+        unfolding e_aff_1_def using x''_def y''_def by simp 
+      then show ?thesis
+        unfolding x''_def y''_def by blast
+  qed
+  next
+    case 2
+    then have "delta x y x' y' \<noteq> 0" 
+      unfolding e_aff_0_def by simp
+    then show ?thesis by simp
+  next
+    case 3
+    then have "delta' x y x' y' \<noteq> 0" 
+      unfolding e_aff_1_def by simp
+    then show ?thesis by simp
   qed
 qed
 
@@ -4474,6 +4607,8 @@ proof -
     qed
   qed   
 
+  thm coherence
+
 lemma gluing_add_1: 
   assumes "gluing `` {((x,y),l)} = {((x, y), l)}" "gluing `` {((x',y'),l')} = {((x', y'), l')}" 
           "gluing `` {((x,y),l)} \<in> e_proj" "gluing `` {((x',y'),l')} \<in> e_proj" "p_delta ((x,y),l) ((x',y'),l') \<noteq> 0"
@@ -6647,7 +6782,7 @@ qed
 
 
 (* in the appropiate localizations means we can use delta \<noteq> 0 *)
-lemma add_add_assoc:
+lemma add_add_add_add_assoc:
   assumes "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "(x3,y3) \<in> e_aff"
   assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta x2 y2 x3 y3 \<noteq> 0"
           "delta (fst (add (x1,y1) (x2,y2))) (snd (add (x1,y1) (x2,y2))) x3 y3 \<noteq> 0"
@@ -6693,7 +6828,7 @@ then show "x1 * (x1 * (x2 * (x3 * (x3 * (x3 * (y1 * (y3 * y3))))))) + (x1 * (x2 
   by (simp add: mult.left_commute)
 qed
 
-lemma ext_add_assoc: 
+lemma ext_ext_ext_ext_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = ext_add (x1,y1) (x2,y2)" "z3' = ext_add (x2,y2) (x3,y3)"
   assumes "delta_x x1 y1 x2 y2 \<noteq> 0" "delta_y x1 y1 x2 y2 \<noteq> 0"
@@ -6850,7 +6985,7 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
-lemma ext_add_assoc_1: 
+lemma ext_add_ext_ext_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = add (x1,y1) (x2,y2)" "z3' = ext_add (x2,y2) (x3,y3)"
   assumes "delta_minus x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0"
@@ -6974,7 +7109,8 @@ proof -
     using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4) by (simp add: prod_eq_iff)
 qed
 
-lemma add_ext_assoc_1: 
+
+lemma add_ext_add_ext_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = ext_add (x1,y1) (x2,y2)" "z3' = ext_add (x2,y2) (x3,y3)"
   assumes "delta_x x1 y1 x2 y2 \<noteq> 0" "delta_y x1 y1 x2 y2 \<noteq> 0"
@@ -7082,6 +7218,124 @@ proof -
     using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4) by (simp add: prod_eq_iff)
 qed
 
+lemma add_add_ext_add_assoc: 
+  assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
+  assumes "z1' = add (x1,y1) (x2,y2)" "z3' = add (x2,y2) (x3,y3)"
+  assumes "delta_minus x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0"
+          "delta_minus x2 y2 x3 y3 \<noteq> 0" "delta_plus x2 y2 x3 y3 \<noteq> 0" 
+          "delta_minus x1' y1' x3 y3 \<noteq> 0" "delta_plus x1' y1' x3 y3 \<noteq> 0" 
+          "delta_x x1 y1 x3' y3' \<noteq> 0" "delta_y x1 y1 x3' y3' \<noteq> 0"
+  assumes "e' x1 y1 = 0" "e' x2 y2 = 0" "e' x3 y3 = 0" 
+  shows "add (add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (add (x2,y2) (x3,y3))" 
+proof -
+  define e1 where "e1 = e' x1 y1"
+  define e2 where "e2 = e' x2 y2"
+  define e3 where "e3 = e' x3 y3" 
+  define Delta\<^sub>x where "Delta\<^sub>x = 
+   (delta_minus x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+  define Delta\<^sub>y where "Delta\<^sub>y =
+   (delta_plus x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
+
+  have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
+  have y1'_expr: "y1' = (x1 * y2 + y1 * x2) / (1 + d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
+  have x3'_expr: "x3' = (x2 * x3 - c * y2 * y3) / (1 - d * x2 * y2 * x3 * y3)" using assms(2,4) by simp
+  have y3'_expr: "y3' = (x2 * y3 + y2 * x3) / (1 + d * x2 * y2 * x3 * y3)" using assms(2,4) by simp
+  
+  have non_unfolded_adds:
+      "delta x1 y1 x2 y2 \<noteq> 0" using delta_def assms(5,6) by auto
+
+  have simp1gx: "
+    (x1' * x3 - c * y1' * y3) * delta_x x1 y1 x3' y3' * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+    ((x1 * x2 - y1 * y2) * x3 * delta_plus x1 y1 x2 y2 -
+     (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
+    ((x2 * x3 - y2 * y3) * y1 * delta_plus x2 y2 x3 y3 -
+     x1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3)
+  "
+    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
+    apply(subst delta_x_def)
+    apply(subst (1 2) delta_minus_def[symmetric])
+    apply(subst (1 2) delta_plus_def[symmetric])
+    unfolding delta'_def delta_def
+    by(simp add: divide_simps assms(5-8) c_eq_1) 
+
+  have simp2gx:
+    "(x1 * y1 - x3' * y3') * delta_minus x1' y1' x3 y3 * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) =
+     (x1 * y1 * (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3) -
+     (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3)) *
+    (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 -
+     d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
+    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
+    apply(subst delta_minus_def)
+    apply(subst (1 3) delta_minus_def[symmetric])
+    apply(subst (1 2) delta_plus_def[symmetric])
+    unfolding delta'_def delta_def
+    by(simp add: divide_simps assms(5-8))
+
+  have "\<exists> r1 r2 r3. g\<^sub>x * Delta\<^sub>x = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding g\<^sub>x_def Delta\<^sub>x_def 
+    apply(simp add: assms(1,2))
+    apply(subst delta_minus_def[symmetric]) 
+    apply(subst (3) delta_x_def[symmetric]) 
+    apply(simp add: divide_simps assms(9,11)) 
+    apply(subst (3) left_diff_distrib)
+    apply(simp add: simp1gx simp2gx)
+    unfolding delta_x_def delta_y_def delta'_def delta_plus_def delta_minus_def delta_def
+              e1_def e2_def e3_def e'_def   
+    by(simp add:  t_expr c_eq_1,algebra) 
+  then have "g\<^sub>x * Delta\<^sub>x = 0" "Delta\<^sub>x \<noteq> 0" 
+    apply(safe)
+    using e1_def e2_def e3_def assms(13-15) apply simp
+    using Delta\<^sub>x_def delta_def delta'_def assms non_unfolded_adds by simp
+  then have "g\<^sub>x = 0" by auto
+
+  have simp1gy: "(x1' * y3 + y1' * x3) * delta_y x1 y1 x3' y3' * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) =
+                 ((x1 * x2 - c * y1 * y2) * y3 * delta_plus x1 y1 x2 y2 +
+     (x1 * y2 + y1 * x2) * x3 * delta_minus x1 y1 x2 y2) *
+    (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 +
+     y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3)"
+    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
+    apply(subst delta_y_def)
+    apply(subst (1 2) delta_plus_def[symmetric])
+    apply(subst (1 2) delta_minus_def[symmetric])
+    unfolding delta'_def delta_def
+    by(simp add: divide_simps assms(5-8))
+   
+  have simp2gy: "(x1 * y1 + x3' * y3') * delta_plus x1' y1' x3 y3 * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) =
+                 (x1 * y1 * (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3) +
+     (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3)) *
+    (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 +
+     d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
+    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
+    apply(subst delta_plus_def)
+    apply(subst (1 3) delta_plus_def[symmetric])
+    apply(subst (1 2) delta_minus_def[symmetric])
+    unfolding delta'_def delta_def
+    by(simp add: divide_simps assms(5-8))
+
+  have "\<exists> r1 r2 r3. g\<^sub>y * Delta\<^sub>y = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding g\<^sub>y_def Delta\<^sub>y_def 
+    apply(simp add: assms(1,2))
+    apply(subst delta_plus_def[symmetric])
+    apply(subst (3) delta_y_def[symmetric])
+    apply(simp add: divide_simps assms)
+    apply(subst left_diff_distrib)
+    apply(simp add: simp1gy simp2gy)
+    unfolding delta_x_def delta_y_def delta_minus_def delta_plus_def
+              e1_def e2_def e3_def e'_def
+    by(simp add: c_eq_1 t_expr,algebra) 
+
+  then have "g\<^sub>y * Delta\<^sub>y = 0" "Delta\<^sub>y \<noteq> 0" 
+    using e1_def assms(13-15) e2_def e3_def apply simp
+    using Delta\<^sub>y_def delta_def delta'_def assms non_unfolded_adds by simp
+  then have "g\<^sub>y = 0" by auto
+
+  show ?thesis 
+    using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4) by (simp add: prod_eq_iff)
+qed
 
 (*lemma add_add_assoc:
   assumes "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" 
@@ -7371,6 +7625,16 @@ qed
    apply(simp add: algebra_simps)
   using t_expr sledgehammer*)
 
+
+
+  thm covering_with_deltas
+  thm add_ext_add
+      inversion_invariance_1
+  thm coherence
+
+
+ 
+
 lemma cancellation_assoc:
   assumes "gluing `` {((x1,y1),0)} \<in> e_proj" "gluing `` {((x2,y2),0)} \<in> e_proj" "gluing `` {(i (x2,y2),0)} \<in> e_proj"
   shows "proj_addition (proj_addition (gluing `` {((x1,y1),0)}) (gluing `` {((x2,y2),0)})) (gluing `` {(i (x2,y2),0)}) = 
@@ -7491,87 +7755,76 @@ proof -
       then show ?thesis 
       proof(cases)
         case aa
-
+        thm b
+        thm covering_with_deltas
         then show ?thesis sorry
       next
         case bb
-        then have pd': "p_delta ((rx, ry), 0) (i (x2, y2), 0) \<noteq> 0" 
-          unfolding e_aff_0_def p_delta_def by simp
 
-        have eq2: "proj_addition (gluing `` {((rx, ry), 0)}) (gluing `` {(i (x2, y2), 0)}) =
-              gluing `` {(add (rx, ry) (i (x2, y2)), 0)}" 
-          using gluing_add[OF e_proj_r _ ] assms(3) pd' by force
-
-       show ?thesis 
-          apply(simp add: eq1 del: add.simps i.simps)
-          apply(subst r_expr(3)[symmetric])
-          apply(simp add: eq2 del: add.simps i.simps)
-         apply(subst r_expr(3))
-         sorry
-        
-        consider (aaa) "fst (add ((rx, ry)) (i (x2, y2))) = 0 \<or>
-                      snd (add ((rx, ry)) (i (x2, y2))) = 0" |
-                 (bbb) "fst (add ((rx, ry)) (i (x2, y2))) \<noteq> 0"
-                      "snd (add ((rx, ry)) (i (x2, y2))) \<noteq> 0" by blast
-        then have ?thesis
+        have pd': "p_delta (add (x1, y1) (x2, y2), 0) (i (x2, y2), 0) \<noteq> 0"
+          using bb(1) unfolding e_aff_0_def p_delta_def r_expr by simp
+        have gl_decomp: "gluing `` {((fst (i (x2, y2)),snd (i (x2, y2))), 0)} \<in> e_proj"
+          using assms(3) by simp
+        have tau_gl: "gluing `` {(i (x2, y2), 0)} = gluing `` {(\<tau> (i (x2, y2)), 1)}" 
+          using "1"(3) "1"(4) gluing_inv in_aff(3) by auto
+          
+        consider (aaa) "delta x2 y2 (fst (i (x2, y2))) (snd (i (x2, y2))) \<noteq> 0" |
+                 (bbb) "delta' x2 y2 (fst (i (x2, y2))) (snd (i (x2, y2))) \<noteq> 0" |
+                 (ccc) "delta x2 y2 (fst (\<tau> (fst (i (x2, y2)), snd (i (x2, y2))))) (snd (\<tau> (fst (i (x2, y2)), snd (i (x2, y2))))) \<noteq> 0" |
+                 (ddd) "delta' x2 y2 (fst (\<tau> (fst (i (x2, y2)), snd (i (x2, y2))))) (snd (\<tau> (fst (i (x2, y2)), snd (i (x2, y2))))) \<noteq> 0"
+          using covering_with_deltas[OF assms(2) gl_decomp] by blast
+        then show ?thesis 
         proof(cases)
           case aaa
+          have pd'': "p_delta ((x2, y2), 0) (i (x2, y2), 0) \<noteq> 0"
+            using aaa unfolding e_aff_0_def p_delta_def by simp
 
-          from aaa have "\<exists>r\<in>rotations. i (x2, y2) = r (i (rx, ry))" 
-            apply(subst prod.collapse[symmetric])
-            apply(rule add_0_coord)
-            using in_aff_r in_aff(3) 1 pd' unfolding p_delta_def by auto
-          then obtain r where "r \<in> rotations" "i (x2, y2) = r (i (rx, ry))" 
-            by blast
-          then have "add (add (x1, y1) (x2, y2)) (i (x2, y2)) =
-                     r(add (add (x1, y1) (x2, y2)) (i (rx, ry)))"
-            using rotation_invariance_1 
-            sorry
-          show ?thesis 
-            apply(simp add: eq1 del: add.simps i.simps)
-            apply(subst r_expr[symmetric])
-            apply(simp add: eq2 del: add.simps i.simps)
-            apply(subst r_expr)
-            sorry
+          have eq2: "proj_addition (gluing `` {(add (x1, y1) (x2, y2), 0)})
+                              (gluing `` {(i (x2, y2), 0)}) =
+                (gluing `` {(add (add (x1, y1) (x2, y2)) (i (x2, y2)), 0)})"
+            using pd' p_delta_def e_proj_r gl_decomp gluing_add r_expr(1) r_expr(2) by auto
+          have assoc: "add (add (x1, y1) (x2, y2)) (i (x2, y2)) = 
+                        (x1,y1)"
+          proof -
+            have ig: "add (x2,y2) (i (x2,y2)) = (1,0)"
+              using inverse_generalized in_aff unfolding e_aff_def by fastforce
+            have "add (add (x1, y1) (x2, y2)) (i (x2, y2)) = 
+                  add (x1, y1) (add (x2, y2) (i (x2, y2)))"
+              apply(subst (5 11) prod.collapse[symmetric])
+              apply(rule add_add_add_add_assoc)
+              using in_aff apply(blast,blast,simp)               
+              using pd pd' pd'' p_delta_def apply(simp,simp,simp)
+              apply(subst (1 2) prod.collapse)
+              apply(simp add: ig del: add.simps i.simps)
+              unfolding delta_def delta_plus_def delta_minus_def by simp
+            also have "... = (x1,y1)"
+              using ig neutral by presburger
+            finally show ?thesis by blast
+          qed
+            
+          then show ?thesis using eq1 eq2 assoc by argo
         next
           case bbb
+          have pd'': "p_delta' ((x2, y2), 0) (i (x2, y2), 0) \<noteq> 0"
+            using bbb unfolding p_delta'_def by simp
+          thm pd pd'
           
-          
-          have "p_delta ((x2, y2), 0) (i (x2, y2), 0) \<noteq> 0" 
-            unfolding p_delta_def delta_def delta_plus_def delta_minus_def
-            apply(simp)
-            apply(safe)
-             defer 1
-            using c_d_pos 
-            using curve_addition.delta_plus_def delta_plus_self apply auto[1]
-            using pd pd' b bb bbb 1
-            thm meaning_of_dichotomy
-            unfolding p_delta_def delta_def delta_plus_def delta_minus_def
-            
-            apply(simp)
-            using r_expr
-            apply(simp)
-            apply(simp add: c_eq_1)
-            apply(simp add: divide_simps)
-
-           
-            apply(safe)
-            sorry
+          have eq2: "proj_addition (gluing `` {(add (x1, y1) (x2, y2), 0)})
+                              (gluing `` {(i (x2, y2), 0)}) =
+                (gluing `` {(add (add (x1, y1) (x2, y2)) (i (x2, y2)), 0)})"
+            using pd' p_delta_def e_proj_r gl_decomp gluing_add r_expr(1) r_expr(2) by auto
+          thm gluing_ext_add
+          have "add (add (x1, y1) (x2, y2)) (i (x2, y2)) =
+                \<tau> (ext_add (add (x1, y1) (x2, y2)) (\<tau> (i (x2, y2))))"
+            using add_ext_add_2 ext_add_comm 1 sorry
+          then show ?thesis 
+        next
+          case ccc
+          then show ?thesis sorry
+        next
+          case ddd
           then show ?thesis sorry
         qed
-
-        
-
-        
-
-        thm associativity
-        have assoc_lemma: "add (add (x1, y1) (x2, y2)) (i (x2, y2)) = add (x1, y1) (add (x2, y2) (i (x2, y2)))"
-          using add_add_assoc in_aff pd pd' 
-          sorry
-
-        
-          thm b bb 1
-          sorry
       next
         case cc
         then show ?thesis sorry
@@ -7663,70 +7916,105 @@ lemma assoc:
   assumes "gluing `` {((x1, y1), 0)}  \<in> e_proj" "gluing `` {((x2, y2), 0)} \<in> e_proj" "gluing `` {((x3, y3), 0)} \<in> e_proj"
   shows "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)})) (gluing `` {((x3, y3), 0)}) = 
          proj_addition (gluing `` {((x1, y1), 0)}) (proj_addition (gluing `` {((x2, y2), 0)}) (gluing `` {((x3, y3), 0)}))"
-proof -
+  using covering_with_deltas[OF assms(1,2)] covering_with_deltas[OF assms(2,3)] 
+proof(elim disjE)
   have in_aff: "(x1,y1) \<in> e_aff" "(x2,y2) \<in> e_aff" "(x3,y3) \<in> e_aff"
     using assms e_class by auto
-  consider
-    (a) "(\<exists>g\<in>symmetries. (x2, y2) = (g \<circ> i) (x1, y1))" |
-    (b) "((x1, y1), x2, y2) \<in> e_aff_0" "\<not> ((\<exists>g\<in>symmetries. (x2, y2) = (g \<circ> i) (x1, y1)))" |
-    (c) "((x1, y1), x2, y2) \<in> e_aff_1" "\<not> ((\<exists>g\<in>symmetries. (x2, y2) = (g \<circ> i) (x1, y1)))" "((x1, y1), x2, y2) \<notin> e_aff_0"
-    using dichotomy_1 in_aff by fast
-  then show ?thesis
-  proof(cases)
-    case a
-    thm cancellation_assoc
-    then show ?thesis sorry
+  assume as: "delta x1 y1 x2 y2 \<noteq> 0" "delta x2 y2 x3 y3 \<noteq> 0" 
+  have add_in: "add (x1, y1) (x2, y2) \<in> e_aff" "add (x2, y2) (x3, y3) \<in> e_aff"
+    using add_closure in_aff e_e'_iff as unfolding e_aff_def delta_def by auto
+  have add_gl: "gluing `` {((fst (add (x1, y1) (x2, y2)), snd (add (x1, y1) (x2, y2))) , 0)}  \<in> e_proj"
+               "gluing `` {((fst (add (x2,y2) (x3, y3)), snd (add (x2, y2) (x3, y3))) , 0)}  \<in> e_proj"
+    using add_in e_points by auto
+
+  show ?thesis
+    using covering_with_deltas[OF add_gl(1) assms(3)] 
+          covering_with_deltas[OF assms(1) add_gl(2)]
+  proof(elim disjE)
+    assume as1: "delta (fst (add (x1, y1) (x2, y2))) (snd (add (x1, y1) (x2, y2))) x3 y3 \<noteq> 0"
+                "delta x1 y1 (fst (add (x2, y2) (x3, y3))) (snd (add (x2, y2) (x3, y3))) \<noteq> 0"
+    have eq1: "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
+                        (gluing `` {((x3, y3), 0)}) =
+          (gluing `` {((add (add (x1, y1) (x2, y2)) (x3, y3)), 0)})"
+      using add_gl as(1) as1 assms(1) assms(2) assms(3) gluing_add p_delta_def by auto
+    have eq2: "proj_addition (gluing `` {((x1, y1), 0)})
+     (proj_addition (gluing `` {((x2, y2), 0)}) (gluing `` {((x3, y3), 0)})) =
+       (gluing `` {((add (x1, y1) (add (x2, y2) (x3, y3))), 0)})"
+      using add_gl(2) as(2) as1(2) assms(1) assms(2) assms(3) gluing_add p_delta_def by auto
+
+    have assoc: "add (add (x1, y1) (x2, y2)) (x3, y3) = add (x1, y1) (add (x2, y2) (x3, y3))"
+      using add_add_add_add_assoc as(1) as(2) as1(1) as1(2) in_aff(1) in_aff(2) in_aff(3) by blast
+
+    show ?thesis using eq1 eq2 assoc by argo
   next
-    case b
-    have pd: "p_delta ((x1, y1), 0) ((x2, y2), 0) \<noteq> 0"
-        using b(1) unfolding e_aff_0_def p_delta_def by simp
-    have eq1: "proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}) =
-          gluing `` {(add (x1, y1) (x2, y2), 0)}" 
-      using gluing_add[OF assms(1,2) pd] by force
-    obtain rx ry where r_expr: 
-      "rx = fst(add (x1,y1) (x2,y2))"
-      "ry = snd(add (x1,y1) (x2,y2))"
-      "(rx,ry) = add (x1,y1) (x2,y2)" by simp
-    have in_aff_r: "(rx,ry) \<in> e_aff"
-      using in_aff(1,2) add_closure pd e_e'_iff unfolding p_delta_def delta_def r_expr e_aff_def
-      by(simp del: add.simps,force) 
-    have e_proj_r: "gluing `` {((rx,ry), 0)} \<in> e_proj"
-        using e_points in_aff_r by auto
-    consider
-      (aa) "(\<exists>g\<in>symmetries. (x3, y3) = (g \<circ> i) (rx,ry))" |
-      (bb) "((rx,ry), (x3, y3)) \<in> e_aff_0" "\<not> ((\<exists>g\<in>symmetries. (x3, y3) = (g \<circ> i) (rx,ry)))" |
-      (cc) "((rx,ry), (x3, y3)) \<in> e_aff_1" "\<not> ((\<exists>g\<in>symmetries. (x3, y3) = (g \<circ> i) (rx,ry)))" "((rx,ry), (x3, y3)) \<notin> e_aff_0"
-        using dichotomy_1 in_aff in_aff_r by fast
-      then show ?thesis 
-      proof(cases)
-        case aa
-        then show ?thesis sorry
-      next
-        case bb
-        then have pd': "p_delta ((rx, ry), 0) ((x3, y3), 0) \<noteq> 0" 
-          unfolding e_aff_0_def p_delta_def by simp
+    assume as1: "delta (fst (add (x1, y1) (x2, y2))) (snd (add (x1, y1) (x2, y2))) x3 y3 \<noteq> 0"
+                "delta' x1 y1 (fst (add (x2, y2) (x3, y3))) (snd (add (x2, y2) (x3, y3))) \<noteq> 0"
 
-        have eq2: "proj_addition (gluing `` {((rx, ry), 0)}) (gluing `` {((x3, y3), 0)}) =
-              gluing `` {(add (rx, ry) (x3, y3), 0)}" 
-          using gluing_add[OF e_proj_r _ ] assms(3) pd' by force
-        then show ?thesis 
-          apply(simp add: eq1 del: add.simps i.simps)
-          apply(subst r_expr(3)[symmetric])
-          apply(simp add: eq2 del: add.simps i.simps)
-          apply(subst r_expr(3))
-          sorry
-      next
-        case cc
-        then show ?thesis sorry
-      qed
+    have eq1: "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
+                        (gluing `` {((x3, y3), 0)}) =
+          (gluing `` {((add (add (x1, y1) (x2, y2)) (x3, y3)), 0)})"
+      using add_gl as(1) as1 assms(1) assms(2) assms(3) gluing_add p_delta_def by auto
+    have eq2: "proj_addition (gluing `` {((x1, y1), 0)})
+     (proj_addition (gluing `` {((x2, y2), 0)}) (gluing `` {((x3, y3), 0)})) =
+       (gluing `` {((ext_add (x1, y1) (add (x2, y2) (x3, y3))), 0)})"
+      using gluing_ext_add[OF assms(1) add_gl(2)] as1(2) p_delta'_def
+            gluing_add[OF assms(2,3)] as(2) p_delta_def by force
+
+    have assoc: "add (add (x1, y1) (x2, y2)) (x3, y3) = ext_add (x1, y1) (add (x2, y2) (x3, y3))"
+      using add_add_ext_add_assoc as as1 in_aff unfolding delta_def delta'_def e_aff_def
+      by(simp del: add.simps ext_add.simps,fastforce)
+
+    show ?thesis using eq1 eq2 assoc by argo
   next
-    case c
-
-    then show ?thesis sorry
-  qed
-
-qed
+    assume as1: "delta (fst (add (x1, y1) (x2, y2))) (snd (add (x1, y1) (x2, y2))) x3 y3 \<noteq> 0"
+                "delta x1 y1 (fst (\<tau> (fst (add (x2, y2) (x3, y3)), snd (add (x2, y2) (x3, y3)))))
+                  (snd (\<tau> (fst (add (x2, y2) (x3, y3)), snd (add (x2, y2) (x3, y3))))) \<noteq> 0" 
+    have "delta' (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
+      using as as1 in_aff add_in
+      unfolding delta_def delta_plus_def delta_minus_def
+                delta'_def delta_x_def delta_y_def
+                e_aff_def e'_def
+      apply(simp add: t_nz)
+      apply(simp add: c_eq_1)
+ apply(simp split: if_splits add: divide_simps t_nz)
+  apply(simp_all add: algebra_simps t_expr)
+       apply(simp_all add: power2_eq_square[symmetric] t_expr d_nz)
+      apply(safe)
   
+      sorry
+
+    have "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) (fst (add (x2, y2) (x3, y3)))
+                  (snd (add (x2, y2) (x3, y3))) \<noteq> 0" 
+      using as1
+      unfolding delta_def delta_plus_def delta_minus_def
+      apply(simp add: t_nz)
+      apply(simp add: c_eq_1)
+      apply(safe)
+                       apply(simp_all add: t_nz)
+      apply(simp_all split: if_splits add: divide_simps t_nz d_nz)
+
+           apply(simp_all add: algebra_simps)
+            apply(simp_all add: power2_eq_square[symmetric] t_expr)
+    
+      apply (metis (no_types, hide_lams) ab_semigroup_mult_class.mult_ac(1) add.inverse_inverse add_neg_numeral_special(7) as(1) c_eq_1 curve_addition.delta_def curve_addition.delta_minus_def curve_addition.delta_plus_def d_nz diff_minus_eq_add nonzero_mult_div_cancel_left semiring_normalization_rules(10) semiring_normalization_rules(19) uminus_add_conv_diff)
+      sorry
+      
+    have eq1: "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
+                        (gluing `` {((x3, y3), 0)}) =
+          (gluing `` {((add (add (x1, y1) (x2, y2)) (x3, y3)), 0)})"
+      using add_gl as(1) as1 assms(1) assms(2) assms(3) gluing_add p_delta_def by auto
+
+    thm tf_tau 
+      
+      
+    have "(gluing `` {(add (x2, y2) (x3, y3), 0)}) =
+          (gluing `` {(\<tau> (add (x2, y2) (x3, y3)), 1)})"
+      sorry
+    show ?thesis sorry
+
+  qed    
+qed
+
 
 lemma projective_group_law:
   shows "comm_group \<lparr>carrier = e_proj, mult = proj_addition, one = gluing `` {((1,0),0)}\<rparr>" 
