@@ -10252,7 +10252,11 @@ proof -
         case 111                
         then show ?thesis using assoc_111_add using "22"(1) add_2_3_def assms(1) assms(2) assms(3) by blast
       next
-        case 222
+        case 222 
+        have assumps: "((x1, y1),add_2_3) \<in> e_aff_0" 
+            apply(subst (3) prod.collapse[symmetric])
+          using 222 e_aff_0_invariance by fastforce 
+
         consider
           (1111) "(\<exists>g\<in>symmetries. (x3,y3) = (g \<circ> i) add_1_2)" |
           (2222) "(add_1_2, (x3,y3)) \<in> e_aff_0" "\<not> ((\<exists>g\<in>symmetries. (x3,y3) = (g \<circ> i) add_1_2))" |
@@ -10264,6 +10268,7 @@ proof -
           then obtain g where g_expr: "g \<in> symmetries" "(x3, y3) = (g \<circ> i) add_1_2" by blast
           then have rot: "\<tau> \<circ> g \<in> rotations" using sym_to_rot assms by blast
 
+        
           have "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
                               (gluing `` {((x3, y3), 0)}) = 
                 proj_addition (gluing `` {(add_1_2, 0)}) (gluing `` {((g \<circ> i) add_1_2, 0)})"
@@ -10285,40 +10290,25 @@ proof -
           have "proj_addition (gluing `` {((x1, y1), 0)})
                               (proj_addition (gluing `` {((x2, y2), 0)}) (gluing `` {((x3, y3), 0)})) = 
                 proj_addition (gluing `` {((x1, y1), 0)})
-                              (proj_addition (gluing `` {((x2, y2), 0)}) (gluing `` {((g \<circ> i) add_1_2, 0)}))" 
-            using g_expr by auto
-          also have "... =  proj_addition (gluing `` {((x1, y1), 0)})
-                            (tf'' (\<tau> \<circ> g)
-                              (proj_addition (gluing `` {(ext_add (i (x1, y1)) (i (x2, y2)), 0)})
-                              (gluing `` {((x2, y2), 0)})))" 
-            apply(subst comp_apply,subst (6) prod.collapse[symmetric])
-            apply(subst (3) remove_sym) 
-            using e_proj_1_2(2) g_expr assms(3) apply(simp,simp,simp)
-            apply(subst prod.collapse)
-            apply(subst (2) real_com) 
-            using assms(2) apply simp
-            using tf''_preserv_e_proj rot e_proj_1_2(2) apply (metis prod.collapse)
-            apply(subst remove_add_sym)
-            using assms(2) e_proj_1_2(2) rot apply(simp,simp,simp)
-            unfolding add_1_2_def 
-            by(subst inverse_rule_4,blast)  
-          also have "... = tf'' (\<tau> \<circ> g) (gluing `` {((1, 0), 0)})"
-            apply(subst (5) prod.collapse[symmetric])
-            apply(subst gluing_ext_add)
-            using assms(2,3) p_delta_1_2 e_proj_1_2 add_1_2_def inverse_rule_4 apply(simp,simp)
-             defer 1
-            (* separate and use cancellation_assoc *)
-            apply(subst remove_add_sym)
-            thm  c_eq_1 comp_apply g_expr(1) g_expr(2) i.cases i.simps identity_equiv proj_add_class_comm proj_addition_def real_inverse sym_decomp tau_idemp tf''_def tf_comp
+                              (gluing `` {(add (x2, y2) (x3, y3), 0)})" 
+            using gluing_add assms(2) assms(3) p_delta_2_3(1) by simp
+          also have "... = gluing `` {(add (x1,y1) (add (x2, y2) (x3, y3)), 0)}"
+            using gluing_add assms(1) e_proj_2_3(1) add_2_3_def p_delta_2_3(1) assumps p_delta_def
+            unfolding e_aff_0_def by force
+          also have "... = gluing `` {(add (ext_add (x1,y1) (x2, y2)) (x3, y3), 0)}"
+            apply(subst add_ext_add_add_assoc)
+            apply(simp,simp)
+                         apply(subst prod.collapse[symmetric],subst prod.inject,fast)+
+            thm 3 22 222 1111
+            using p_delta_1_2(1) p_delta_2_3(1) assumps 1111(1) 
+            using in_aff p_delta_1_2 sorry
           then show ?thesis 
             
             sorry
           
         next
           case 2222
-          have assumps: "((x1, y1),add_2_3) \<in> e_aff_0" 
-            apply(subst (3) prod.collapse[symmetric])
-            using 222 e_aff_0_invariance by fastforce 
+
           have "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
      (gluing `` {((x3, y3), 0)}) = 
             proj_addition (gluing `` {(ext_add (x1, y1) (x2, y2), 0)}) (gluing `` {((x3, y3), 0)})"
@@ -10350,9 +10340,7 @@ proof -
           finally show ?thesis by blast
         next
           case 3333
-          have assumps: "((x1, y1),add_2_3) \<in> e_aff_0" 
-            apply(subst (3) prod.collapse[symmetric])
-            using 222 e_aff_0_invariance by fastforce 
+
           have "proj_addition (proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 0)}))
      (gluing `` {((x3, y3), 0)}) = 
             proj_addition (gluing `` {(ext_add (x1, y1) (x2, y2), 0)}) (gluing `` {((x3, y3), 0)})"
