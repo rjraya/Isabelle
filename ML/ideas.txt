@@ -1,0 +1,1 @@
+a tactic to automate prod.collapses
