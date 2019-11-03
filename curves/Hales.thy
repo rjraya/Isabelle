@@ -1,33 +1,34 @@
 theory Hales
   imports Complex_Main "HOL-Algebra.Group" "HOL-Algebra.Bij"
           "HOL-Library.Bit" "HOL-Library.Rewrite"
-          
 begin
 
 section\<open>Affine Edwards curves\<close>
 
-locale curve_addition =
-  fixes c d :: real
-begin      
+class curve_addition = field + one +
+  fixes c d :: 'a
+  assumes two_not_zero: "2 \<noteq> 0"
+begin   
 
-definition e :: "real \<Rightarrow> real \<Rightarrow> real" where
+definition e :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
  "e x y = x^2 + c * y^2 - 1 - d * x^2 * y^2"
 
-definition delta_plus :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
  "delta_plus x1 y1 x2 y2 = 1 + d * x1 * y1 * x2 * y2"
 
-definition delta_minus :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
  "delta_minus x1 y1 x2 y2 = 1 - d * x1 * y1 * x2 * y2"
 
-definition delta :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
  "delta x1 y1 x2 y2 = (delta_plus x1 y1 x2 y2) * 
                       (delta_minus x1 y1 x2 y2)"
 
 lemma delta_com: 
   "(delta x0 y0 x1 y1 = 0) = (delta x1 y1 x0 y0 = 0)"
-  unfolding delta_def delta_plus_def delta_minus_def by argo
+  unfolding delta_def delta_plus_def delta_minus_def 
+  by (simp add: algebra_simps)
 
-fun add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
+fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
  "add (x1,y1) (x2,y2) =
     ((x1*x2 - c*y1*y2) div (1-d*x1*y1*x2*y2), 
      (x1*y2+y1*x2) div (1+d*x1*y1*x2*y2))"
@@ -68,7 +69,9 @@ proof -
     apply(algebra add: assms(5,6))
 *)
   have prod_eq_1: "\<exists> r1 r2. prod - (r1 * e1 + r2 * e2) = 0"
-    unfolding prod_def e1_def e2_def e_def by algebra
+    unfolding prod_def e1_def e2_def e_def     
+    apply algebra    
+    sorry
 
   define a where "a = x1*x2 - c*y1*y2"
   define b where "b = x1*y2+y1*x2"
@@ -127,10 +130,10 @@ proof -
  define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
- define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+ define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
  define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(add (x1,y1) z3')"
  define gxpoly where "gxpoly = g\<^sub>x * Delta\<^sub>x"
-  define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
+ define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
 
   define gxpoly_expr where "gxpoly_expr = 
     d*x2* y2* (x1^2* x2* x3* y1-x1^2* x2* x3^3* y1-c* x1* x3* y1^2* y2+d* x1^3* x2^2* x3* y1^2* y2
@@ -177,11 +180,13 @@ proof -
   
   have gx_div: "\<exists> r1 r2 r3. gxpoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_expr_def e1_def e2_def e3_def e_def 
-    by algebra
+    apply algebra
+    sorry
 
   have gy_div: "\<exists> r1 r2 r3. gypoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gypoly_expr_def e1_def e2_def e3_def e_def 
-    by algebra
+    apply algebra 
+    sorry
 
   have simp1gx: "
     (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' *
@@ -189,13 +194,14 @@ proof -
     ((x1 * x2 - c * y1 * y2) * x3 * delta_plus x1 y1 x2 y2 -
      c * (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
     (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 -
-     d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
+     d * x1 * y1 * (x2 * x3 - c * y2 * y3) *
+     (x2 * y3 + y2 * x3))
   "
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply((subst delta_minus_def[symmetric])+,(subst delta_plus_def[symmetric])+)
     apply(subst (3) delta_minus_def)
     unfolding delta_def
-    by(simp add: divide_simps assms(5-8))
+    by(simp add: field_simps assms(5-8) )
 
   have simp2gx:
     "(x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 *
@@ -208,7 +214,7 @@ proof -
     apply((subst delta_minus_def[symmetric])+,(subst delta_plus_def[symmetric])+)
     apply(subst (3) delta_minus_def)
     unfolding delta_def
-    by(simp add: divide_simps assms(5-8))
+    by(simp add: field_simps assms(5-8))
 
   have "gxpoly = gxpoly_expr"
     unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
@@ -218,7 +224,7 @@ proof -
     apply(subst (3) left_diff_distrib)
     apply(simp add: simp1gx simp2gx)
     unfolding delta_minus_def delta_plus_def (* equality *)
-    unfolding gxpoly_expr_def
+    unfolding gxpoly_expr_def 
     by algebra
 
   obtain r1x r2x r3x where "gxpoly = r1x * e1 + r2x * e2 + r3x * e3"
@@ -230,29 +236,29 @@ proof -
   then have "g\<^sub>x = 0" 
     using \<open>gxpoly = 0\<close> gxpoly_def by auto
 
-  have simp1gy: "(x1' * y3 + y1' * x3) * local.delta_plus x1 y1 x3' y3' *
-    (local.delta x1 y1 x2 y2 * local.delta x2 y2 x3 y3) = 
-    ((x1 * x2 - c * y1 * y2) * y3 * local.delta_plus x1 y1 x2 y2 +
-     (x1 * y2 + y1 * x2) * x3 * local.delta_minus x1 y1 x2 y2) *
-    (local.delta_minus x2 y2 x3 y3 * local.delta_plus x2 y2 x3 y3 +
+  have simp1gy: "(x1' * y3 + y1' * x3) * delta_plus x1 y1 x3' y3' *
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+    ((x1 * x2 - c * y1 * y2) * y3 * delta_plus x1 y1 x2 y2 +
+     (x1 * y2 + y1 * x2) * x3 * delta_minus x1 y1 x2 y2) *
+    (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 +
      d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))"
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply((subst delta_minus_def[symmetric])+,(subst delta_plus_def[symmetric])+)
     apply(subst (2) delta_plus_def)
     unfolding delta_def
-    by(simp add: divide_simps assms(5-8))
+    by(simp add: field_simps assms(5-8))
 
-  have simp2gy: "(x1 * y3' + y1 * x3') * local.delta_plus x1' y1' x3 y3 *
-    (local.delta x1 y1 x2 y2 * local.delta x2 y2 x3 y3) = 
-     (x1 * (x2 * y3 + y2 * x3) * local.delta_minus x2 y2 x3 y3 +
-     y1 * (x2 * x3 - c * y2 * y3) * local.delta_plus x2 y2 x3 y3) *
-    (local.delta_minus x1 y1 x2 y2 * local.delta_plus x1 y1 x2 y2 +
+  have simp2gy: "(x1 * y3' + y1 * x3') * delta_plus x1' y1' x3 y3 *
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+     (x1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3 +
+     y1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3) *
+    (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 +
      d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply((subst delta_minus_def[symmetric])+,(subst delta_plus_def[symmetric])+)
     apply(subst (3) delta_plus_def)
     unfolding delta_def
-    by(simp add: divide_simps assms(5-8))
+    by(simp add: field_simps assms(5-8))
 
   have "gypoly = gypoly_expr"
     unfolding gypoly_def g\<^sub>y_def Delta\<^sub>y_def 
@@ -285,7 +291,10 @@ lemma neutral: "add z (1,0) = z" by(cases "z",simp)
 lemma inverse:
   assumes "e a b = 0" "delta_plus a b a b \<noteq> 0" 
   shows "add (a,b) (a,-b) = (1,0)" 
-  using assms by(simp add: delta_plus_def e_def,algebra) 
+  using assms 
+  apply(simp add: delta_plus_def e_def) 
+  apply algebra
+  sorry
   
 lemma affine_closure:
   assumes "delta x1 y1 x2 y2 = 0" "e x1 y1 = 0" "e x2 y2 = 0"
@@ -1118,7 +1127,8 @@ qed
 
 lemma dichotomy_1:
   assumes "p \<in> e'_aff" "q \<in> e'_aff" 
-  shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or> (p,q) \<in> e'_aff_0 \<or> (p,q) \<in> e'_aff_1" 
+  shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or> 
+         (p,q) \<in> e'_aff_0 \<or> (p,q) \<in> e'_aff_1" 
 proof -
   obtain x1 y1 where p_def: "p = (x1,y1)" by fastforce
   obtain x2 y2 where q_def: "q = (x2,y2)" by fastforce
@@ -9225,6 +9235,8 @@ proof(unfold_locales,simp_all)
     if "x \<in> e_proj" "y \<in> e_proj" "z \<in> e_proj" for x y z
     using proj_assoc that by simp
 qed
+
+end
 
 end
 
