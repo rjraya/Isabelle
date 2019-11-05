@@ -5,9 +5,13 @@ begin
 
 section\<open>Affine Edwards curves\<close>
 
-class curve_addition = field + one +
-  fixes c d :: 'a
+class ell_field = field + 
   assumes two_not_zero: "2 \<noteq> 0"
+
+
+
+locale curve_addition =  
+  fixes c d :: "'a::ell_field"
 begin   
 
 definition e :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
@@ -26,7 +30,7 @@ definition delta :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rig
 lemma delta_com: 
   "(delta x0 y0 x1 y1 = 0) = (delta x1 y1 x0 y0 = 0)"
   unfolding delta_def delta_plus_def delta_minus_def 
-  by (simp add: algebra_simps)
+  by algebra
 
 fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
  "add (x1,y1) (x2,y2) =
@@ -59,19 +63,9 @@ proof -
   define e1 where "e1 = e x1 y1"
   define e2 where "e2 = e x2 y2"
 
-(*
-  Exception!
-
-  have prod_eq_1: "\<exists> r1 r2. 
-      (e x3 y3)*(delta x1 y1 x2 y2)\<^sup>2 - (r1 * e1 + r2 * e2) = 0"
-    unfolding prod_def e1_def e2_def e_def delta_def
-              delta_plus_def delta_minus_def x3_expr y3_expr
-    apply(algebra add: assms(5,6))
-*)
   have prod_eq_1: "\<exists> r1 r2. prod - (r1 * e1 + r2 * e2) = 0"
     unfolding prod_def e1_def e2_def e_def     
-    apply algebra    
-    sorry
+    by algebra    
 
   define a where "a = x1*x2 - c*y1*y2"
   define b where "b = x1*y2+y1*x2"
@@ -180,13 +174,11 @@ proof -
   
   have gx_div: "\<exists> r1 r2 r3. gxpoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_expr_def e1_def e2_def e3_def e_def 
-    apply algebra
-    sorry
+    by algebra
 
   have gy_div: "\<exists> r1 r2 r3. gypoly_expr = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gypoly_expr_def e1_def e2_def e3_def e_def 
-    apply algebra 
-    sorry
+    by algebra 
 
   have simp1gx: "
     (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' *
@@ -293,8 +285,7 @@ lemma inverse:
   shows "add (a,b) (a,-b) = (1,0)" 
   using assms 
   apply(simp add: delta_plus_def e_def) 
-  apply algebra
-  sorry
+  by algebra
   
 lemma affine_closure:
   assumes "delta x1 y1 x2 y2 = 0" "e x1 y1 = 0" "e x2 y2 = 0"
@@ -311,15 +302,18 @@ proof -
   then have cases: "(1 - c*d*y1^2*y2^2) = 0 \<or> (1 - d*y1^2*x2^2) = 0" 
     using r_def by auto
   have "d \<noteq> 0" using \<open>r = 0\<close> r_def by auto
-  {assume "(1 - d*y1^2*x2^2) = 0"
-  then have "1/d = y1^2*x2^2" "1/d \<noteq> 0"
-    by(auto simp add: divide_simps \<open>d \<noteq> 0\<close>,argo)}
+  {
+    assume "(1 - d*y1^2*x2^2) = 0"
+    then have "1/d = y1^2*x2^2" "1/d \<noteq> 0"     
+      apply(auto simp add: divide_simps \<open>d \<noteq> 0\<close>) 
+      by algebra
+  }
   note case1 = this
   {assume "(1 - c*d*y1^2*y2^2) = 0" "(1 - d*y1^2*x2^2) \<noteq> 0"
     then have "c \<noteq> 0" by auto
     then have "1/(c*d) = y1^2*y2^2" "1/(c*d) \<noteq> 0" 
       apply(simp add: divide_simps \<open>d \<noteq> 0\<close> \<open>c \<noteq> 0\<close>) 
-      using \<open>(1 - c*d*y1^2*y2^2) = 0\<close> apply argo
+      using \<open>(1 - c*d*y1^2*y2^2) = 0\<close> apply algebra
       using \<open>c \<noteq> 0\<close> \<open>d \<noteq> 0\<close> by auto
   }
   note case2 = this
@@ -459,35 +453,52 @@ end
 section\<open>Extension\<close>
 (* Generalize for c \<noteq> 1 *)
 locale ext_curve_addition = curve_addition +
-  assumes c_eq_1: "c = 1" 
-  assumes t_intro: "\<exists> b'. d = (b')^2"
-  assumes t_ineq: "sqrt(d)^2 \<noteq> 1" "sqrt(d) \<noteq> 0"
+  fixes t' :: "'a::ell_field"
+  assumes c_eq_1: "c = 1"
+  assumes t_intro: "d = t'^2"
+  assumes t_ineq: "t'^2 \<noteq> 1" "t' \<noteq> 0"
 begin
 
 subsection \<open>Change of variables\<close>
-
-definition t where "t = sqrt(d)"
-
-lemma c_d_pos: "d \<ge> 0" using t_intro by auto
+(*lemma c_d_pos: "d \<ge> 0" 
+  using t_intro by auto
 
 lemma delta_plus_self: "delta_plus x0 y0 x0 y0 \<noteq> 0" 
-    unfolding delta_plus_def
+  unfolding delta_plus_def
+        apply (simp add: semiring_normalization_rules(18) semiring_normalization_rules(29) two_not_zero)  
+
     apply(subst (1) mult.assoc,subst (2) mult.assoc,subst (1) mult.assoc)
     apply(subst power2_eq_square[symmetric])
-    using mult_nonneg_nonneg[OF c_d_pos zero_le_power2[of "x0*y0"]] by simp
+    using t_intro t_ineq
+    using mult_nonneg_nonneg[OF _ zero_le_power2[of "x0*y0"]] by simp
+*)
+(* TODO: defomotopm so that rewriting leaves t' inside of the terms *)
+definition t where "t = t'" 
 
-lemma t_nz: "t \<noteq> 0" using t_def t_ineq(2) by auto
+lemma t_nz: "t \<noteq> 0" using t_ineq(2) t_def by auto
 
-lemma d_nz: "d \<noteq> 0" using t_def t_nz by simp
+lemma d_nz: "d \<noteq> 0" using t_nz t_ineq t_intro by simp
 
-lemma t_expr: "t^2 = d" "t^4 = d^2" using t_def t_intro by auto
+lemma t_expr: "t^2 = d" "t^4 = d^2" using t_intro t_def by auto
 
 lemma t_sq_n1: "t^2 \<noteq> 1"  using t_ineq(1) t_def by simp
+
+lemma t_nm1: "t \<noteq> -1" using t_sq_n1 by fastforce
 
 lemma d_n1: "d \<noteq> 1" using t_sq_n1 t_expr by blast
 
 lemma t_n1: "t \<noteq> 1" using t_sq_n1 by fastforce
- 
+
+lemma t_dneq2: "2*t \<noteq> -2"
+proof(rule ccontr)
+  assume "\<not> 2 * t \<noteq> - 2"
+  then have "2*t = -2" by auto
+  then have "t = -1"
+    using two_not_zero mult_cancel_left by fastforce
+  then show "False"
+    using t_nm1 t_def by argo
+qed
+
 subsection \<open>New points\<close>
 
 definition e' where "e' x y = x^2 + y^2 - 1 - t^2 * x^2 * y^2"
@@ -496,7 +507,7 @@ definition "e'_aff = {(x,y). e' x y = 0}"
   definition "e_circ = {(x,y). x \<noteq> 0 \<and> y \<noteq> 0 \<and> (x,y) \<in> e'_aff}"
 
 lemma e_e'_iff: "e x y = 0 \<longleftrightarrow> e' x y = 0"
-  unfolding e_def e'_def using c_eq_1 t_expr(1) by simp
+  unfolding e_def e'_def using c_eq_1 t_expr(1) t_def by simp
 
 lemma circ_to_aff: "p \<in> e_circ \<Longrightarrow> p \<in> e'_aff"
   unfolding e_circ_def by auto
@@ -522,9 +533,9 @@ subsection \<open>Group transformations and inversions\<close>
   Watch for duplication of facts
 *)
 
-fun \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where 
+fun \<rho> :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where 
   "\<rho> (x,y) = (-y,x)"
-fun \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where 
+fun \<tau> :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where 
   "\<tau> (x,y) = (1/(t*x),1/(t*y))"
 
 definition G where
@@ -551,7 +562,7 @@ lemma tau_idemp_explicit: "\<tau>(\<tau>(x,y)) = (x,y)"
 lemma tau_idemp_point: "\<tau>(\<tau> p) = p"
   using o_apply[symmetric, of \<tau> \<tau> p] tau_idemp by simp  
 
-fun i :: "real \<times> real \<Rightarrow> real \<times> real" where 
+fun i :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where 
   "i (a,b) = (a,-b)" 
 
 lemma i_idemp: "i \<circ> i = id"
@@ -599,7 +610,7 @@ lemma rho_circ:
   assumes "p \<in> e_circ"
   shows "\<rho> p \<in> e_circ"
   using assms unfolding e_circ_def e'_aff_def e'_def 
-  by(simp split: prod.splits,argo) 
+  by(simp split: prod.splits add: add.commute)
 
 lemma i_aff:
   assumes "p \<in> e'_aff"
@@ -641,6 +652,7 @@ lemma \<tau>_circ:
   apply(simp add: t_nz)
   by(simp add: algebra_simps)
 
+
 lemma rot_comp:
   assumes "t1 \<in> rotations" "t2 \<in> rotations"
   shows "t1 \<circ> t2 \<in> rotations"
@@ -669,27 +681,24 @@ lemma rot_aff:
   assumes "r \<in> rotations" "p \<in> e'_aff"
   shows "r p \<in> e'_aff"
   using assms unfolding rotations_def e'_aff_def e'_def
-  by(auto simp add: semiring_normalization_rules(16))
+  by(auto simp add: semiring_normalization_rules(16) add.commute)
 
 (* Can be erased *) 
 lemma rot_delta:
   assumes "r \<in> rotations" "delta x1 y1 x2 y2 \<noteq> 0"
   shows "delta (fst (r (x1,y1))) (snd (r (x1,y1))) x2 y2 \<noteq> 0"
   using assms unfolding rotations_def delta_def delta_plus_def delta_minus_def
-  apply(simp)
   apply(safe)
-         apply simp
-  apply simp
-  apply(simp,argo) 
-    apply(simp,argo) 
-     apply(simp)
-    apply(simp)
-   apply(simp,argo)
-  by(simp,argo)
+  apply simp 
+  apply (simp add: semiring_normalization_rules(16))
+  apply(simp) 
+  by(simp add: add_eq_0_iff equation_minus_iff semiring_normalization_rules(16))
 
 lemma tau_not_id: "\<tau> \<noteq> id"
   apply(simp add: fun_eq_iff) 
-  by (metis c_eq_1 eq_divide_eq_1 mult_cancel_left2 one_power2 t_def t_ineq(1))
+  apply(simp add: divide_simps t_nz) 
+  apply(simp add: field_simps) 
+  by (metis mult.left_neutral t_n1 zero_neq_one)
 
 lemma sym_not_id:
   assumes "r \<in> rotations"
@@ -698,8 +707,11 @@ lemma sym_not_id:
   apply(subst fun_eq_iff,simp)
   apply(auto)
   using tau_not_id apply auto[1]
-  apply (metis d_nz)
-  apply (metis eq_divide_eq_1 minus_mult_minus mult.right_neutral ring_normalization_rules(1) semiring_normalization_rules(29) t_expr(1) t_sq_n1)
+    apply (metis d_nz)
+   apply(simp add: divide_simps t_nz)
+  apply(simp add: field_simps)
+   apply (metis c_eq_1 mult_numeral_1 numeral_One one_neq_zero 
+                power2_minus power_one t_sq_n1)
   by (metis d_nz)
 
 lemma sym_decomp:
@@ -712,7 +724,11 @@ lemma symmetries_i_inverse:
   assumes "tr \<in> symmetries"
   shows "\<exists> tr' \<in> symmetries. (tr \<circ> i) (x,y) = (i \<circ> tr') (x,y) \<and> tr \<circ> tr' = id"
 proof -
-  consider (1) "tr = \<tau>" | (2) "tr = \<tau> \<circ> \<rho>" | (3) "tr = \<tau> \<circ> \<rho> \<circ> \<rho>" | (4) "tr = \<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>" using assms unfolding symmetries_def by blast
+  consider (1) "tr = \<tau>" | 
+           (2) "tr = \<tau> \<circ> \<rho>" | 
+           (3) "tr = \<tau> \<circ> \<rho> \<circ> \<rho>" | 
+           (4) "tr = \<tau> \<circ> \<rho> \<circ> \<rho> \<circ> \<rho>" 
+    using assms unfolding symmetries_def by blast
   then show ?thesis
   proof(cases)
     case 1
@@ -759,20 +775,21 @@ lemma sym_to_rot: "g \<in> symmetries \<Longrightarrow> \<tau> \<circ> g \<in> r
 
 subsection \<open>Extended addition\<close>
 
-fun ext_add :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<times> real" where
+fun ext_add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
  "ext_add (x1,y1) (x2,y2) =
     ((x1*y1-x2*y2) div (x2*y1-x1*y2),
      (x1*y1+x2*y2) div (x1*x2+y1*y2))"
 
-definition delta_x :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta_x :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
   "delta_x x1 y1 x2 y2 = x2*y1 - x1*y2"
-definition delta_y :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta_y :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
   "delta_y x1 y1 x2 y2 = x1*x2 + y1*y2"
-definition delta' :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+definition delta' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
   "delta' x1 y1 x2 y2 = delta_x x1 y1 x2 y2 * delta_y x1 y1 x2 y2"
 
 lemma delta'_com: "(delta' x0 y0 x1 y1 = 0) = (delta' x1 y1 x0 y0 = 0)"
-  unfolding delta'_def delta_x_def delta_y_def by argo
+  unfolding delta'_def delta_x_def delta_y_def 
+  by algebra
 
 definition e'_aff_0 where
   "e'_aff_0 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e'_aff \<and> 
@@ -786,7 +803,7 @@ definition e'_aff_1 where
 
 lemma ext_add_comm:
   "ext_add (x1,y1) (x2,y2) = ext_add (x2,y2) (x1,y1)"
-  by(simp add: divide_simps,argo) 
+  by(simp add: divide_simps,algebra) 
 
 lemma ext_add_comm_points:
   "ext_add z1 z2 = ext_add z2 z1"
@@ -796,13 +813,13 @@ lemma ext_add_comm_points:
 
 lemma ext_add_inverse:
   "x \<noteq> 0 \<Longrightarrow> y \<noteq> 0 \<Longrightarrow> ext_add (x,y) (i (x,y)) = (1,0)"
-  by(simp)
+  by(simp add: two_not_zero)
 
 lemma ext_add_deltas:
   "ext_add (x1,y1) (x2,y2) =
     ((delta_x x2 y1 x1 y2) div (delta_x x1 y1 x2 y2),
      (delta_y x1 x2 y1 y2) div (delta_y x1 y1 x2 y2))"
-  unfolding delta_x_def delta_y_def by(simp)
+  unfolding delta_x_def delta_y_def by simp 
 
 subsubsection \<open>Inversion and rotation invariance\<close>
 
@@ -818,17 +835,13 @@ lemma inversion_invariance_1:
   apply(simp_all add: divide_simps assms t_nz d_nz)
   by(simp_all add: algebra_simps)
 
+
+
 lemma inversion_invariance_2:
   assumes "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
   shows "ext_add (\<tau> (x1,y1)) (x2,y2) = ext_add (x1,y1) (\<tau> (x2,y2))"
-  apply(simp add: algebra_simps)
-  apply(subst power2_eq_square[symmetric])+
-  apply(subst t_expr)+
-  apply(rule conjI)
-  apply(simp add: divide_simps assms t_nz d_nz)
-  apply(simp add: algebra_simps)
-  apply(simp add: divide_simps assms t_nz d_nz)
-  by(simp add: algebra_simps)
+  apply(simp add: divide_simps t_nz assms) 
+  by algebra
 
 lemma rho_invariance_1: 
   "add (\<rho> (x1,y1)) (x2,y2) = \<rho> (add (x1,y1) (x2,y2))"
@@ -891,11 +904,11 @@ lemma rotation_invariance_2_points:
 lemma rotation_invariance_3: 
   "delta x1 y1 (fst (\<rho> (x2,y2))) (snd (\<rho> (x2,y2))) = 
    delta x1 y1 x2 y2"
-  by(simp add: delta_def delta_plus_def delta_minus_def,argo)
+  by(simp add: delta_def delta_plus_def delta_minus_def,algebra)
 
 lemma rotation_invariance_4: 
   "delta' x1 y1 (fst (\<rho> (x2,y2))) (snd (\<rho> (x2,y2))) = - delta' x1 y1 x2 y2"
-  by(simp add: delta'_def delta_x_def delta_y_def,argo)
+  by(simp add: delta'_def delta_x_def delta_y_def,algebra)
 
 lemma inverse_rule_1:
   "(\<tau> \<circ> i \<circ> \<tau>) (x,y) = i (x,y)" by (simp add: t_nz)
@@ -934,8 +947,10 @@ lemma add_ext_add:
   apply(simp add: c_eq_1)
   apply(simp add: divide_simps t_nz power2_eq_square[symmetric] assms t_expr(1) d_nz)
   apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1)) 
+  apply (simp add: semiring_normalization_rules(18) semiring_normalization_rules(29) t_intro)
   apply(simp add: divide_simps t_nz power2_eq_square[symmetric] assms t_expr(1) d_nz)
-  by(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1)) 
+  apply(simp add: algebra_simps power2_eq_square[symmetric] t_expr(1))  
+  by (simp add: power2_eq_square t_intro)
 
 corollary add_ext_add_2:
   assumes "x1 \<noteq> 0" "y1 \<noteq> 0" 
@@ -1054,13 +1069,15 @@ lemma ext_add_closure_points:
 
 subsubsection \<open>Useful lemmas in the extension\<close>
 
-lemma inverse_generalized:
+(*lemma inverse_generalized:
   assumes "(a,b) \<in> e'_aff" 
   shows "add (a,b) (a,-b) = (1,0)" 
   using assms 
   apply(simp) 
   unfolding e'_def e'_aff_def
   apply(simp add: t_expr c_eq_1)
+  apply(rule conjI)
+  thm inverse
   using c_d_pos 
   apply(safe)
   using curve_addition.delta_plus_def delta_plus_self apply auto[1]
@@ -1070,7 +1087,15 @@ lemma inverse_generalized_points:
   assumes "p \<in> e'_aff" 
   shows "add p (i p) = (1,0)" 
   using assms inverse_generalized 
-  by (metis i.simps prod.exhaust_sel)
+  by (metis i.simps prod.exhaust_sel)*)
+
+lemma inverse_generalized:
+  assumes "(a,b) \<in> e'_aff" "delta_plus a b a b \<noteq> 0"
+  shows "add (a,b) (a,-b) = (1,0)" 
+  using inverse assms
+  unfolding e'_aff_def
+  using e_e'_iff 
+  by(simp) 
 
 lemma add_closure_points:
   assumes "delta x y x' y' \<noteq> 0"
@@ -1104,21 +1129,26 @@ proof -
   next 
     case rot
     then have "x = 0"  
-      using assms(3) unfolding rotations_def p_def  by auto
+      using assms(3) two_not_zero
+      unfolding rotations_def p_def  
+      by auto
     then have "False" 
       using nz by blast
     then show ?thesis by blast
   next
     case sym
     then have "t*x*y = 0 \<or> (t*x^2 \<in> {-1,1} \<and> t*y^2 \<in> {-1,1} \<and> t*x^2 = t*y^2)"
-      using assms(3) unfolding symmetries_def p_def power2_eq_square
-      apply(safe)
-      by(auto simp add: algebra_simps divide_simps)
+      using assms(3) two_not_zero
+      unfolding symmetries_def p_def power2_eq_square
+      apply(safe) 
+      apply(auto simp add: algebra_simps divide_simps two_not_zero)
+      using two_not_zero by metis+
     then have "e' x y = 2 * (1 - t) / t \<or> e' x y = 2 * (-1 - t) / t"
       using nz t_nz unfolding e'_def 
       by(simp add: algebra_simps divide_simps,algebra)
     then have "e' x y \<noteq> 0" 
-      using t_sq_n1 t_nz by auto  
+      using t_dneq2 t_n1
+      by(auto simp add: algebra_simps divide_simps t_nz) 
     then have "False"
       using assms nz p_def unfolding e_circ_def e'_aff_def by fastforce
     then show ?thesis by simp
@@ -1154,20 +1184,26 @@ proof -
     
     obtain a0 b0 where tq_expr: "\<tau> q = (a0,b0)" by fastforce
     then have q_expr: "q = \<tau> (a0,b0)" using tau_idemp_explicit q_def by auto
-    obtain a1 b1 where "p = (a1,b1)" by fastforce
+    obtain a1 b1 where p_expr: "p = (a1,b1)" by fastforce
     have a0_nz: "a0 \<noteq> 0" "b0 \<noteq> 0"
       using \<open>\<tau> q = (a0, b0)\<close> \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> comp_apply q_def tau_sq by auto
 
     have a1_nz: "a1 \<noteq> 0" "b1 \<noteq> 0"
       using \<open>p = (a1, b1)\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> p_def by auto
-    define \<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
+
+    have in_aff: "(a0,b0) \<in> e'_aff" "(a1,b1) \<in> e'_aff"
+      using \<open>q \<in> e_circ\<close> \<tau>_circ circ_to_aff tq_expr apply fastforce
+      using assms(1) p_expr by auto
+
+    define \<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
       "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
-    define p\<delta>' :: "real \<Rightarrow> real \<Rightarrow> real" where 
+    define p\<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
       "p\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_plus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
-    define \<delta>_plus :: "real \<Rightarrow> real \<Rightarrow> real" where
+    define \<delta>_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
       "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_x a1 b1 (1/(t*x0)) (1/(t*y0)))"
-    define \<delta>_minus :: "real \<Rightarrow> real \<Rightarrow> real" where
+    define \<delta>_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
       "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y a1 b1 (1/(t*x0)) (1/(t*y0)))"
+
     have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
     proof(cases "delta_minus a1 b1 (fst q) (snd q) = 0")
       case True
@@ -1211,49 +1247,58 @@ proof -
           using tau_rot_sym \<open>g \<in> rotations\<close> symmetries_def by blast     
     next
       case False
+        (* in this case we need to use the in_aff equations *)
         then have cas2: "delta_minus a1 b1 (fst q) (snd q) = 0"
                         "\<delta>_minus a0 b0 = 0"               
           using t1 \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
                 delta'_def 3 q_def p_def tq_expr by auto
-
+        
         have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
           unfolding \<delta>'_def delta_minus_def 
           by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
 
-        then have eq1': "a0*b0 - a1*b1 = 0" 
-          using \<delta>'_expr cas2(1) tau_sq q_expr \<delta>'_def by fastforce
-        then have eq1: "a0 = a1 * (b1 / b0)"  
-          using a0_nz(2) by(simp add: divide_simps) 
+        have eq1: "a1 * b0 + b1 * a0  = 0"
+          using cas2(2) unfolding \<delta>_minus_def delta_y_def 
+          by(simp add: divide_simps a0_nz a1_nz t_nz power2_eq_square[symmetric])
+         
+        have eq2: "a0*b0 - a1*b1 = 0"
+          using \<delta>'_expr q_def tau_sq tq_expr cas2(1) unfolding \<delta>'_def by fastforce
 
-        (* the argument should not depend on the field!, in previous versions it did *)
-        have "0 = \<delta>_minus a0 b0" using cas2 by auto
-        also have "\<delta>_minus a0 b0 = a0 * b1 + a1 * b0"
-          unfolding \<delta>_minus_def delta_y_def by(simp add: algebra_simps t_nz a0_nz)            
-        also have "... = a1 * (b1 / b0) * b1 + a1 * b0" by(simp add: eq1)
-        also have "... = (a1 / b0) * (b0^2 + b1^2)" 
-          by(simp add: algebra_simps divide_simps a0_nz,algebra) 
-        finally have eq2: "b0^2 + b1^2 = 0" 
-          by(simp add: a0_nz a1_nz)
-    
-        have "a0^2 - b1^2 = a1^2 * (b1^2 / b0^2) - b1^2"
-          by(simp add: algebra_simps eq1 power2_eq_square)
-        also have "... = (b1^2 / b0^2) * (a1^2 - b0^2)"
-          by(simp add: divide_simps a0_nz right_diff_distrib')
-        also have "... = 0" 
-          using eq2 by auto
-        finally have eq3: "a0^2 - b1^2 = 0" by blast
-    
-        from eq2 have pos1: "a1 = b0 \<or> a1 = -b0" 
-          using a1_nz(2) by auto
-        from eq3 have pos2: "a0 = b1 \<or> a0 = -b1" by algebra
-        have "(a0 = b1 \<and> a1 = b0) \<or> (a0 = -b1 \<and> a1 = -b0)"
-          using pos1 pos2 eq2 eq3 eq1' by fastforce 
-        then have "(a0,b0) = (b1,a1) \<or> (a0,b0) = (-b1,-a1)" by auto        
-        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}" by simp
-        moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
-          using \<open>p = (a1, b1)\<close> by simp
-        ultimately have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
-          by blast
+        define c1 where "c1 = a0^2*b0^2" 
+        define c2 where "c2 = a1^2*b0^2"
+        have c_eqs: "c1 = a0^2*b0^2" "c2 = a1^2*b0^2"
+                    "c1 = a1^2*b1^2" "c2 = a0^2*b1^2"
+          using c1_def c2_def eq1 eq2 by algebra+
+
+        have "c1 * (a0^2 + b0^2 - 1)  = c1 * (a1^2 + b1^2 - 1)"
+          using in_aff c_eqs 
+          unfolding e'_aff_def e'_def
+          by(simp add: a1_nz a0_nz)
+        then have eq3: "(c1-c2) * (a0^2-b1^2) = 0"
+                       "(c1-c2) * (a1^2-b0^2) = 0"
+          apply(simp_all add: algebra_simps)
+          unfolding c1_def c2_def
+          using c_eqs by algebra+
+        then consider
+          (1) "c1 = c2" |
+          (2) "a0^2 - b1^2 = 0" "a1^2-b0^2 = 0" by force
+        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        proof(cases)
+          case 1
+          then have "b0^2 = b1^2" "a0^2 = a1^2"
+            using c_eqs a0_nz a1_nz by auto      
+          then have "b0 = b1 \<or> b0 = -b1" "a0 = a1 \<or> a0 = -a1"
+            by algebra+
+          then show ?thesis
+            using eq2 eq1 a0_nz(1) a1_nz(2) nonzero_mult_div_cancel_left 
+                  two_not_zero by force
+        next
+          case 2
+          then show ?thesis 
+            using eq2 by algebra
+        qed
+        then  have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          using p_expr by auto
         then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
           unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
         then obtain g where "g \<in> rotations \<and> \<tau> q = (g \<circ> i) p"
@@ -1280,7 +1325,8 @@ proof -
         have eq1': "a0 * b0 + a1 * b1 = 0"
           using \<delta>'_expr cas1(1) p\<delta>'_def q_def tau_sq tq_expr by auto 
         then have eq1: "a0 = - (a1 * b1) / b0"  
-          using a0_nz(2) by(simp add: divide_simps) 
+          using a0_nz(2) 
+          by(simp add: divide_simps,algebra) 
         have eq2: "b0^2 - b1^2 = 0"
           using cas1(2) unfolding \<delta>_minus_def delta_y_def  
           by(simp add: divide_simps t_nz a0_nz a1_nz eq1 power2_eq_square[symmetric])
@@ -1317,40 +1363,48 @@ proof -
         have \<delta>'_expr: "p\<delta>' a0 b0 = a0*b0 + a1*b1"
           unfolding p\<delta>'_def delta_plus_def 
           by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
-        then have eq1': "a0*b0 + a1*b1 = 0" 
+        then have eq1: "a0*b0 + a1*b1 = 0" 
           using p\<delta>'_def \<delta>'_expr tq_expr q_def tau_sq cas2(1) by force
 
-        then have eq1: "a0 = - (a1 * b1) / b0"  
-          using a0_nz(2) by(simp add: divide_simps)  
+        have eq2: "b0 * b1 - a0 * a1 = 0" 
+          using cas2 unfolding \<delta>_plus_def delta_x_def 
+          by(simp add: algebra_simps t_nz a0_nz)  
 
-        have "0 = \<delta>_plus a0 b0" using cas2 by auto
-        also have "\<delta>_plus a0 b0 = b0 * b1 - a0 * a1"
-          unfolding \<delta>_plus_def delta_x_def by(simp add: algebra_simps t_nz a0_nz)  
-        also have "... = (b1 / b0) * (b0^2 + a1^2)" 
-          by(simp add: t_nz a0_nz eq1 algebra_simps power2_eq_square) 
-        finally have "(b1 / b0) * (b0^2 - a1^2) = 0" by auto
-        then have eq2: "(b0^2 - a1^2) = 0" 
-          by(simp add: a0_nz a1_nz)
+        define c1 where "c1 = a0^2*b0^2" 
+        define c2 where "c2 = a0^2*a1^2"
+        have c_eqs: "c1 = a0^2*b0^2" "c2 = a0^2*a1^2"
+                    "c1 = a1^2*b1^2" "c2 = b0^2*b1^2"
+          using c1_def c2_def eq1 eq2 by algebra+
 
-        have "a0^2 - b1^2 = a1^2 * (b1^2 / b0^2) - b1^2"
-          by(simp add: algebra_simps eq1 power2_eq_square)
-        also have "... = (b1^2 / b0^2) * (a1^2 - b0^2)"
-          by(simp add: divide_simps a0_nz right_diff_distrib')
-        also have "... = 0" 
-          using eq2 by auto
-        finally have eq3: "a0^2 - b1^2 = 0" by blast
+        have "c1 * (a0^2 + b0^2 - 1)  = c1 * (a1^2 + b1^2 - 1)"
+          using in_aff c_eqs 
+          unfolding e'_aff_def e'_def
+          by(simp add: a1_nz a0_nz)
+        then have eq3: "(c1-c2) * (a0^2-a1^2) = 0"
+                       "(c1-c2) * (b0^2-b1^2) = 0"
+          apply(simp_all add: algebra_simps)
+          unfolding c1_def c2_def
+          using c_eqs by algebra+
 
-        from eq2 have pos1: "a1 = b0 \<or> a1 = -b0" by algebra
-        from eq3 have pos2: "a0 = b1 \<or> a0 = -b1" by algebra
-        then have "(a0,b0) = (b1,-a1) \<or> (a0,b0) = (-b1,a1)" 
-          using pos1 pos2 eq2 eq3 eq1' by fastforce 
-        then have "(a0,b0) \<in> {(b1,-a1),(-b1,a1)}" by simp
-        moreover have "{(b1,-a1),(-b1,a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
-          using \<open>p = (a1, b1)\<close> p_def 
-          using \<open>(a0, b0) = (b1, - a1) \<or> (a0, b0) = (- b1, a1)\<close> 
-                \<open>\<delta>_plus a0 b0 = b0 * b1 - a0 * a1\<close> cas2(2) by auto
-        ultimately have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
-          by blast
+        then consider
+          (1) "c1 = c2" |
+          (2) "a0^2-a1^2 = 0" "b0^2-b1^2 = 0" by force
+        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        proof(cases)
+          case 1
+          then have "b0^2 = a1^2" "a0^2 = b1^2"
+            using c_eqs a0_nz a1_nz by auto 
+          then show ?thesis
+            using eq2 by algebra          
+        next
+          case 2
+          then have "b0 = b1 \<or> b0 = -b1" "a0 = a1 \<or> a0 = -a1"
+            by algebra+
+          then show ?thesis
+            using eq1 eq2 False \<delta>_minus_def a1_nz(1) a1_nz(2) delta_y_def by auto
+        qed
+        then have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          unfolding p_expr by auto
 
         then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
           unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
@@ -1377,38 +1431,52 @@ proof -
     using assms(1,2) unfolding e'_aff_0_def e'_aff_def delta_def delta_plus_def 
                                delta_minus_def e'_def
     apply(simp) 
-    apply(simp add: c_eq_1 t_expr)
-    by(algebra)
+    apply(simp add: c_eq_1 t_expr) 
+    by algebra
 
   have 2: "y1 = - y2"
     using assms(1,2) unfolding e'_aff_0_def e'_aff_def delta_def delta_plus_def 
                                delta_minus_def e'_def
     apply(simp) 
     apply(simp add: c_eq_1 t_expr)
-    by(algebra)
+    by algebra
 
   from 1 2 show ?thesis by simp
 qed
   
-        
+(*TODO: once the field is generalized, algebra stops automatically solving this goal*)       
 lemma dichotomy_3:
   assumes "ext_add (x1,y1) (x2,y2) = (1,0)" 
           "((x1,y1),(x2,y2)) \<in> e'_aff_1"
   shows "(x2,y2) = i (x1,y1)"
 proof -
-  have 1: "x1 = x2"
-    using assms(1,2) unfolding e'_aff_1_def e'_aff_def delta'_def delta_x_def 
-                               delta_y_def e'_def
-    apply(simp) 
-    apply(simp add: c_eq_1 t_expr)
-    by(algebra)
+  have nz: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+    using assms by(simp,force)+
+  have in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+    using assms unfolding e'_aff_1_def by auto
+  have ds: "delta' x1 y1 x2 y2 \<noteq> 0"
+    using assms unfolding e'_aff_1_def by auto
+
+  have eqs: "x1*(y1+y2) = x2*(y1+y2)" "x1 * y1 + x2 * y2 = 0" 
+    using assms in_aff ds
+    unfolding e'_aff_def e'_def delta'_def delta_x_def delta_y_def
+    apply simp_all
+    by algebra
+    
+  then consider (1) "y1 + y2 = 0" | (2) "x1 = x2" by auto
+  then have 1: "x1 = x2"
+  proof(cases)
+    case 1
+    then show ?thesis 
+      using eqs nz by algebra
+  next
+    case 2
+    then show ?thesis by auto
+  qed
 
   have 2: "y1 = - y2"
-    using assms(1,2) unfolding e'_aff_1_def e'_aff_def delta'_def delta_x_def 
-                               delta_y_def e'_def
-    apply(simp) 
-    apply(simp add: c_eq_1 t_expr)
-    by(algebra)
+    using eqs 1 nz
+    by algebra
 
   from 1 2 show ?thesis by simp
 qed
@@ -1455,7 +1523,7 @@ lemma meaning_of_dichotomy_2:
 
 subsection \<open>Gluing relation and projective points\<close>
 
-definition gluing :: "(((real \<times> real) \<times> bit) \<times> ((real \<times> real) \<times> bit)) set" where
+definition gluing :: "((('a \<times> 'a) \<times> bit) \<times> (('a \<times> 'a) \<times> bit)) set" where
   "gluing = {(((x0,y0),l),((x1,y1),j)). 
                ((x0,y0) \<in> e'_aff \<and> (x1,y1) \<in> e'_aff) \<and>
                (((x0,y0) \<in> e_circ \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
@@ -1476,7 +1544,7 @@ lemma gluing_aff:
   shows "(x0,y0) \<in> e'_aff" "(x1,y1) \<in> e'_aff"
   using assms unfolding gluing_def by force+
 
-definition e'_aff_bit :: "((real \<times> real) \<times> bit) set" where
+definition e'_aff_bit :: "(('a \<times> 'a) \<times> bit) set" where
  "e'_aff_bit = e'_aff \<times> UNIV"
 
 lemma eq_rel: "equiv e'_aff_bit gluing"
@@ -1679,9 +1747,8 @@ qed
 
 subsection \<open>Projective addition on points\<close>
 
-type_synonym point = "(real \<times> real) \<times> bit"
 
-function (domintros) proj_add :: "point \<Rightarrow> point \<Rightarrow> point"
+function (domintros) proj_add :: "('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit"
   where 
     "proj_add ((x1, y1), l) ((x2, y2), j) = (add (x1, y1) (x2, y2), l+j)"
       if "delta x1 y1 x2 y2 \<noteq> 0" and "(x1, y1) \<in> e'_aff" and "(x2, y2) \<in> e'_aff" 
@@ -1771,12 +1838,27 @@ proof -
     then show ?thesis
     proof(cases)
       case a
+      then have "d * x0^2 * y0^2 = 1 \<or> d * x0^2 * y0^2 = -1" 
+                "x0^2 = y0^2"
+                "x0^2 + y0^2 - 1 = d * x0^2 * y0^2"
+        unfolding power2_eq_square
+        using a unfolding delta_def delta_plus_def delta_minus_def apply algebra
+        using 3 two_not_zero a unfolding delta'_def delta_x_def delta_y_def apply force
+        using assms t_expr unfolding e'_aff_def e'_def power2_eq_square by force
+      then have "2*x0^2 = 2 \<or> 2*x0^2 = 0"
+        by algebra
+      then have "x0 = 1 \<or> x0 = -1"
+        using 3 
+        apply(simp add: two_not_zero) 
+        by algebra
+      then have "y0 = 0"
+        using assms t_n1 t_nm1
+        unfolding e'_aff_def e'_def 
+        apply simp 
+        by algebra
       then have "False"
-        using assms 3 d_n1
-        unfolding delta'_def delta_x_def delta_y_def 
-                  delta_def delta_plus_def delta_minus_def e'_aff_def e'_def
-        by(simp add: t_expr,algebra)
-      then show ?thesis by simp 
+        using 3 by auto
+      then show ?thesis by auto
     next
       case b
       have "proj_add ((x0, y0), l) (i (x0, y0), l') = 
@@ -1784,7 +1866,9 @@ proof -
         using assms i_in b
         by(simp add: proj_add_def)
       also have "... = ((1,0),l+l')"
-        using inverse_generalized assms e'_aff_def by force
+        using inverse_generalized[OF assms] b 
+        unfolding delta_def delta_plus_def delta_minus_def
+        by auto
       finally show ?thesis 
         by blast
     next
@@ -1794,7 +1878,8 @@ proof -
         using assms i_in c
         by(simp add: proj_add_def)
       also have "... = ((1,0),l+l')"
-        by(simp add: 3)
+        apply(subst ext_add_inverse)
+        using 3 by auto
       finally show ?thesis 
         by blast
     next
@@ -1804,7 +1889,9 @@ proof -
         using assms i_in d
         by(simp add: proj_add_def)
       also have "... = ((1,0),l+l')"
-        using inverse_generalized assms e'_aff_def by force
+        using inverse_generalized[OF assms] d
+        unfolding delta_def delta_plus_def delta_minus_def
+        by auto
       finally show ?thesis 
         by blast
     qed
@@ -1831,9 +1918,7 @@ qed
 
 subsection \<open>Projective addition on classes\<close>
 
-type_synonym pclass = "point set"
-
-function (domintros) proj_add_class :: "pclass \<Rightarrow> pclass \<Rightarrow> pclass set"
+function (domintros) proj_add_class :: "(('a \<times> 'a) \<times> bit ) set \<Rightarrow> (('a \<times> 'a) \<times> bit ) set \<Rightarrow> ((('a \<times> 'a) \<times> bit ) set) set"
   where 
     "proj_add_class c1 c2 = 
         (
@@ -2152,8 +2237,8 @@ proof -
     unfolding e'_aff_0_def e'_aff_1_def
               e'_aff_def e'_def 
               delta_def delta_plus_def delta_minus_def
-              delta'_def delta_x_def delta_y_def
-    by(simp,argo) 
+              delta'_def delta_x_def delta_y_def 
+    by(simp,algebra) 
   then have "{proj_add ((x1, y1), i) ((x2, y2), j) |x1 y1 i x2 y2 j.
      ((x1, y1), i) \<in> c1 \<and> ((x2, y2), j) \<in> c2 \<and> ((x1, y1), x2, y2) \<in> e'_aff_0 \<union> e'_aff_1} = 
         {proj_add ((x1, y1), i) ((x2, y2), j) |x1 y1 i x2 y2 j.
@@ -2364,7 +2449,9 @@ proof -
       unfolding e'_aff_0_def by auto    
     then have ds: "delta (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) (fst (\<tau> (x', y'))) (snd (\<tau> (x', y'))) \<noteq> 0" 
       unfolding delta_def delta_plus_def delta_minus_def 
-      by(simp add: t_nz nz algebra_simps power2_eq_square[symmetric] t_expr d_nz power_one_over)
+      apply(simp add: algebra_simps power2_eq_square[symmetric])
+      unfolding t_expr[symmetric]
+      by(simp add: field_simps)
     have v1: "proj_add ((x, y), l) ((x', y'), l') = (add (x, y) (x', y'), l + l')"
       using ld_nz proj_add.simps \<open>(x,y) \<in> e'_aff\<close> \<open>(x',y') \<in> e'_aff\<close> by simp
     have v2: "proj_add (\<tau> (x, y), l+1) (\<tau> (x', y'), l'+1) = (add (x, y) (x', y'), l + l')"
@@ -2387,7 +2474,8 @@ proof -
         unfolding e'_aff_def e'_def delta_def delta_minus_def delta_plus_def 
         apply(safe)
         apply(simp_all add: divide_simps t_nz nz)
-        apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+         apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+        unfolding t_expr[symmetric]
         by algebra+
       
       have v3: 
@@ -2401,7 +2489,7 @@ proof -
       have ds': "delta (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) x' y' \<noteq> 0"
         using aaa unfolding delta_def delta_plus_def delta_minus_def
         apply(simp add: t_nz nz algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-        by(simp add: divide_simps nz)
+        by(simp add: divide_simps nz t_nz)
 
       have v4: "proj_add (\<tau> (x, y), l+1) ((x', y'), l') = (\<tau> (add (x, y) (x', y')), l+l'+1)"
       proof -
@@ -2422,7 +2510,8 @@ proof -
         apply(simp_all add: c_eq_1)
         using aaa in_aff ld_nz unfolding e'_aff_def e'_def delta_def delta_minus_def delta_plus_def 
         apply(simp_all add: t_expr nz t_nz divide_simps)
-        apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr d_nz) 
+         apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr d_nz) 
+        unfolding t_expr[symmetric]
         by algebra+
 
       have class_eq: "gluing `` {(add (x, y) (x', y'), l + l')} =
@@ -2488,7 +2577,8 @@ proof -
         by(simp add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)
       then have pd'': "delta' x y (fst (\<tau> (x', y'))) (snd (\<tau> (x', y'))) \<noteq> 0"
         unfolding delta'_def delta_x_def delta_y_def
-        by(simp add: divide_simps t_nz nz,argo) 
+        apply(simp add: divide_simps t_nz nz)
+        by algebra
       have v4: "proj_add (\<tau> (x, y), l+1) ((x', y'), l') = (ext_add (\<tau> (x, y)) (x', y'), l+l'+1)"
         using proj_add.simps in_aff taus pd pd' by simp
       have v3_eq_v4: "(ext_add (x, y) (\<tau> (x', y')), l+l'+1) = (ext_add (\<tau> (x, y)) (x', y'), l+l'+1)" 
@@ -2523,7 +2613,8 @@ proof -
         apply(simp_all add: divide_simps d_nz t_nz nz)
         apply(safe)
         using ld_nz eq unfolding delta_def delta_minus_def delta_plus_def
-          by(algebra,blast)+
+        unfolding t_expr[symmetric]
+        by algebra+
            
         have trans_add: "\<tau> (add (x, y) (x', y')) = (ext_add (x, y) (\<tau> (x', y')))" 
                         "add (x, y) (x', y') = \<tau> (ext_add (x, y) (\<tau> (x', y')))" 
@@ -2619,16 +2710,15 @@ proof -
                      "delta' (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) x' y' = 0"
         unfolding delta_def delta_plus_def delta_minus_def
                   delta'_def delta_x_def delta_y_def 
-        by(simp add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)+               
+        by(simp_all add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)   
       then have v4: "proj_add (\<tau> (x, y), l+1) ((x', y'), l') = undefined" by simp 
 
       have add_z: "fst (add (x, y) (x', y')) = 0 \<or> snd (add (x, y) (x', y')) = 0"
         using b ccc unfolding e'_aff_0_def 
                                  delta_def delta'_def delta_plus_def delta_minus_def
                                  delta_x_def delta_y_def e'_aff_def e'_def
-        apply(simp add: t_nz nz algebra_simps)
-        apply(simp add: c_eq_1 power2_eq_square[symmetric] t_expr d_nz)
-        apply(simp add: divide_simps d_nz nz) 
+        apply(simp add: t_nz nz field_simps)
+        apply(simp add: c_eq_1)
         by algebra
 
       have add_closure: "add (x, y) (x', y') \<in> e'_aff"
@@ -2918,7 +3008,8 @@ proof -
       unfolding e'_aff_1_def by auto    
     then have ds: "delta' (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) (fst (\<tau> (x', y'))) (snd (\<tau> (x', y'))) \<noteq> 0" 
       unfolding delta'_def delta_x_def delta_y_def 
-      by(simp add: t_nz divide_simps nz)
+      (*TODO: note how field_simps is preferable over divide_simps in the field generalization*)
+      by(simp add: t_nz field_simps nz)
       
     have v1: "proj_add ((x, y), l) ((x', y'), l') = (ext_add (x, y) (x', y'), l + l')"
       using ld_nz proj_add.simps \<open>(x,y) \<in> e'_aff\<close> \<open>(x',y') \<in> e'_aff\<close> by simp
@@ -2943,8 +3034,7 @@ proof -
         using aaa in_aff ld_nz 
         unfolding e'_aff_def e'_def delta'_def delta_x_def delta_y_def 
         apply(safe)
-        apply(simp_all add: divide_simps t_nz nz)
-        apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+         apply(simp_all add: divide_simps t_nz nz)
         by algebra+
       
       have v3: 
@@ -3042,10 +3132,10 @@ proof -
       have pd': "delta (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) x' y' \<noteq> 0"
         using bbb unfolding delta'_def delta_x_def delta_y_def
                             delta_def delta_plus_def delta_minus_def 
-        by(simp add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+        by(simp add: t_nz nz field_simps power2_eq_square[symmetric] t_expr d_nz)
       then have pd'': "delta x y (fst (\<tau> (x', y'))) (snd (\<tau> (x', y'))) \<noteq> 0"
         unfolding delta_def delta_plus_def delta_minus_def
-        by(simp add: divide_simps t_nz nz algebra_simps t_expr power2_eq_square[symmetric] d_nz) 
+        by(simp add: divide_simps t_nz nz algebra_simps t_expr power2_eq_square[symmetric] d_nz)
       have v4: "proj_add (\<tau> (x, y), l+1) ((x', y'), l') = (add (\<tau> (x, y)) (x', y'), l+l'+1)"
         using proj_add.simps in_aff taus pd pd' by auto
       have v3_eq_v4: "(add (x, y) (\<tau> (x', y')), l+l'+1) = (add (\<tau> (x, y)) (x', y'), l+l'+1)" 
@@ -3174,16 +3264,16 @@ proof -
                      "delta' (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) x' y' = 0"
         unfolding delta_def delta_plus_def delta_minus_def
                   delta'_def delta_x_def delta_y_def 
-        by(simp add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)+               
+        by(simp_all add: t_nz nz divide_simps algebra_simps power2_eq_square[symmetric] t_expr d_nz)
       then have v4: "proj_add (\<tau> (x, y), l+1) ((x', y'), l') = undefined" by simp 
 
       have add_z: "fst (ext_add (x, y) (x', y')) = 0 \<or> snd (ext_add (x, y) (x', y')) = 0"
-        using c ccc unfolding e'_aff_0_def 
+        using c ccc ld_nz unfolding e'_aff_0_def
                                  delta_def delta'_def delta_plus_def delta_minus_def
                                  delta_x_def delta_y_def e'_aff_def e'_def
-        apply(simp add: t_nz nz algebra_simps)
-        apply(simp add: c_eq_1 power2_eq_square[symmetric] t_expr d_nz)
-        apply(simp add: divide_simps d_nz nz) 
+        apply(simp_all add: field_simps t_nz nz)
+        unfolding t_expr[symmetric] power2_eq_square 
+        apply(simp_all add: divide_simps d_nz t_nz) 
         by algebra
 
       have add_closure: "ext_add (x, y) (x', y') \<in> e'_aff"
@@ -3262,7 +3352,7 @@ proof -
       case 3 then show ?thesis
       proof -
         have pd: "delta' x2 y2 x1 y1 \<noteq> 0"
-          using assms(3) unfolding delta'_def delta_x_def delta_y_def by argo
+          using assms(3) unfolding delta'_def delta_x_def delta_y_def by algebra
         have "proj_addition (gluing `` {((x1, y1), l)}) (gluing `` {((x2, y2), j)}) = 
               proj_addition (gluing `` {((x2, y2), j)}) (gluing `` {((x1, y1), l)})"
           unfolding proj_addition_def
@@ -3280,6 +3370,42 @@ proof -
   qed  
 
 subsubsection \<open>Basic properties\<close>
+
+(* TODO: Remove from bottom and assign to a right section *)
+lemma move_tau_in_delta:
+  assumes  "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
+  shows "delta x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0"
+  using assms
+  unfolding delta_def delta_plus_def delta_minus_def
+  apply(simp add: t_nz power2_eq_square[symmetric] algebra_simps t_expr d_nz)
+  apply(simp split: if_splits add: divide_simps)
+  by fastforce
+
+lemma move_tau_in_delta_points:
+  assumes  "delta (fst (\<tau> p)) (snd (\<tau> p)) (fst q) (snd q) \<noteq> 0"
+  shows "delta (fst p) (snd p) (fst (\<tau> q)) (snd (\<tau> q)) \<noteq> 0"
+  using move_tau_in_delta 
+  by (metis assms prod.collapse)
+
+lemma move_tau_in_delta':
+  assumes  "delta' (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
+  shows "delta' x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0"
+  using assms
+  unfolding delta'_def delta_x_def delta_y_def
+  apply(simp add: t_nz power2_eq_square[symmetric] algebra_simps t_expr d_nz)
+  apply(simp split: if_splits add: divide_simps t_nz d_nz)
+  apply(safe)
+  apply simp
+  apply(simp add: algebra_simps power2_eq_square)
+  apply(simp add: t_expr power2_eq_square[symmetric] algebra_simps)
+  by algebra
+
+lemma move_tau_in_delta'_points:
+  assumes  "delta' (fst (\<tau> p)) (snd (\<tau> p)) (fst q) (snd q) \<noteq> 0"
+  shows "delta' (fst p) (snd p) (fst (\<tau> q)) (snd (\<tau> q)) \<noteq> 0"
+  using move_tau_in_delta'
+  by (metis assms prod.collapse)
+
 
 (* TODO: this does not use independence of the representant *)
 lemma proj_add_class_inv:
@@ -3399,20 +3525,51 @@ proof -
 
     have good_deltas: 
          "delta x y (fst (i (x,y))) (snd (i (x,y))) \<noteq> 0 \<or> 
-          delta' x y (fst (i (x,y))) (snd (i (x,y))) \<noteq> 0" 
+          delta' x y (fst (i (x,y))) (snd (i (x,y))) \<noteq> 0" (is "?one")
          "delta (fst (\<tau> (x,y))) (snd (\<tau> (x,y))) 
                 (fst (\<tau> (i (x,y)))) (snd (\<tau> (i (x,y)))) \<noteq> 0 \<or> 
           delta' (fst (\<tau> (x,y))) (snd (\<tau> (x,y))) 
-                 (fst (\<tau> (i (x,y)))) (snd (\<tau> (i (x,y)))) \<noteq> 0" 
-      using nz in_aff taus d_n1 d_nz
-      unfolding delta_def delta_plus_def delta_minus_def
-                delta'_def delta_x_def delta_y_def
-                e'_aff_def e'_def
-      apply(simp_all add: divide_simps t_nz) 
-      unfolding power2_eq_square
-      apply(simp_all add: algebra_simps)
-      apply(simp_all add: algebra_simps power2_eq_square[symmetric] t_expr)
-      by algebra+
+                 (fst (\<tau> (i (x,y)))) (snd (\<tau> (i (x,y)))) \<noteq> 0" (is "?two")
+    proof -
+
+      show ?one
+        unfolding delta_def delta_plus_def delta_minus_def
+                  delta'_def delta_x_def delta_y_def
+      proof(simp_all add: two_not_zero nz,cases "x^2 = y^2")
+        case True
+        have simp: "2 * y\<^sup>2 \<noteq> 2" "2 * y^2 \<noteq> 0"  
+          using in_aff t_n1 t_nm1 two_not_zero unfolding e'_aff_def e'_def
+          apply simp_all
+          using True t_def t_ineq(1) by auto
+        then show "d * x * y * x * y \<noteq> 1 \<and> 1 + d * x * y * x * y \<noteq> 0 \<or> x * x \<noteq> y * y"
+          using in_aff unfolding e'_aff_def e'_def
+          apply(simp add: t_expr)
+          by algebra+
+      next
+        case False
+        then show "d * x * y * x * y \<noteq> 1 \<and> 1 + d * x * y * x * y \<noteq> 0 \<or> x * x \<noteq> y * y"
+          by algebra
+      qed
+      
+      then show ?two
+      proof(cases "delta x y (fst (i (x, y))) (snd (i (x, y))) \<noteq> 0")
+        case True
+        then have "delta (fst (\<tau> (\<tau> (x,y)))) (snd (\<tau> (\<tau> (x,y)))) (fst (i (x, y))) (snd (i (x, y))) \<noteq> 0"
+          using tau_idemp_point by fastforce
+        then have "delta (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) (fst (\<tau> (i (x, y)))) (snd (\<tau> (i (x, y)))) \<noteq> 0" 
+          using move_tau_in_delta_points by blast
+        then show ?thesis by auto
+      next
+        case False
+        then have "delta' x y (fst (i (x, y))) (snd (i (x, y))) \<noteq> 0" 
+          using \<open>?one\<close> by blast
+        then have "delta' (fst (\<tau> (\<tau> (x,y)))) (snd (\<tau> (\<tau> (x,y)))) (fst (i (x, y))) (snd (i (x, y))) \<noteq> 0"
+          using tau_idemp_point by fastforce
+        then have "delta' (fst (\<tau> (x, y))) (snd (\<tau> (x, y))) (fst (\<tau> (i (x, y)))) (snd (\<tau> (i (x, y)))) \<noteq> 0" 
+          using move_tau_in_delta'_points by blast
+        then show ?thesis by auto
+      qed
+    qed
 
     have dom_eq: "{proj_add ((x1, y1), ia) ((x2, y2), j) |x1 y1 ia x2 y2 j.
        ((x1, y1), ia) \<in> {((x, y), l), (\<tau> (x, y), l + 1)} \<and>
@@ -3550,14 +3707,7 @@ proof -
     have alt_ds: "delta x y (fst (\<tau> (x',y'))) (snd (\<tau> (x',y'))) \<noteq> 0 \<or>
                   delta' x y (fst (\<tau> (x',y'))) (snd (\<tau> (x',y'))) \<noteq> 0"
       (is "?d1 \<noteq> 0 \<or> ?d2 \<noteq> 0")
-      using in_aff d_nz d_n1 ds
-      unfolding delta_def delta_plus_def delta_minus_def
-                delta'_def delta_x_def delta_y_def
-                e'_aff_def e'_def
-      apply(simp add: nz t_nz divide_simps algebra_simps 
-                      power2_eq_square[symmetric] t_expr d_nz)
-      by algebra
-
+      using covering_with_deltas ds assms p_q_expr by blast
 
     have "proj_addition p q = proj_addition (gluing `` {((x, y), l)}) (gluing `` {((x', y'), l')})"
       (is "?lhs = proj_addition ?p ?q")
@@ -3944,35 +4094,46 @@ proof -
       using sym_decomp by blast
     have ds: "delta x y x' y' = 0" "delta' x y x' y' = 0" 
       using wd_d_nz[OF g_expr e_circ] wd_d'_nz[OF g_expr e_circ] by auto
-    have ds': "delta x y x (-y) \<noteq> 0 \<or> delta' x y x (-y) \<noteq> 0"
-      using delta_plus_self[of x y] in_aff(1) d_n1
-      unfolding delta_def delta_plus_def delta_minus_def
-                delta'_def delta_x_def delta_y_def
-                e'_aff_def e'_def
-      apply(simp add: t_expr)
-      apply(safe)
-      apply(simp_all add: algebra_simps) 
-      by algebra+
+ 
     have ds'': "delta x y (fst ((r \<circ> i) (x, y))) (snd ((r \<circ> i) (x, y))) \<noteq> 0 \<or> 
                 delta' x y (fst ((r \<circ> i) (x, y))) (snd ((r \<circ> i) (x, y))) \<noteq> 0"
       (is "?ds1 \<noteq> 0 \<or> ?ds2 \<noteq> 0")
-      using ds' r_expr(2)
-      unfolding delta_def delta_plus_def delta_minus_def
-                delta'_def delta_x_def delta_y_def rotations_def
-      apply(simp)
-      apply(safe) 
-      apply auto 
-      by argo+
+      using r_expr covering_with_deltas tau_idemp_point ds 
+      by (metis comp_apply e_proj(1) e_proj(2))
+      
     have ds''': "delta (fst (\<rho> (x,y))) (snd (\<rho> (x,y))) (fst ((r \<circ> i) (x, y))) (snd ((r \<circ> i) (x, y))) \<noteq> 0 \<or> 
-                delta' (fst (\<rho> (x,y))) (snd (\<rho> (x,y))) (fst ((r \<circ> i) (x, y))) (snd ((r \<circ> i) (x, y))) \<noteq> 0"
+                 delta' (fst (\<rho> (x,y))) (snd (\<rho> (x,y))) (fst ((r \<circ> i) (x, y))) (snd ((r \<circ> i) (x, y))) \<noteq> 0"
       (is "?ds3 \<noteq> 0 \<or> ?ds4 \<noteq> 0")
-      using ds' r_expr(2)
+      using r_expr(2) rotation_invariance_3 rotation_invariance_4 delta_com ds'' 
+      by (metis (no_types, hide_lams) add.inverse_inverse delta'_com diff_0 minus_diff_eq)
+    have ds:"?ds3 \<noteq> 0 \<Longrightarrow> delta x y x (-y) \<noteq> 0"
+            "?ds4 \<noteq> 0 \<Longrightarrow> delta' x y x (-y) \<noteq> 0"
+            "?ds1 \<noteq> 0 \<Longrightarrow> delta x y x (-y) \<noteq> 0"
+            "?ds2 \<noteq> 0 \<Longrightarrow> delta' x y x (-y) \<noteq> 0"
+      using ds'''
+      (*TODO: a beatiful command for this*)
+      using r_expr
       unfolding delta_def delta_plus_def delta_minus_def
                 delta'_def delta_x_def delta_y_def rotations_def
-      apply(simp)
-      apply(safe) 
-      apply auto 
-      by argo+
+      apply(simp add: zeros two_not_zero)
+      apply(elim disjE,safe)
+      apply(simp_all add: algebra_simps divide_simps t_nz zeros)
+      using eq_neg_iff_add_eq_0 apply force
+      using eq_neg_iff_add_eq_0 apply force
+      using r_expr unfolding rotations_def
+      apply(simp add: zeros two_not_zero)
+      apply(elim disjE,safe)
+      apply(simp_all add: algebra_simps divide_simps t_nz zeros)
+      using r_expr unfolding rotations_def
+      apply(simp add: zeros two_not_zero)
+      apply(elim disjE,safe)
+      apply(simp_all add: algebra_simps divide_simps t_nz zeros)
+      apply(simp add: zeros two_not_zero)
+      using r_expr unfolding rotations_def
+      apply(simp add: zeros two_not_zero)
+      apply(elim disjE,safe)
+      by(simp_all add: algebra_simps divide_simps t_nz zeros)
+
     have eq: "gluing `` {((\<tau> \<circ> r \<circ> i) (x, y), l')} = 
                 gluing `` {((r \<circ> i) (x, y), l'+1)}"
         apply(subst gluing_inv[of "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1",
@@ -3980,9 +4141,12 @@ proof -
         using zeros r_expr unfolding rotations_def apply fastforce+
         using i_aff[of "(x,y)",OF in_aff(1)] rot_aff[OF r_expr(2)] apply fastforce 
         by force
-    have simp1: "proj_addition (gluing `` {(\<rho> (x, y), l)}) (gluing `` {((\<tau> \<circ> r \<circ> i) (x, y), l')}) =
-          gluing `` {((\<rho> \<circ> r) (1,0),l+l'+1)}"
-    proof -      
+    have e_proj': "gluing `` {(\<rho> (x, y), l)} \<in> e_proj"
+                  "gluing `` {((r \<circ> i) (x, y), l' + 1)} \<in> e_proj"
+        using e_proj(1) insert_rho_gluing rho_preserv_e_proj apply auto[1]
+        using e_proj(2) eq r_expr(1) by auto
+    {
+      assume True: "delta x y x (-y) \<noteq> 0" 
       have 1: "add (\<rho> (x, y)) ((r \<circ> i) (x, y)) = (\<rho> \<circ> r) (1,0)"
         (is "?lhs = ?rhs")
       proof -
@@ -3992,9 +4156,14 @@ proof -
           using rotation_invariance_1_points[OF 
                  r_expr(2),simplified commutativity] by fastforce
         also have "... = ?rhs"
-          using inverse_generalized_points[OF in_aff(1)] by auto
+          using inverse_generalized[OF in_aff(1)] True in_aff 
+          unfolding delta_def delta_plus_def delta_minus_def by simp
         finally show ?thesis by auto
       qed
+    }
+    note add_case = this
+    {
+      assume us_ds: "delta' x y x (-y) \<noteq> 0" 
       have 2: "ext_add (\<rho> (x, y)) ((r \<circ> i) (x, y)) = (\<rho> \<circ> r) (1,0)"
         (is "?lhs = ?rhs")
       proof -
@@ -4007,118 +4176,99 @@ proof -
           using ext_add_inverse[OF zeros] by argo
         finally show ?thesis by auto
       qed
-      have e_proj': "gluing `` {(\<rho> (x, y), l)} \<in> e_proj"
-                    "gluing `` {((r \<circ> i) (x, y), l' + 1)} \<in> e_proj"
-        using e_proj(1) insert_rho_gluing rho_preserv_e_proj apply auto[1]
-        using e_proj(2) eq r_expr(1) by auto
-      consider (c1) "?ds3 \<noteq> 0" | (c2) "?ds4 \<noteq> 0" using ds''' by auto
-      then have "proj_addition (gluing `` {(\<rho> (x, y), l)})
+    }
+    note ext_add_case = this
+
+    have simp1: "proj_addition (gluing `` {(\<rho> (x, y), l)})
                                (gluing `` {((r \<circ> i) (x, y), l' + 1)})=
             gluing `` {((\<rho> \<circ> r) (1,0),l+l'+1)}"
         (is "proj_addition ?g1 ?g2 = ?g3")
-      proof(cases)
-        case c1
-        then have "proj_addition ?g1 ?g2 = 
+    proof(cases "?ds3 \<noteq> 0")      
+      case True
+      then have "delta x y x (-y) \<noteq> 0" using ds by blast
+      then have 1: "add (\<rho> (x, y)) ((r \<circ> i) (x, y)) = (\<rho> \<circ> r) (1,0)"
+        using add_case by auto
+      have "proj_addition ?g1 ?g2 = 
                    gluing `` {(add (\<rho> (x, y)) ((r \<circ> i) (x, y)), l+l'+1)}"
           using gluing_add[of "fst (\<rho> (x, y))" "snd (\<rho> (x, y))" l
                               "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1", 
-                           simplified prod.collapse, OF e_proj' c1]
+                           simplified prod.collapse, OF e_proj' ] True
           by (simp add: add.assoc)
         also have "... = ?g3"
           using 1 by auto
         finally show ?thesis by auto
-      next 
-        case c2
-        then have "proj_addition ?g1 ?g2 = 
+    next
+      case False
+      then have "delta' x y x (-y) \<noteq> 0" using ds ds''' by fast
+      then have 2: "ext_add (\<rho> (x, y)) ((r \<circ> i) (x, y)) = (\<rho> \<circ> r) (1,0)"
+        using ext_add_case by auto
+      then have "proj_addition ?g1 ?g2 = 
                    gluing `` {(ext_add (\<rho> (x, y)) ((r \<circ> i) (x, y)), l+l'+1)}"
           using gluing_ext_add[of "fst (\<rho> (x, y))" "snd (\<rho> (x, y))" l
                               "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1", 
-                           simplified prod.collapse, OF e_proj' c2]
-          by (simp add: add.assoc)
+                           simplified prod.collapse, OF e_proj'] False         
+          by (metis (no_types, lifting) add.assoc ds''')
         also have "... = ?g3"
           using 2 by auto
         finally show ?thesis by auto
-      qed
-      then show ?thesis
-        unfolding eq by auto
     qed
+    
+    have e_proj': "gluing `` {((x, y), l)} \<in> e_proj"
+                  "gluing `` {((r \<circ> i) (x, y), l' + 1)} \<in> e_proj"
+      using e_proj apply auto[1]
+      using e_proj(2) eq r_expr(1) by auto
     have simp2: "tf \<rho>
      (proj_addition (gluing `` {((x, y), l)})
-       (gluing `` {((\<tau> \<circ> r \<circ> i) (x, y), l')})) = 
+       (gluing `` {((r \<circ> i) (x, y), l'+1)})) = 
       gluing `` {((\<rho> \<circ> r) (1,0),l+l'+1)}"
-    proof -
-      have 1: "add (x, y) ((r \<circ> i) (x, y)) = r (1,0)"
-        (is "?lhs = ?rhs")
-      proof -
-        have "?lhs = add (x, y) (r (i (x, y)))" 
-          using rho_invariance_1_points o_apply[of r i] by presburger
-        also have "... = r (add (x, y) (i (x, y)))"
-          using rotation_invariance_1_points[OF 
-                 r_expr(2),simplified commutativity] by fastforce
-        also have "... = ?rhs"
-          using inverse_generalized_points[OF in_aff(1)] by auto
-        finally show ?thesis by auto
-      qed
-      have 2: "ext_add (x, y) ((r \<circ> i) (x, y)) = r (1,0)"
-        (is "?lhs = ?rhs")
-      proof -
-        have "?lhs = ext_add (x, y) (r (i (x, y)))" 
-          using rho_invariance_2_points o_apply[of r i] by presburger
-        also have "... = r (ext_add (x, y) (i (x, y)))"
-          using rotation_invariance_2_points[OF 
-                 r_expr(2),simplified ext_add_comm_points] by force
-        also have "... = ?rhs"
-          using ext_add_inverse[OF zeros] by argo
-        finally show ?thesis by auto
-      qed
-      have e_proj': "gluing `` {((x, y), l)} \<in> e_proj"
-                    "gluing `` {((r \<circ> i) (x, y), l' + 1)} \<in> e_proj"
-        using e_proj apply auto[1]
-        using e_proj(2) eq r_expr(1) by auto
-      consider (c1) "?ds1 \<noteq> 0" | (c2) "?ds2 \<noteq> 0" using ds'' by auto
-      then have eq': "proj_addition (gluing `` {((x, y), l)})
-                               (gluing `` {((r \<circ> i) (x, y), l' + 1)})=
-            gluing `` {(r (1,0),l+l'+1)}"
-        (is "proj_addition ?g1 ?g2 = ?g3")
-      proof(cases)
-        case c1
-        then have "proj_addition ?g1 ?g2 = 
+      (is "tf _ (proj_addition ?g1 ?g2) = ?g3")
+    proof(cases "?ds1 \<noteq> 0")    
+      case True
+      then have us_ds: "delta x y x (-y) \<noteq> 0" using ds by blast
+      then have 1: "add (x, y) ((r \<circ> i) (x, y)) = r (1,0)"
+        using add_case rho_invariance_1[of x y "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))",
+                                        simplified prod.collapse]  
+        by (metis comp_apply i_idemp_explicit inverse_rule_2 prod.exhaust_sel)
+      have "proj_addition ?g1 ?g2 = 
                    gluing `` {(add (x, y) ((r \<circ> i) (x, y)), l+l'+1)}"
-          using gluing_add[of x y l
-                              "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1", 
-                           simplified prod.collapse, OF e_proj' c1]
-          by (simp add: add.assoc)
-        also have "... = ?g3"
-          using 1 by auto
-        finally show ?thesis by auto
-      next 
-        case c2
-        then have "proj_addition ?g1 ?g2 = 
-                   gluing `` {(ext_add (x, y) ((r \<circ> i) (x, y)), l+l'+1)}"
-          using gluing_ext_add[of x y l
-                              "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1", 
-                           simplified prod.collapse, OF e_proj' c2]
-          by (simp add: add.assoc)
-        also have "... = ?g3"
-          using 2 by auto
-        finally show ?thesis by auto
-      qed
-      show ?thesis
-        unfolding eq 
+        using gluing_add[of x y l
+                            "fst ((r \<circ> i) (x, y))" "snd ((r \<circ> i) (x, y))" "l'+1", 
+                         simplified prod.collapse, OF e_proj'] True 
+        by (metis (no_types, lifting) is_num_normalize(1))
+      also have "... = gluing `` {(r (1, 0), l + l' + 1)}"
+        using 1 by presburger
+      finally have eq': "proj_addition ?g1 ?g2 = gluing `` {(r (1, 0), l + l' + 1)}"
+        by auto
+      show ?thesis 
         apply(subst eq')
-        apply(subst o_apply)
-        apply(subst insert_rho_gluing[of "fst (r (1,0))" "snd (r (1,0))" "l+l'+1",
-                              simplified prod.collapse])
-        using assms eq eq' p_q_expr well_defined r_expr(1) apply force
-        by auto        
+        apply(subst remove_rho[symmetric, of "fst (r (1,0))" "snd (r (1,0))",
+                       simplified prod.collapse])
+        using e_proj' eq' well_defined by force+
+    next
+      case False
+      then have us_ds: "delta' x y x (-y) \<noteq> 0" using ds ds'' by argo
+      then have 2: "ext_add (x, y) ((r \<circ> i) (x, y)) = r (1,0)"
+        using ext_add_comm_points ext_add_inverse r_expr(2) rotation_invariance_2_points zeros by auto
+      have "proj_addition ?g1 ?g2 = 
+                   gluing `` {(ext_add (x, y) ((r \<circ> i) (x, y)), l+l'+1)}"
+        using gluing_ext_add e_proj' False
+          by (metis (no_types, lifting) add.assoc ds'' prod.collapse)
+      also have "... = gluing `` {(r (1, 0), l + l' + 1)}"
+        using "2" by auto      
+      finally have eq': "proj_addition ?g1 ?g2 = gluing `` {(r (1, 0), l + l' + 1)}"
+        by auto
+      then show ?thesis
+        apply(subst eq')
+        apply(subst remove_rho[symmetric, of "fst (r (1,0))" "snd (r (1,0))",
+                       simplified prod.collapse])
+        using e_proj' eq' well_defined by force+
     qed
-
-    show ?thesis 
+    show ?thesis
       unfolding p_q_expr
-      unfolding remove_rho[OF e_proj(1),symmetric] 
-      unfolding r_expr simp1 simp2 by auto
-  next
-    case b
+      unfolding remove_rho[OF e_proj(1),symmetric] r_expr eq
+      unfolding simp1 simp2 by blast
+next
+  case b
     then have ds: "delta x y x' y' \<noteq> 0"
       unfolding e'_aff_0_def by auto
     have eq1: "proj_addition (tf \<rho> (gluing `` {((x, y), l)}))
@@ -4550,7 +4700,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
   define gxpoly where "gxpoly = g\<^sub>x * Delta\<^sub>x"
   define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
@@ -4708,7 +4858,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
   define gxpoly where "gxpoly = g\<^sub>x * Delta\<^sub>x"
   define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
@@ -4852,7 +5002,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -4977,7 +5127,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -5098,7 +5248,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -5214,7 +5364,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -5356,7 +5506,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -5488,7 +5638,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -5616,7 +5766,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd (add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -5758,7 +5908,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd (add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -5902,7 +6052,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd (add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -6038,7 +6188,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd (ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)" using assms(1,3) by simp
@@ -6159,7 +6309,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd (add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -6301,7 +6451,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_y x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta' x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd (add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -6434,7 +6584,7 @@ proof -
   define Delta\<^sub>y where "Delta\<^sub>y =
    (delta_plus x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
-  define g\<^sub>x :: real where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
 
   have x1'_expr: "x1' = (x1 * y1 - x2 * y2) / (x2 * y1 - x1 * y2)" using assms(1,3) by simp
@@ -6602,7 +6752,8 @@ lemma tau_tau_d':
   unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
   apply(simp)
   apply(simp add: t_expr)
-  by(simp split: if_splits add: divide_simps t_nz)
+  apply(simp split: if_splits add: divide_simps t_nz)
+  by algebra
 
 lemma zero_coord_expr:
   assumes "(x,y) \<in> e'_aff" "x = 0 \<or> y = 0"
@@ -6641,6 +6792,21 @@ lemma delta_add_delta'_1:
   apply(simp add: c_eq_1 algebra_simps)
   by algebra
 
+lemma delta'_add_delta_1: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
+  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
+  using pd' unfolding delta_def delta_minus_def delta_plus_def
+                      delta'_def delta_x_def delta_y_def 
+  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  using in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
+                            e'_aff_def e'_def
+  apply(simp split: if_splits add: divide_simps t_expr)
+  apply(simp add: c_eq_1 algebra_simps)
+  by algebra
+
 lemma delta_add_delta'_2: 
   assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
   assumes r_expr: "rx = fst (add (x1,y1) (x2,y2))" "ry = snd (add (x1,y1) (x2,y2))" 
@@ -6651,27 +6817,13 @@ lemma delta_add_delta'_2:
   using pd' unfolding delta_def delta_minus_def delta_plus_def
                       delta'_def delta_x_def delta_y_def 
   apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  using pd in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
+  using in_aff  unfolding r_expr delta_def delta_minus_def delta_plus_def
                             e'_aff_def e'_def
-  apply(simp add: divide_simps t_expr)
-  apply(simp add: c_eq_1 algebra_simps)
-  by algebra
+  apply simp
+  apply(simp split: if_splits add: divide_simps t_expr c_eq_1)
+ (* here algebra should work *)
+  sorry
 
-lemma delta'_add_delta_1: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd: "delta' x1 y1 x2 y2 \<noteq> 0" 
-  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
-  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
-  using pd' unfolding delta_def delta_minus_def delta_plus_def
-                      delta'_def delta_x_def delta_y_def 
-  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  using pd in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
-                            e'_aff_def e'_def
-  apply(simp split: if_splits add: divide_simps t_expr)
-  apply(simp add: c_eq_1 algebra_simps)
-  by algebra
 
 lemma delta'_add_delta_2: 
   assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
@@ -6687,7 +6839,9 @@ lemma delta'_add_delta_2:
                             e'_aff_def e'_def delta'_def delta_x_def delta_y_def
   apply(simp split: if_splits add: divide_simps t_expr)
   apply(simp add: c_eq_1 algebra_simps)
-  by algebra
+  sledgehammer
+(* here algebra should work *)
+  sorry
 
 lemma delta'_add_delta_not_add: 
   assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
@@ -6706,14 +6860,6 @@ lemma delta'_add_delta_not_add:
   apply(simp add: d_nz) 
   using d_nz 
   by (metis distrib_left mult_eq_0_iff)
-
-lemma move_tau_in_delta:
-  assumes  "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
-  shows "delta x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0"
-  using assms
-  unfolding delta_def delta_plus_def delta_minus_def
-  apply(simp add: t_nz power2_eq_square[symmetric] algebra_simps t_expr d_nz)
-  by (metis eq_divide_eq_1 power_divide)
 
 subsection \<open>Lemmas for associativity\<close>
 
@@ -6818,17 +6964,16 @@ proof -
       have pd: "delta x1 y1 x2 y2 \<noteq> 0"
         using b(1) unfolding e'_aff_0_def by simp
 
-      have ds: "delta x2 y2 x2 (-y2) \<noteq> 0 \<or>
-                delta' x2 y2 (x2) (-y2) \<noteq> 0 "
-        using delta_plus_self[of x2 y2] in_aff d_n1
+      have ds: "delta x2 y2 x2 (-y2) \<noteq> 0 \<or> delta' x2 y2 (x2) (-y2) \<noteq> 0 "
+        using in_aff d_n1 
         unfolding delta_def delta_plus_def delta_minus_def
                   delta'_def delta_x_def delta_y_def
                   e'_aff_def e'_def
-        apply(simp add: t_expr)
+        apply(simp add: t_expr two_not_zero)
         apply(safe)
         apply(simp_all add: algebra_simps) 
-        by algebra
-      
+        by(simp add: semiring_normalization_rules(18) semiring_normalization_rules(29) two_not_zero)+  
+
       have eq1: "proj_addition ?g1 ?g2 = gluing `` {(add (x1, y1) (x2, y2), 0)}" 
         (is "_ = ?g_add")
         using gluing_add[OF assms(1,2) pd] by force
@@ -6929,7 +7074,8 @@ proof -
         proof(cases "delta x2 y2 x2 (-y2) \<noteq> 0")
           case True
           have inv: "add (x2, y2) (i (x2, y2)) = (1,0)"
-            using inverse_generalized_points in_aff by blast
+            using inverse_generalized[OF in_aff(2)] True
+            unfolding delta_def delta_minus_def delta_plus_def by auto
           show ?thesis
             apply(subst add_add_add_add_assoc[OF in_aff(1,2), 
                  of "fst (i (x2,y2))" "snd (i (x2,y2))",
@@ -6966,7 +7112,8 @@ proof -
         proof(cases "delta x2 y2 x2 (-y2) \<noteq> 0")
           case True
           have inv: "add (x2, y2) (i (x2, y2)) = (1,0)"
-            using inverse_generalized_points in_aff by blast
+            using inverse_generalized[OF in_aff(2)] True
+            unfolding delta_def delta_minus_def delta_plus_def by auto
           show ?thesis
             apply(subst ext_add_add_add_assoc_points[OF in_aff(1,2), 
                  of "fst (i (x2,y2))" "snd (i (x2,y2))",
@@ -7003,14 +7150,15 @@ proof -
 
       have ds: "delta x2 y2 x2 (-y2) \<noteq> 0 \<or>
                 delta' x2 y2 (x2) (-y2) \<noteq> 0 "
-        using delta_plus_self[of x2 y2] in_aff d_n1
+        using in_aff d_n1
         unfolding delta_def delta_plus_def delta_minus_def
                   delta'_def delta_x_def delta_y_def
                   e'_aff_def e'_def
         apply(simp add: t_expr)
         apply(safe)
         apply(simp_all add: algebra_simps) 
-        by algebra
+        by(simp add: semiring_normalization_rules(18) semiring_normalization_rules(29) two_not_zero)+  
+
       
       have eq1: "proj_addition ?g1 ?g2 = gluing `` {(ext_add (x1, y1) (x2, y2), 0)}" 
         (is "_ = ?g_add")
@@ -7112,7 +7260,8 @@ proof -
         proof(cases "delta x2 y2 x2 (-y2) \<noteq> 0")
           case True
           have inv: "add (x2, y2) (i (x2, y2)) = (1,0)"
-            using inverse_generalized_points in_aff by blast
+            using inverse_generalized[OF in_aff(2)] True
+            unfolding delta_def delta_minus_def delta_plus_def by auto
           show ?thesis
             apply(subst add_ext_add_add_assoc_points[OF in_aff(1,2), 
                  of "fst (i (x2,y2))" "snd (i (x2,y2))",
@@ -7149,7 +7298,8 @@ proof -
         proof(cases "delta x2 y2 x2 (-y2) \<noteq> 0")
           case True
           have inv: "add (x2, y2) (i (x2, y2)) = (1,0)"
-            using inverse_generalized_points in_aff by blast
+            using inverse_generalized[OF in_aff(2)] True
+            unfolding delta_def delta_minus_def delta_plus_def by auto
           show ?thesis
             apply(subst ext_ext_add_add_assoc_points[OF in_aff(1,2), 
                  of "fst (i (x2,y2))" "snd (i (x2,y2))",
@@ -7558,7 +7708,7 @@ proof -
                 "delta' (fst (i (x2,y2))) (snd (i (x2,y2))) 
                         (fst (i (x3,y3))) (snd (i (x3,y3))) \<noteq> 0" 
         using 22 unfolding e'_aff_1_def apply simp
-        using 22 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by simp
+        using 22 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by force
 
   define add_2_3 where "add_2_3 = ext_add (x2,y2) (x3,y3)"
   have add_in: "add_2_3 \<in> e'_aff"
@@ -7998,7 +8148,7 @@ proof -
                         "delta' (fst (i (x2,y2))) (snd (i (x2,y2))) 
                                 (fst (i (x3,y3))) (snd (i (x3,y3))) \<noteq> 0" 
         using 33 unfolding e'_aff_1_def apply simp
-        using 33 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by simp
+        using 33 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by force
 
       define add_2_3 where "add_2_3 = ext_add (x2,y2) (x3,y3)"
       have add_in: "add_2_3 \<in> e'_aff"
@@ -8625,7 +8775,7 @@ proof -
                         "delta' (fst (i (x2,y2))) (snd (i (x2,y2))) 
                                 (fst (i (x3,y3))) (snd (i (x3,y3))) \<noteq> 0" 
         using 33 unfolding e'_aff_1_def apply simp
-        using 33 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by simp
+        using 33 unfolding e'_aff_1_def delta'_def delta_x_def delta_y_def by fastforce
 
       define add_2_3 where "add_2_3 = ext_add (x2,y2) (x3,y3)"
       have add_in: "add_2_3 \<in> e'_aff"
@@ -8954,11 +9104,12 @@ proof -
                      "proj_addition (gluing `` {((x1, y1), 0)}) (gluing `` {((x2, y2), 1)}) \<in> e_proj" 
                      "proj_addition (gluing `` {((x2, y2), 1)}) (gluing `` {((x3, y3), 0)}) \<in> e_proj"
                      "proj_addition (gluing `` {((x2, y2), 1)}) (gluing `` {((x3, y3), 1)}) \<in> e_proj" 
-    using e_proj_0 well_defined proj_addition_def by auto
+    using e_proj_0 well_defined proj_addition_def by blast+
+    
 
   have complex_e_proj: "?t1 \<in> e_proj"
                        "?t2 \<in> e_proj"
-    using e_proj_0 e_proj_add_0 well_defined proj_addition_def by presburger+
+    using e_proj_0 e_proj_add_0 well_defined proj_addition_def by blast+
 
   have eq3: "?t1 = ?t2"
     by(subst assoc_with_zeros,(simp add: e_proj_0)+)
@@ -9240,4 +9391,3 @@ end
 
 end
 
-end
