@@ -6829,7 +6829,8 @@ lemma not_add_self:
     apply(safe)
     by(simp_all add: algebra_simps t_nz power2_eq_square[symmetric] t_expr) 
 
-lemma s1: "((x1 * x2 - y1 * y2) * ((x1 * x2 - y1 * y2) * (x2 * (y2 * (1 + d * x1 * y1 * x2 * y2)))) +
+lemma funny_field_lemma_1: 
+  "((x1 * x2 - y1 * y2) * ((x1 * x2 - y1 * y2) * (x2 * (y2 * (1 + d * x1 * y1 * x2 * y2)))) +
      (x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * y2\<^sup>2) * (1 - d * x1 * y1 * x2 * y2)) *
     (1 + d * x1 * y1 * x2 * y2) \<noteq>
     ((x1 * y2 + y1 * x2) * ((x1 * y2 + y1 * x2) * (x2 * (y2 * (1 - d * x1 * y1 * x2 * y2)))) +
@@ -6858,10 +6859,10 @@ lemma delta_add_delta'_2:
   apply(simp add: c_eq_1 divide_simps)
   using in_aff unfolding e'_aff_def e'_def
   apply(simp add: t_expr)
-  apply safe  
-  using s1 by blast
+  apply safe   
+  using funny_field_lemma_1 by blast
 
-lemma s2: " (x2 * y2)\<^sup>2 * ((x2 * y1 - x1 * y2) * (x1 * x2 + y1 * y2))\<^sup>2 \<noteq> ((x1 * y1 - x2 * y2) * (x1 * y1 + x2 * y2))\<^sup>2 \<Longrightarrow>
+lemma funny_field_lemma_2: " (x2 * y2)\<^sup>2 * ((x2 * y1 - x1 * y2) * (x1 * x2 + y1 * y2))\<^sup>2 \<noteq> ((x1 * y1 - x2 * y2) * (x1 * y1 + x2 * y2))\<^sup>2 \<Longrightarrow>
     ((x1 * y1 - x2 * y2) * ((x1 * y1 - x2 * y2) * (x2 * (y2 * (x1 * x2 + y1 * y2)))) +
      (x1 * y1 - x2 * y2) * ((x1 * y1 + x2 * y2) * x2\<^sup>2) * (x2 * y1 - x1 * y2)) *
     (x1 * x2 + y1 * y2) =
@@ -6889,7 +6890,7 @@ lemma delta'_add_delta_2:
   using in_aff unfolding e'_aff_def e'_def
   apply(simp add: t_expr)
   apply safe  
-  using s2 by fast
+  using funny_field_lemma_2 by fast
 
 lemma delta'_add_delta_not_add: 
   assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
@@ -7108,13 +7109,6 @@ proof -
           case ccc 
           then have pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
             unfolding e'_aff_0_def e'_aff_1_def by auto
-          thm b aa ccc delta_add_delta'_2 add_self add_ext_add
-          thm wd_d_nz dichotomy_2
-          have "proj_addition (proj_addition ?g1 ?g2) ?g3 = 
-                proj_addition (gluing `` {(add (x1,y1) (x2,y2),0)}) ?g3"
-            apply(subst gluing_add)
-            using pd e_proj by force+
-          
           then have pd'': "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
             using 1 delta_add_delta'_2 in_aff pd r_expr by auto
           have "False"
