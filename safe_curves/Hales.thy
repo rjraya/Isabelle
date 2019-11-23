@@ -102,6 +102,9 @@ proof -
   ultimately have "prod = 0" using prod_eq_1 by simp
   then show "e x3 y3 = 0" using prod_eq_2 by simp
 qed
+
+thm divide_inverse
+find_theorems "_ / _ = 0"
                       
 lemma associativity: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
@@ -347,6 +350,7 @@ qed
 lemma group_law:
   assumes "\<exists> b. 1/c = b^2" "\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)"
   shows "comm_group \<lparr>carrier = {(x,y). e x y = 0}, mult = add, one = (1,0)\<rparr>" 
+
 proof(unfold_locales)
   {fix x1 y1 x2 y2
   assume "e x1 y1 = 0" "e x2 y2 = 0"
@@ -1102,13 +1106,10 @@ lemma add_closure_points:
   using add_closure assms e_e'_iff
   unfolding delta_def e'_aff_def by auto
 
-end
+
 
 section \<open>Projective Edwards curves\<close>
 
-locale projective_curve =
- ext_curve_addition
-begin
   
 subsection \<open>No fixed-point lemma and dichotomies\<close>
 
@@ -7438,7 +7439,7 @@ proof -
           using remove_rotations one_in rot_expr' by simp
         also have "... = tf r (tf r' (proj_addition (gluing `` {((x1, y1), 0)}) ((gluing `` {(i (1, 0), 0)}))))"
           using proj_add_class_inv assms 
-          by (metis i.simps one_in proj_addition_comm projective_curve.remove_add_rotation projective_curve_axioms rot_expr'(1) rotation_preserv_e_proj)
+          by (metis i.simps one_in proj_addition_comm remove_add_rotation rot_expr'(1) rotation_preserv_e_proj)
         also have "... = tf (id) (proj_addition (gluing `` {((x1, y1), 0)}) ((gluing `` {((1, 0), 0)})))"
           using tf_comp rot_expr'  by force
         also have "... = (gluing `` {((x1, y1), 0)})"
