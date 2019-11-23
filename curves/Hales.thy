@@ -347,6 +347,7 @@ qed
 lemma group_law:
   assumes "\<exists> b. 1/c = b^2" "\<not> (\<exists> b. b \<noteq> 0 \<and> 1/d = b^2)"
   shows "comm_group \<lparr>carrier = {(x,y). e x y = 0}, mult = add, one = (1,0)\<rparr>" 
+ (is "comm_group ?g")
 proof(unfold_locales)
   {fix x1 y1 x2 y2
   assume "e x1 y1 = 0" "e x2 y2 = 0"
@@ -355,10 +356,8 @@ proof(unfold_locales)
     using add_closure delta_non_zero[OF \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close> assms(1) assms(2)] 
           delta_def \<open>e x1 y1 = 0\<close> \<open>e x2 y2 = 0\<close> by auto}
   then show "
-      \<And>x y. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-             y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-           x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> y
-           \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>" by auto
+      \<And>x y. x \<in> carrier ?g \<Longrightarrow> y \<in> carrier ?g \<Longrightarrow>
+           x \<otimes>\<^bsub>?g\<^esub> y \<in> carrier ?g" by auto
 next
   {fix x1 y1 x2 y2 x3 y3 
    assume "e x1 y1 = 0" "e x2 y2 = 0" "e x3 y3 = 0" 
@@ -383,40 +382,22 @@ next
 
   then show "
     \<And>x y z.
-       x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-       y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-       z \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-       x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-       y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-       z =
-       x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-      (y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-       z)" by auto
+       x \<in> carrier ?g \<Longrightarrow> y \<in> carrier ?g \<Longrightarrow> z \<in> carrier ?g \<Longrightarrow>
+       x \<otimes>\<^bsub>?g\<^esub> y \<otimes>\<^bsub>?g\<^esub> z = x \<otimes>\<^bsub>?g\<^esub> (y \<otimes>\<^bsub>?g\<^esub> z)" by auto
 next
-  show "
-   \<one>\<^bsub>\<lparr>carrier = {(x, y). e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-    \<in> carrier \<lparr>carrier = {(x, y). e x y = 0}, mult = local.add, one = (1, 0)\<rparr>"
-    by (simp add: e_def)
+  show "\<one>\<^bsub>?g\<^esub> \<in> carrier ?g" by (simp add: e_def)
 next
-  show "
-   \<And>x. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-        \<one>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> x = x"
+  show "\<And>x. x \<in> carrier ?g \<Longrightarrow> \<one>\<^bsub>?g\<^esub> \<otimes>\<^bsub>?g\<^esub> x = x"
     by (simp add: commutativity neutral)
 next
-  show "\<And>x. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-             x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub>
-         \<one>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> = x"
+  show "\<And>x. x \<in> carrier ?g \<Longrightarrow> x \<otimes>\<^bsub>?g\<^esub> \<one>\<^bsub>?g\<^esub> = x"
     by (simp add: neutral)
 next
-  show "\<And>x y. x \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-              y \<in> carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr> \<Longrightarrow>
-           x \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> y =
-           y \<otimes>\<^bsub>\<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>\<^esub> x"
+  show "\<And>x y. x \<in> carrier ?g \<Longrightarrow> y \<in> carrier ?g \<Longrightarrow>
+           x \<otimes>\<^bsub>?g\<^esub> y = y \<otimes>\<^bsub>?g\<^esub> x"
     using commutativity by auto
 next
-  show "
-   carrier \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>
-   \<subseteq> Units \<lparr>carrier = {(x, y). local.e x y = 0}, mult = local.add, one = (1, 0)\<rparr>"
+  show "carrier ?g \<subseteq> Units ?g"
   proof(simp,standard)
     fix z
     assume "z \<in> {(x, y). local.e x y = 0}"
