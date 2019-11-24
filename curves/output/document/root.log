@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.13)  24 NOV 2019 00:29
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.13)  24 NOV 2019 16:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -177,7 +177,7 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip44
 )
-(./root.aux)
+No file root.aux.
 \openout1 = `root.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 36.
@@ -194,7 +194,7 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 36.
 LaTeX Font Info:    ... okay on input line 36.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 36.
 LaTeX Font Info:    ... okay on input line 36.
- (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+(/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count98
 \scratchdimen=\dimen112
@@ -221,8 +221,6 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 36.
 LaTeX Info: Redefining \pageref on input line 36.
 LaTeX Info: Redefining \nameref on input line 36.
-
-(./root.out) (./root.out)
 \@outlinefile=\write4
 \openout4 = `root.out'.
 
@@ -232,70 +230,95 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 41.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 41.
- (./root.toc
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 3.
-)
 \tf@toc=\write5
 \openout5 = `root.toc'.
 
- (./session.tex (./Hales.tex
+
+(./session.tex (./Hales.tex
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 12.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 12.
  [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 237--239
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
+./Hales.tex:243: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.243 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
+./Hales.tex:262: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.262 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 258--260
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
+./Hales.tex:275: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.275 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
+[3]
+./Hales.tex:315: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.315 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 313--315
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
+./Hales.tex:330: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.330 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:343: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.343 ...nderscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
 [4]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 330--332
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[5]
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 481.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 473.
 
  (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/bx/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/b/n' tried instead on input line 481.
- [6]
-Overfull \hbox (49.17534pt too wide) in paragraph at lines 575--577
+(Font)              Font shape `OMS/cmsy/b/n' tried instead on input line 473.
+ [5]
+Overfull \hbox (49.17534pt too wide) in paragraph at lines 567--569
 [][]   \OT1/cmr/bx/n/10 by $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis []1 $\OML/
 cmm/m/it/10 =$ $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 c $\OMS/cmsy/m/n/10 ^^C$ \OT
 1/cmr/m/it/10 d$\OT1/cmr/m/n/10 )$ $=$ \OT1/cmr/m/it/10 b$[][]$ $\OMS/cmsy/m/n/
@@ -305,8 +328,19 @@ n/10 6\OT1/cmr/m/n/10 =$ \OT1/cmr/m/it/10 0[] eq[]divide[]eq semiring[]normaliz
 ation[]rules$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 18$\OT1/cmr/m/n/10 )$$)$[] 
  []
 
-[7] [8] [9] [10] [11] [12] [13]
-Overfull \hbox (5.00241pt too wide) in paragraph at lines 1873--1875
+[6] [7] [8]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 1041.
+ [9] [10] [11] [12]
+Overfull \hbox (5.00241pt too wide) in paragraph at lines 1865--1867
+[][]      \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT
+1/cmr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 
+hide[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 comp[]id fun$\OML/cmm/m/it/10 :$
+\OT1/cmr/m/it/10 map[]comp rho[]order[]4 tau[]idemp
+ []
+
+[13]
+Overfull \hbox (5.00241pt too wide) in paragraph at lines 1886--1888
 [][]      \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT
 1/cmr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 
 hide[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 comp[]id fun$\OML/cmm/m/it/10 :$
@@ -314,45 +348,82 @@ hide[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 comp[]id fun$\OML/cmm/m/it/10 :$
  []
 
 
-Overfull \hbox (5.00241pt too wide) in paragraph at lines 1894--1896
+Overfull \hbox (5.00241pt too wide) in paragraph at lines 1907--1909
 [][]      \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT
 1/cmr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 
 hide[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 comp[]id fun$\OML/cmm/m/it/10 :$
 \OT1/cmr/m/it/10 map[]comp rho[]order[]4 tau[]idemp
  []
 
-[14]
-Overfull \hbox (5.00241pt too wide) in paragraph at lines 1915--1917
-[][]      \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT
-1/cmr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 
-hide[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 comp[]id fun$\OML/cmm/m/it/10 :$
-\OT1/cmr/m/it/10 map[]comp rho[]order[]4 tau[]idemp
- []
-
-[15] [16] [17]
-Overfull \hbox (18.16457pt too wide) in paragraph at lines 2563--2565
+[14] [15] [16] [17]
+Overfull \hbox (18.16457pt too wide) in paragraph at lines 2555--2557
 [][]  \OT1/cmr/bx/n/10 ap-ply $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp add$\OT1
 /cmr/m/n/10 :$ \OT1/cmr/m/it/10 semiring[]normalization[]rules$\OT1/cmr/m/n/10 
 ($\OT1/cmr/m/it/10 18$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 semiring[]normalizati
 on[]rules$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 29$\OT1/cmr/m/n/10 )$
  []
 
-[18] [19] [20] [21] [22] [23]
-Overfull \hbox (20.24413pt too wide) in paragraph at lines 3236--3238
+./Hales.tex:2659: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.2659 ...derscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:2661: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.2661 ...derscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+[18]
+./Hales.tex:2694: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.2694 ...derscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:2696: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.2696 ...derscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+[19] [20] [21]
+Overfull \hbox (20.24413pt too wide) in paragraph at lines 3185--3187
 [][]          \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp add$\
 OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 divide[]simps a0[]nz a1[]nz eq1 eq2 power2[]
 eq[]square right[]diff[]distrib$ [] $$\OT1/cmr/m/n/10 )$[] 
  []
 
-[24] [25] [26] [27] [28]
-Overfull \hbox (30.41273pt too wide) in paragraph at lines 3857--3866
+[22] [23] [24] [25] [26] [27]
+Overfull \hbox (30.41273pt too wide) in paragraph at lines 3806--3815
 [][]  \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 assms \OT1/cmr/bx/n/10 un-fold-i
 ng \OT1/cmr/m/it/10 symmetries[]def e[]circ[]def delta[]def delta[]minus[]def d
 elta[]plus[]def[] 
  []
 
-[29] [30] [31] [32] [33] [34] [35] [36]
-Overfull \hbox (22.35667pt too wide) in paragraph at lines 5007--5012
+[28] [29] [30] [31] [32] [33] [34] [35]
+Overfull \hbox (22.35667pt too wide) in paragraph at lines 4960--4965
 [][]    \OT1/cmr/bx/n/10 case \OT1/cmr/m/it/10 2 \OT1/cmr/bx/n/10 then show \OT
 1/cmr/m/it/10 ?the-sis \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 s
 imp add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 ext[]add[]comm delta$ [] $[]com del
@@ -360,30 +431,30 @@ $\OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 ext[]add$\OML/cmm/m/it/10 :$\OT1/cmr/m/it/
 10 simps$\OT1/cmr/m/n/10 )$
  []
 
-[37] [38] [39] [40]
-Overfull \hbox (33.75014pt too wide) in paragraph at lines 5499--5502
+[36] [37] [38] [39]
+Overfull \hbox (33.75014pt too wide) in paragraph at lines 5456--5459
 [][]    \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 assms$\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 1$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 e$ [] $[]aff[]bit[]def e[]proj
 []def eq[]rel gluing[]cases[]explicit in[]quotient[]imp[]subset
  []
 
 
-Overfull \hbox (33.75014pt too wide) in paragraph at lines 5502--5505
+Overfull \hbox (33.75014pt too wide) in paragraph at lines 5459--5462
 [][]    \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 assms$\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 2$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 e$ [] $[]aff[]bit[]def e[]proj
 []def eq[]rel gluing[]cases[]explicit in[]quotient[]imp[]subset
  []
 
-[41] [42] [43] [44] [45] [46] [47] [48] [49] [50] [51] [52] [53]
-Overfull \hbox (9.82411pt too wide) in paragraph at lines 6792--6794
+[40] [41] [42] [43] [44] [45] [46] [47] [48] [49] [50] [51]
+Overfull \hbox (9.82411pt too wide) in paragraph at lines 6749--6751
 [][]        \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp[]all ad
 d$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 t[]nz nz divide[]simps algebra[]simps pow
 er2[]eq[]square$\OT1/cmr/m/n/10 [$\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
 
  []
 
-[54] [55] [56] [57] [58]
-Overfull \hbox (4.11104pt too wide) in paragraph at lines 7378--7379
+[52] [53] [54] [55] [56] [57]
+Overfull \hbox (4.11104pt too wide) in paragraph at lines 7335--7336
 [][] \OT1/cmr/bx/n/10 as-sumes \OT1/cmr/m/it/10 glu-ing `` $\OMS/cmsy/m/n/10 f$
 $\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 x$\OML/cmm/m/it/10 ;$\OT1/cmr/m/it/10 y$
 \OT1/cmr/m/n/10 )$$\OML/cmm/m/it/10 ;$\OT1/cmr/m/it/10 l$\OT1/cmr/m/n/10 )$$\OM
@@ -399,25 +470,25 @@ cmsy/m/n/10 g$ \OT1/cmr/m/it/10 glu-ing `` $\OMS/cmsy/m/n/10 f$$\OT1/cmr/m/n/10
 OMS/cmsy/m/n/10 g$
  []
 
-[59] [60] [61] [62]
-Overfull \hbox (23.53511pt too wide) in paragraph at lines 7727--7729
+[58] [59] [60] [61]
+Overfull \hbox (23.53511pt too wide) in paragraph at lines 7684--7686
 [][]        \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp add$\OT
 1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 divide[]simps t[]nz nz algebra[]simps t[]expr 
 power2[]eq[]square$\OT1/cmr/m/n/10 [$\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10
  ]$
  []
 
-[63] [64] [65]
-Overfull \hbox (9.82411pt too wide) in paragraph at lines 8005--8007
+[62] [63] [64]
+Overfull \hbox (9.82411pt too wide) in paragraph at lines 7962--7964
 [][]        \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp[]all ad
 d$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 t[]nz nz divide[]simps algebra[]simps pow
 er2[]eq[]square$\OT1/cmr/m/n/10 [$\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
 
  []
 
-[66] [67] [68] [69] [70] [71] [72] [73] [74] [75] [76] [77] [78] [79] [80]
-[81] [82] [83]
-Overfull \hbox (16.64957pt too wide) in paragraph at lines 10033--10035
+[65] [66] [67] [68] [69] [70] [71] [72] [73] [74] [75] [76] [77] [78] [79]
+[80] [81]
+Overfull \hbox (16.64957pt too wide) in paragraph at lines 9990--9992
 [][]      \OT1/cmr/bx/n/10 by $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT1/c
 mr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 hid
 e[]lams$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 add$\OML/cmm/m/it/10 :$\OT1/cmr/m/i
@@ -425,33 +496,23 @@ t/10 inverse[]inverse delta$ [] $[]com diff[]0 minus[]diff[]eq$\OT1/cmr/m/n/10
 )$[] 
  []
 
-[84] [85]
-Overfull \hbox (15.5767pt too wide) in paragraph at lines 10342--10345
+[82] [83] [84]
+Overfull \hbox (15.5767pt too wide) in paragraph at lines 10299--10302
 [][]        \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 ext[]add[]comm[]points ext
 []add[]inverse r[]expr$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 2$\OT1/cmr/m/n/10 )$ 
 \OT1/cmr/m/it/10 rotation[]invariance[]2[]points
  []
 
-[86] [87] [88] [89] [90] [91] [92] [93]
-Overfull \hbox (6.53586pt too wide) in paragraph at lines 11135--11137
+[85] [86] [87] [88] [89] [90] [91]
+Overfull \hbox (6.53586pt too wide) in paragraph at lines 11092--11094
 [][]  \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 rotation[]preserv[]e[]proj$\OT1/
 cmr/m/n/10 [$\OT1/cmr/m/it/10 OF assms$\OT1/cmr/m/n/10 ]$ \OT1/cmr/m/it/10 tf[]
 preserv[]e[]proj insert[]rotation[]gluing$\OT1/cmr/m/n/10 [$\OT1/cmr/m/it/10 OF
 
  []
 
-[94] [95]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11389--11391
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[96]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11409--11411
+[92] [93] [94]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11346--11348
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -461,7 +522,7 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11471--11473
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11366--11368
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -470,8 +531,8 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[97]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11490--11492
+[95]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11428--11430
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -479,29 +540,76 @@ cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
 mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11447--11449
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[96] [97]
+./Hales.tex:11605: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.11605 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:11625: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.11625 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:11639: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.11639 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
 [98]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11642--11644
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
+./Hales.tex:11678: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.11678 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./Hales.tex:11688: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.11688 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
 [99]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11667--11669
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11729--11731
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11803--11805
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -511,27 +619,7 @@ m/n/10 )$$+$$)$[]
  []
 
 [100]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11757--11759
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[101]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11898--11900
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[102]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11922--11924
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11827--11829
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -541,13 +629,13 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 11953--11955
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 11858--11860
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 11978--11980
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11883--11885
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -557,7 +645,7 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12001--12003
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 11906--11908
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -566,8 +654,8 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[103] [104]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12135--12137
+[101] [102]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12040--12042
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -577,23 +665,84 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12153--12155
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12058--12060
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
 cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
 mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
+ []
+
+[103]
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 12085--12087
+[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
+ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12110--12112
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12127--12129
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[104]
+Overfull \hbox (0.796pt too wide) in paragraph at lines 12227--12228
+[][]  \OT1/cmr/bx/n/10 as-sumes $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 x1$ [] $$\O
+ML/cmm/m/it/10 ;$\OT1/cmr/m/it/10 y1$ [] $$\OT1/cmr/m/n/10 )$ $=$ \OT1/cmr/m/it
+/10 ext[]add $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 x1$\OML/cmm/m/it/10 ;$\OT1/cmr
+/m/it/10 y1$\OT1/cmr/m/n/10 )$ $($\OT1/cmr/m/it/10 x2$\OML/cmm/m/it/10 ;$\OT1/c
+mr/m/it/10 y2$\OT1/cmr/m/n/10 )$ $($\OT1/cmr/m/it/10 x3$ [] $$\OML/cmm/m/it/10 
+;$\OT1/cmr/m/it/10 y3$ [] $$\OT1/cmr/m/n/10 )$ $=$ \OT1/cmr/m/it/10 ext[]add $\
+OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 x2$\OML/cmm/m/it/10 ;$\OT1/cmr/m/it/10 y2$\OT
+1/cmr/m/n/10 )$ $($\OT1/cmr/m/it/10 x3$\OML/cmm/m/it/10 ;$\OT1/cmr/m/it/10 y3$\
+OT1/cmr/m/n/10 )$[] 
  []
 
 [105]
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 12180--12182
+./Hales.tex:12302: Undefined control sequence.
+<argument> \normalfont \rmfamily \wasylozenge 
+                                              
+l.12302 ...erscore}\ {\isacharslash}\ {\isasymhole
+                                                  }{\isachardoublequoteclose...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12314--12316
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[106]
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 12343--12345
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12205--12207
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12370--12372
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -603,7 +752,7 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12222--12224
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12390--12392
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -612,18 +761,8 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[106] [107]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12384--12386
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12404--12406
+[107] [108]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12524--12526
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -633,43 +772,23 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 12433--12435
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12549--12551
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 12580--12582
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
- []
-
-[108]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12459--12461
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12479--12481
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
  []
 
 [109]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12612--12614
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[110]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12637--12639
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12608--12610
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -679,33 +798,43 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 12668--12670
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12632--12634
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[110] [111]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12801--12803
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12821--12823
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 12850--12852
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12696--12698
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[111]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12720--12722
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[112] [113]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12889--12891
+[112]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12877--12879
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -715,7 +844,17 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12909--12911
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 12896--12898
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[113] [114]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13062--13064
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -725,33 +864,33 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 12938--12940
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13086--13088
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 13119--13121
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12965--12967
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[114]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 12984--12986
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
  []
 
 [115]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13150--13152
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13146--13148
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13170--13172
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -761,23 +900,7 @@ m/n/10 )$$+$$)$[]
  []
 
 [116]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13174--13176
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 13207--13209
-[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
-ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13234--13236
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13309--13311
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -787,7 +910,23 @@ m/n/10 )$$+$$)$[]
  []
 
 [117]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13258--13260
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13334--13336
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 13365--13367
+[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
+ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13392--13394
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -797,7 +936,7 @@ m/n/10 )$$+$$)$[]
  []
 
 [118]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13397--13399
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13415--13417
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -806,8 +945,8 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[119]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13422--13424
+[119] [120]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13585--13587
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -817,43 +956,23 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 13453--13455
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13609--13611
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 13642--13644
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13480--13482
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[120]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13503--13505
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
  []
 
 [121]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13673--13675
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[122]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13697--13699
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13670--13672
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -863,33 +982,43 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 13730--13732
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13693--13695
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[122] [123]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13867--13869
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13887--13889
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 13916--13918
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13758--13760
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[123]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13781--13783
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[124] [125]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13955--13957
+[124]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13944--13946
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -899,7 +1028,17 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 13975--13977
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 13964--13966
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[125] [126]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14133--14135
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -909,13 +1048,23 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 14004--14006
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14153--14155
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 14180--14182
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
-[126]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14032--14034
+[127]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14208--14210
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -925,7 +1074,7 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14052--14054
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14228--14230
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -934,34 +1083,18 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[127] [128]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14221--14223
+[128]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14360--14362
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
 cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
 mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14241--14243
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 14268--14270
-[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
-ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
 [129]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14296--14298
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14384--14386
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -971,7 +1104,13 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14316--14318
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 14417--14419
+[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
+ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14445--14447
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -981,7 +1120,7 @@ m/n/10 )$$+$$)$[]
  []
 
 [130]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14448--14450
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14468--14470
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -990,8 +1129,8 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
-[131]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14472--14474
+[131] [132]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14641--14643
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -1001,43 +1140,23 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 14505--14507
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14660--14662
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 14689--14691
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
- []
-
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14533--14535
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[132]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14556--14558
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
  []
 
 [133]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14729--14731
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[134]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14748--14750
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14717--14719
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -1047,33 +1166,43 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 14777--14779
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14735--14737
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+[134] [135]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14903--14905
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14927--14929
+[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
+ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
+mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
+cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
+mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
+m/n/10 )$$+$$)$[] 
+ []
+
+
+Overfull \hbox (5.66756pt too wide) in paragraph at lines 14960--14962
 [][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
 ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
  []
 
-
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14805--14807
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[135]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14823--14825
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
- []
-
-[136] [137]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 14991--14993
+[136]
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 14987--14989
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -1083,7 +1212,7 @@ m/n/10 )$$+$$)$[]
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 15015--15017
+Overfull \hbox (3.95125pt too wide) in paragraph at lines 15011--15013
 [][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
  [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
 mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
@@ -1092,69 +1221,43 @@ mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
 m/n/10 )$$+$$)$[] 
  []
 
+[137]
+Overfull \hbox (21.6869pt too wide) in paragraph at lines 15107--15109
+[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
+def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
+f
+ []
 
-Overfull \hbox (5.66756pt too wide) in paragraph at lines 15048--15050
-[][]    \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 delta[]x[]def delta[]y[]d
-ef delta$ [] $[]def delta[]plus[]def delta[]minus[]def delta[]def[] 
+
+Overfull \hbox (21.6869pt too wide) in paragraph at lines 15140--15142
+[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
+def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
+f
+ []
+
+
+Overfull \hbox (21.6869pt too wide) in paragraph at lines 15175--15177
+[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
+def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
+f
  []
 
 [138]
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 15075--15077
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
+Overfull \hbox (21.6869pt too wide) in paragraph at lines 15208--15210
+[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
+def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
+f
  []
 
 
-Overfull \hbox (3.95125pt too wide) in paragraph at lines 15099--15101
-[][]    \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 subst x1$
- [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$ $\OT1/cmr/m/n/10 ($\OT1/c
-mr/m/it/10 subst y1$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/cmm/m/it/10 ;$$\OT1/
-cmr/m/n/10 ($\OT1/cmr/m/it/10 subst x3$ [] $[]expr$\OT1/cmr/m/n/10 )$$+$$\OML/c
-mm/m/it/10 ;$$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 subst y3$ [] $[]expr$\OT1/cmr/
-m/n/10 )$$+$$)$[] 
+Overfull \hbox (21.6869pt too wide) in paragraph at lines 15243--15245
+[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
+def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
+f
  []
 
 [139]
-Overfull \hbox (21.6869pt too wide) in paragraph at lines 15195--15197
-[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
-def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
-f
- []
-
-
-Overfull \hbox (21.6869pt too wide) in paragraph at lines 15228--15230
-[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
-def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
-f
- []
-
-
-Overfull \hbox (21.6869pt too wide) in paragraph at lines 15263--15265
-[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
-def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
-f
- []
-
-[140]
-Overfull \hbox (21.6869pt too wide) in paragraph at lines 15296--15298
-[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
-def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
-f
- []
-
-
-Overfull \hbox (21.6869pt too wide) in paragraph at lines 15331--15333
-[][]  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]
-def delta[]def delta[]plus[]def delta[]minus[]def delta$ [] $[]def delta[]y[]de
-f
- []
-
-[141]
-Overfull \hbox (49.99887pt too wide) in paragraph at lines 15434--15436
+Overfull \hbox (49.99887pt too wide) in paragraph at lines 15346--15348
 [][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
 1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
 t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
@@ -1162,7 +1265,7 @@ t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
  []
 
 
-Overfull \hbox (49.99887pt too wide) in paragraph at lines 15471--15473
+Overfull \hbox (49.99887pt too wide) in paragraph at lines 15383--15385
 [][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
 1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
 t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
@@ -1170,39 +1273,39 @@ t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
  []
 
 
-Overfull \hbox (5.22716pt too wide) in paragraph at lines 15513--15520
+Overfull \hbox (5.22716pt too wide) in paragraph at lines 15425--15432
 [][]    \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp add$\OT1/cm
 r/m/n/10 :$ \OT1/cmr/m/it/10 semiring[]normalization[]rules$\OT1/cmr/m/n/10 ($\
 OT1/cmr/m/it/10 18$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 semiring[]normalization[
 ]rules$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 29$\OT1/cmr/m/n/10 )$
  []
 
+[140]
+Overfull \hbox (49.99887pt too wide) in paragraph at lines 15513--15515
+[][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
+1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
+t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
+\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
+ []
+
+[141]
+Overfull \hbox (49.99887pt too wide) in paragraph at lines 15586--15588
+[][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
+1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
+t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
+\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
+ []
+
 [142]
-Overfull \hbox (49.99887pt too wide) in paragraph at lines 15601--15603
-[][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
-1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
-t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
-\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
- []
-
-[143]
-Overfull \hbox (49.99887pt too wide) in paragraph at lines 15674--15676
-[][]  \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp split$\OT
-1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/i
-t/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n/10 [$
-\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
- []
-
-
-Overfull \hbox (66.86543pt too wide) in paragraph at lines 15727--15729
+Overfull \hbox (66.86543pt too wide) in paragraph at lines 15639--15641
 [][]   \OT1/cmr/bx/n/10 ap-ply$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp[]all spl
 it$\OT1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 if[]splits add$\OT1/cmr/m/n/10 :$ \OT1/c
 mr/m/it/10 divide[]simps t[]nz 1 algebra[]simps power2[]eq[]square$\OT1/cmr/m/n
 /10 [$\OT1/cmr/m/it/10 symmetric$\OT1/cmr/m/n/10 ]$
  []
 
-[144]
-Overfull \hbox (18.19121pt too wide) in paragraph at lines 15763--15764
+
+Overfull \hbox (18.19121pt too wide) in paragraph at lines 15675--15676
 [][]  \OT1/cmr/bx/n/10 shows \OT1/cmr/m/it/10 proj[]addition $\OT1/cmr/m/n/10 (
 $\OT1/cmr/m/it/10 proj[]addition $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 gluing `` 
 $\OMS/cmsy/m/n/10 f$$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 x1$\OML/cmm/m/it/10 
@@ -1213,24 +1316,24 @@ luing `` $\OMS/cmsy/m/n/10 f$$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 x2$\OML/cmm
 /it/10 0$\OT1/cmr/m/n/10 )$$\OMS/cmsy/m/n/10 g$$\OT1/cmr/m/n/10 )$$)$
  []
 
-[145] [146]
-Overfull \hbox (15.44933pt too wide) in paragraph at lines 15989--15991
+[143] [144]
+Overfull \hbox (15.44933pt too wide) in paragraph at lines 15901--15903
 [][]        \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 simp add$\OT
 1/cmr/m/n/10 :$ \OT1/cmr/m/it/10 semiring[]normalization[]rules$\OT1/cmr/m/n/10
  ($\OT1/cmr/m/it/10 18$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 semiring[]normalizat
 ion[]rules$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 29$\OT1/cmr/m/n/10 )$
  []
 
-[147] [148] [149] [150] [151] [152] [153] [154] [155]
-Overfull \hbox (4.61952pt too wide) in paragraph at lines 16951--16953
+[145] [146] [147] [148] [149] [150] [151] [152] [153]
+Overfull \hbox (4.61952pt too wide) in paragraph at lines 16863--16865
 [][]          \OT1/cmr/bx/n/10 by $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis i$\
 OML/cmm/m/it/10 :$\OT1/cmr/m/it/10 simps one[]in proj[]addition[]comm remove[]a
 dd[]rotation rot[]expr$ [] $$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 1$\OT1/cmr/m/n/
 10 )$
  []
 
-[156] [157] [158] [159] [160] [161]
-Overfull \hbox (2.82072pt too wide) in paragraph at lines 17504--17507
+[154] [155] [156] [157] [158] [159]
+Overfull \hbox (2.82072pt too wide) in paragraph at lines 17416--17419
 [][]  \OT1/cmr/bx/n/10 also have $\OML/cmm/m/it/10 :$$:$$:$ $\OT1/cmr/m/n/10 =$
  \OT1/cmr/m/it/10 proj[]addition $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 gluing `` 
 $\OMS/cmsy/m/n/10 f$$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 g $\OMS/cmsy/m/n/10 
@@ -1241,7 +1344,7 @@ OT1/cmr/m/it/10 add[]2[]3$\OML/cmm/m/it/10 ;$
  []
 
 
-Overfull \hbox (3.79938pt too wide) in paragraph at lines 17582--17584
+Overfull \hbox (3.79938pt too wide) in paragraph at lines 17494--17496
 [][]      \OT1/cmr/bx/n/10 by $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 metis $\OT1/c
 mr/m/n/10 ($\OT1/cmr/m/it/10 no[]types$\OML/cmm/m/it/10 ;$ \OT1/cmr/m/it/10 lif
 t-ing$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 assms$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it
@@ -1250,8 +1353,8 @@ mr/m/n/10 ($\OT1/cmr/m/it/10 2$\OT1/cmr/m/n/10 )$ \OT1/cmr/m/it/10 e[]proj[]0$\
 OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 3$\OT1/cmr/m/n/10 )$
  []
 
-[162] [163]
-Overfull \hbox (2.82072pt too wide) in paragraph at lines 17729--17732
+[160] [161]
+Overfull \hbox (2.82072pt too wide) in paragraph at lines 17641--17644
 [][]  \OT1/cmr/bx/n/10 also have $\OML/cmm/m/it/10 :$$:$$:$ $\OT1/cmr/m/n/10 =$
  \OT1/cmr/m/it/10 proj[]addition $\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 gluing `` 
 $\OMS/cmsy/m/n/10 f$$\OT1/cmr/m/n/10 ($$($\OT1/cmr/m/it/10 g $\OMS/cmsy/m/n/10 
@@ -1261,55 +1364,62 @@ m/it/10 ;$ \OT1/cmr/m/it/10 0$\OT1/cmr/m/n/10 )$$\OMS/cmsy/m/n/10 g$$\OT1/cmr/m
 OT1/cmr/m/it/10 add[]2[]3$\OML/cmm/m/it/10 ;$
  []
 
-[164] [165] [166]
-Overfull \hbox (9.60477pt too wide) in paragraph at lines 18016--18020
+[162] [163] [164]
+Overfull \hbox (9.60477pt too wide) in paragraph at lines 17928--17932
 [][]        \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 in[]aff e[]e$ [] $[]iff 22
  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]aff[]
 0[]def delta[]def \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 fastfo
 rce$\OT1/cmr/m/n/10 )$$+$[] 
  []
 
-[167] [168] [169] [170] [171] [172]
-Overfull \hbox (13.17746pt too wide) in paragraph at lines 18676--18680
+[165] [166] [167] [168] [169] [170]
+Overfull \hbox (13.17746pt too wide) in paragraph at lines 18588--18592
 [][]        \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 in[]aff e[]e$ [] $[]iff 33
  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]aff[]
 1[]def delta$ [] $[]def \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 
 fastforce$\OT1/cmr/m/n/10 )$$+$[] 
  []
 
-[173] [174] [175] [176] [177] [178] [179] [180]
-Overfull \hbox (9.60477pt too wide) in paragraph at lines 19431--19435
+[171] [172] [173] [174] [175] [176] [177] [178]
+Overfull \hbox (9.60477pt too wide) in paragraph at lines 19343--19347
 [][]        \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 in[]aff e[]e$ [] $[]iff 22
  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]aff[]
 0[]def delta[]def \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 fastfo
 rce$\OT1/cmr/m/n/10 )$$+$[] 
  []
 
-[181] [182] [183] [184] [185] [186]
-Overfull \hbox (13.17746pt too wide) in paragraph at lines 20089--20093
+[179] [180] [181] [182] [183] [184]
+Overfull \hbox (13.17746pt too wide) in paragraph at lines 20001--20005
 [][]        \OT1/cmr/bx/n/10 us-ing \OT1/cmr/m/it/10 in[]aff e[]e$ [] $[]iff 33
  \OT1/cmr/bx/n/10 un-fold-ing \OT1/cmr/m/it/10 e$ [] $[]aff[]def e$ [] $[]aff[]
 1[]def delta$ [] $[]def \OT1/cmr/bx/n/10 by$\OT1/cmr/m/n/10 ($\OT1/cmr/m/it/10 
 fastforce$\OT1/cmr/m/n/10 )$$+$[] 
  []
 
-[187] [188] [189] [190] [191] [192] [193] [194] [195] [196] [197] [198]
-[199] [200]))
+[185] [186] [187] [188] [189] [190] [191] [192] [193] [194] [195] [196]
+[197] [198]))
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 54.
- [201]
+ [199]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 54.
  (./root.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 54.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 54.
-Package rerunfilecheck Info: File `root.out' has not changed.
-(rerunfilecheck)             Checksum: 12239AD799DEFD56A305B378BD9B4842;1862.
+
+
+Package rerunfilecheck Warning: File `root.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `root.out':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  12239AD799DEFD56A305B378BD9B4842;1862.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 54.
  ) 
 Here is how much of TeX's memory you used:
- 5788 strings out of 492982
- 82506 string characters out of 6134895
- 174275 words of memory out of 5000000
- 9095 multiletter control sequences out of 15000+600000
+ 5752 strings out of 492982
+ 81996 string characters out of 6134895
+ 174171 words of memory out of 5000000
+ 9069 multiletter control sequences out of 15000+600000
  12056 words of font info for 42 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  34i,8n,28p,5707b,417s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1327,10 +1437,10 @@ msy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.p
 fb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb>
-Output written on root.pdf (201 pages, 617474 bytes).
+Output written on root.pdf (199 pages, 605615 bytes).
 PDF statistics:
- 1095 PDF objects out of 1200 (max. 8388607)
- 868 compressed objects within 9 object streams
- 228 named destinations out of 1000 (max. 500000)
- 201 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 985 PDF objects out of 1000 (max. 8388607)
+ 761 compressed objects within 8 object streams
+ 226 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

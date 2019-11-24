@@ -1,6 +1,5 @@
 theory Hales
-  imports Complex_Main "HOL-Algebra.Group" "HOL-Algebra.Bij"
-          "HOL-Library.Bit" "HOL-Library.Rewrite"
+  imports  "HOL-Algebra.Group"  "HOL-Library.Bit" "HOL-Library.Rewrite"
 begin
 
 section\<open>Affine Edwards curves\<close>
@@ -121,7 +120,11 @@ proof -
     apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta_def
     by(simp add: divide_simps assms(5-8))
-
+text_raw \<open>
+\begin{figure}
+\begin{center}\begin{minipage}{0.6\textwidth}
+\isastyleminor\isamarkuptrue
+\<close>
   have "\<exists> r1 r2 r3. gxpoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
     apply(simp add: assms(1,2))
@@ -1579,11 +1582,15 @@ subsection \<open>Projective addition on points\<close>
 function (domintros) proj_add :: "('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit"
   where 
     "proj_add ((x1, y1), l) ((x2, y2), j) = (add (x1, y1) (x2, y2), l+j)"
-      if "delta x1 y1 x2 y2 \<noteq> 0" and "(x1, y1) \<in> e'_aff" and "(x2, y2) \<in> e'_aff" 
+   if "delta x1 y1 x2 y2 \<noteq> 0" and 
+     "(x1, y1) \<in> e'_aff" and 
+     "(x2, y2) \<in> e'_aff" 
   | "proj_add ((x1, y1), l) ((x2, y2), j) = (ext_add (x1, y1) (x2, y2), l+j)"
-      if "delta' x1 y1 x2 y2 \<noteq> 0" and "(x1, y1) \<in> e'_aff" and "(x2, y2) \<in> e'_aff"
+   if "delta' x1 y1 x2 y2 \<noteq> 0" and 
+     "(x1, y1) \<in> e'_aff" and 
+     "(x2, y2) \<in> e'_aff"
   | "proj_add ((x1, y1), l) ((x2, y2), j) = undefined" 
-      if "(x1, y1) \<notin> e'_aff \<or> (x2, y2) \<notin> e'_aff \<or> 
+   if "(x1, y1) \<notin> e'_aff \<or> (x2, y2) \<notin> e'_aff \<or> 
         (delta x1 y1 x2 y2 = 0 \<and> delta' x1 y1 x2 y2 = 0)"
   apply(fast)
   apply(fastforce)
@@ -1704,19 +1711,23 @@ qed
 
 subsection \<open>Projective addition on classes\<close>
 
-function (domintros) proj_add_class :: "(('a \<times> 'a) \<times> bit ) set \<Rightarrow> (('a \<times> 'a) \<times> bit ) set \<Rightarrow> ((('a \<times> 'a) \<times> bit ) set) set"
+function (domintros) proj_add_class :: "(('a \<times> 'a) \<times> bit ) set \<Rightarrow> 
+                                        (('a \<times> 'a) \<times> bit ) set \<Rightarrow> 
+                                        ((('a \<times> 'a) \<times> bit ) set) set"
   where 
     "proj_add_class c1 c2 = 
         (
           {
-            proj_add ((x1, y1), i) ((x2, y2), j) | x1 y1 i x2 y2 j. 
-              ((x1, y1), i) \<in> c1 \<and> ((x2, y2), j) \<in> c2 \<and> 
+            proj_add ((x1, y1), i) ((x2, y2), j) | 
+              x1 y1 i x2 y2 j. 
+              ((x1, y1), i) \<in> c1 \<and> 
+              ((x2, y2), j) \<in> c2 \<and> 
               ((x1, y1), (x2, y2)) \<in> e'_aff_0 \<union> e'_aff_1
           } // gluing
         )" 
-      if "c1 \<in> e_proj" and "c2 \<in> e_proj" 
-      | "proj_add_class c1 c2 = undefined" 
-      if "c1 \<notin> e_proj \<or> c2 \<notin> e_proj" 
+   if "c1 \<in> e_proj" and "c2 \<in> e_proj" 
+  | "proj_add_class c1 c2 = undefined" 
+   if "c1 \<notin> e_proj \<or> c2 \<notin> e_proj" 
   by (meson surj_pair) auto
 
 termination proj_add_class using "termination" by auto
@@ -2130,8 +2141,8 @@ proof -
     have gl_class: "gluing `` {(add (x, y) (x', y'), l + l')} =
                 {(add (x, y) (x', y'), l + l'), (\<tau> (add (x, y) (x', y')), l + l' + 1)}"
            "gluing `` {(add (x, y) (x', y'), l + l')} \<in> e_proj" 
-       using gluing_class_2 e_points add_nz add_in apply simp
-       using e_points add_nz add_in by force
+       using gluing_class_2 add_nz add_in apply simp
+       using e_points gluing_class_2 e_proj_elim_2 add_nz add_in by force
    
     show ?thesis          
     proof -
@@ -4402,43 +4413,6 @@ lemma add_add_add_add_assoc:
   using assms unfolding e'_aff_def delta_def apply(simp)
   using associativity e_e'_iff by fastforce
 
-
-(* TODO: eliminate this *)
-lemma ext_add_hard_1:
-  "x2 \<noteq> 0 \<Longrightarrow>
-    y2 = 0 \<Longrightarrow>
-    x3 \<noteq> 0 \<Longrightarrow>
-    y3 \<noteq> 0 \<Longrightarrow>
-    y1 \<noteq> 0 \<Longrightarrow>
-    x1 \<noteq> 0 \<Longrightarrow>
-    x1 * (x1 * (x2 * (x3 * y1))) + x1 * (x2 * (y1 * (y1 * y3))) \<noteq> 0 \<Longrightarrow>
-    - (x1 * (x2 * (x3 * (x3 * y3)))) \<noteq> x2 * (x3 * (y1 * (y3 * y3))) \<Longrightarrow>
-    x1 * x1 + y1 * y1 = 1 + d * (x1 * (x1 * (y1 * y1))) \<Longrightarrow>
-    x2 * x2 = 1 \<Longrightarrow>
-    x3 * x3 + y3 * y3 = 1 + d * (x3 * (x3 * (y3 * y3))) \<Longrightarrow>
-    x3 * y1 \<noteq> x1 * y3 \<and> x1 * x3 + y1 * y3 \<noteq> 0 \<Longrightarrow>
-    x1 * (x1 * (x2 * (x3 * (x3 * (x3 * (y1 * (y3 * y3))))))) +
-    (x1 * (x2 * (x3 * (x3 * (y1 * (y1 * (y3 * (y3 * y3))))))) +
-     (x1 * (x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (y1 * (y1 * y3))))))))) +
-      x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (y1 * (y1 * (y1 * (y3 * y3))))))))))) =
-    x1 * (x1 * (x1 * (x2 * (x3 * (x3 * (y1 * (y1 * y3))))))) +
-    (x1 * (x1 * (x2 * (x3 * (y1 * (y1 * (y1 * (y3 * y3))))))) +
-     (x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (x3 * (y1 * (y3 * y3))))))))) +
-      x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (y1 * (y1 * (y3 * (y3 * y3)))))))))))"
-proof -
-    assume a1: "x2 * x2 = 1"
-    have f2: "\<forall>r ra. (ra::real) * r = r * ra"
-      by auto
-    have "\<forall>r. x2 * (r * x2) = r"
-      using a1 by auto
-    then have "x1 * (x1 * (y1 * (x3 * (x3 * (x3 * (y3 * (x2 * y3))))))) + (x1 * (y1 * (y1 * (x3 * (x3 * (y3 * (y3 * (x2 * y3))))))) + (x1 * (x1 * (x1 * (y1 * (y1 * (x3 * (x3 * (x2 * (x2 * (x2 * y3))))))))) + x1 * (x1 * (y1 * (y1 * (y1 * (x3 * (y3 * (x2 * (x2 * (x2 * y3))))))))))) = x1 * (x1 * (x1 * (y1 * (y1 * (x3 * (x3 * (x2 * y3))))))) + (x1 * (x1 * (y1 * (y1 * (y1 * (x3 * (y3 * (x2 * y3))))))) + (x1 * (x1 * (y1 * (x3 * (x3 * (x3 * (y3 * (x2 * (x2 * (x2 * y3))))))))) + x1 * (y1 * (y1 * (x3 * (x3 * (y3 * (y3 * (x2 * (x2 * (x2 * y3)))))))))))"
-      using f2 
-      apply(simp add: algebra_simps) 
-      by (simp add: a1 semiring_normalization_rules(18))
-then show "x1 * (x1 * (x2 * (x3 * (x3 * (x3 * (y1 * (y3 * y3))))))) + (x1 * (x2 * (x3 * (x3 * (y1 * (y1 * (y3 * (y3 * y3))))))) + (x1 * (x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (y1 * (y1 * y3))))))))) + x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (y1 * (y1 * (y1 * (y3 * y3))))))))))) = x1 * (x1 * (x1 * (x2 * (x3 * (x3 * (y1 * (y1 * y3))))))) + (x1 * (x1 * (x2 * (x3 * (y1 * (y1 * (y1 * (y3 * y3))))))) + (x1 * (x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (x3 * (y1 * (y3 * y3))))))))) + x1 * (x2 * (x2 * (x2 * (x3 * (x3 * (y1 * (y1 * (y3 * (y3 * y3)))))))))))"
-  by (simp add: mult.left_commute)
-qed
-
 lemma ext_ext_ext_ext_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = ext_add (x1,y1) (x2,y2)" "z3' = ext_add (x2,y2) (x3,y3)"
@@ -4955,13 +4929,29 @@ lemma add_ext_add_ext_assoc_points:
   using add_ext_add_ext_assoc 
   apply(safe) 
   using ext_add.simps by metis
+(*
+ML \<open>
+fun abstract_assoc ctxt assms dassms eassms goal =
+  let 
+    val e1 = eassms(1)
+    val e2 = eassms(2)
+    val e3 = eassms(3)
+    val deltas = dassms(1) * dassms(2) * dassms(3) * dassms(4)
+    val Deltax = dassms(5) * dassms(7) * deltas
+    val Deltay = dassms(6) * dassms(8) * deltas
+    val goalx = fst goal
+    val goaly = snd goal
+  in
+    
+  end ;
+\<close>*)
 
 lemma add_ext_ext_ext_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
-  assumes "z1' = ext_add (x1,y1) (x2,y2)" "z3' = ext_add (x2,y2) (x3,y3)"
+  assumes "(x1',y1') = ext_add (x1,y1) (x2,y2)" "(x3',y3') = ext_add (x2,y2) (x3,y3)"
   assumes "delta_x x1 y1 x2 y2 \<noteq> 0" "delta_y x1 y1 x2 y2 \<noteq> 0"
           "delta_x x2 y2 x3 y3 \<noteq> 0" "delta_y x2 y2 x3 y3 \<noteq> 0"
-          "delta_plus x1' y1' x3 y3 \<noteq> 0" "delta_minus x1' y1' x3 y3 \<noteq> 0"
+          "delta_minus x1' y1' x3 y3 \<noteq> 0" "delta_plus x1' y1' x3 y3 \<noteq> 0"
           "delta_x x1 y1 x3' y3' \<noteq> 0" "delta_y x1 y1 x3' y3' \<noteq> 0"
   assumes "e' x1 y1 = 0" "e' x2 y2 = 0" "e' x3 y3 = 0" 
   shows "add (ext_add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (ext_add (x2,y2) (x3,y3))" 
@@ -4991,10 +4981,12 @@ proof -
     ((x1 * y1 - x2 * y2) * x3 * delta_y x1 y1 x2 y2 - (x1 * y1 + x2 * y2) * y3 * delta_x x1 y1 x2 y2) *
     ((x2 * y2 - x3 * y3) * y1 * delta_y x2 y2 x3 y3 - x1 * (x2 * y2 + x3 * y3) * delta_x x2 y2 x3 y3)
   "
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_x_def)
-    apply(subst (2 5) delta_x_def[symmetric])
-    apply(subst (2 4) delta_y_def[symmetric])
+    thm assms(3,4) prod.collapse[symmetric]
+    using assms(3,4)
+    apply(simp add: assms(3,4))
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_x_def)
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric])+
     unfolding delta'_def delta_def
     by(simp add: divide_simps assms(5-8) c_eq_1) 
 
@@ -5022,6 +5014,7 @@ proof -
     unfolding delta_x_def delta_y_def delta'_def delta_plus_def delta_minus_def delta_def
               e1_def e2_def e3_def e'_def   
     by(simp add:  t_expr c_eq_1,algebra) 
+
   then have "g\<^sub>x * Delta\<^sub>x = 0" "Delta\<^sub>x \<noteq> 0" 
     apply(safe)
     using e1_def e2_def e3_def assms(13-15) apply auto
@@ -5069,8 +5062,9 @@ proof -
   then have "g\<^sub>y = 0" by auto
 
   show ?thesis 
-    using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4) by (simp add: prod_eq_iff)
+    using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms by auto
 qed
+
 
 lemma add_ext_add_add_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
