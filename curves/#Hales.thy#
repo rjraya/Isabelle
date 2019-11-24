@@ -1401,7 +1401,7 @@ proof(safe)
     unfolding trans_def gluing_def by(auto simp add: e_circ_def t_nz)
 qed
 
-definition e_proj where "e_proj = e'_aff_bit // gluing"
+typedef (Eprojt) e_proj where "e_proj = e'_aff_bit // gluing"
 
 subsubsection\<open>Point-class classification\<close>
 
@@ -3210,7 +3210,7 @@ proof -
   qed  
 
 subsubsection \<open>Basic properties\<close>
-term Abs_Integ
+
 theorem well_defined:
   assumes "p \<in> e_proj" "q \<in> e_proj"
   shows "proj_addition p q \<in> e_proj"
