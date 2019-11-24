@@ -103,10 +103,9 @@ proof -
       (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 - 
       d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
   "
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_minus_def)
-    apply(subst (1 3) delta_minus_def[symmetric])
-    apply(subst (1 2) delta_plus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_minus_def)
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta_def
     by(simp add: divide_simps assms(5-8))
 
@@ -117,19 +116,18 @@ proof -
        c * y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) *
        (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 - 
        d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_minus_def)
-    apply(subst (1 3) delta_minus_def[symmetric])
-    apply(subst (1 2) delta_plus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_minus_def)
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta_def
     by(simp add: divide_simps assms(5-8))
 
   have "\<exists> r1 r2 r3. gxpoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
     apply(simp add: assms(1,2))
-    apply(subst (1 2) delta_minus_def[symmetric])
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric])+
     apply(simp add: divide_simps assms(9,11))
-    apply(subst (3) left_diff_distrib)
+    apply(rewrite left_diff_distrib)
     apply(simp add: simp1gx simp2gx)
     unfolding delta_plus_def delta_minus_def
               e1_def e2_def e3_def e_def
@@ -145,29 +143,27 @@ proof -
   have simp1gy: "(x1' * y3 + y1' * x3) * delta_plus x1 y1 x3' y3' * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
      ((x1 * x2 - c * y1 * y2) * y3 * delta_plus x1 y1 x2 y2 + (x1 * y2 + y1 * x2) * x3 * delta_minus x1 y1 x2 y2) *
     (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 + d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_plus_def) 
-    apply(subst (1 3) delta_plus_def[symmetric])
-    apply(subst (1 2) delta_minus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_plus_def) 
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta_def
     by(simp add: divide_simps assms(5-8))
     
   have simp2gy: "(x1 * y3' + y1 * x3') * delta_plus x1' y1' x3 y3 * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
      (x1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3 + y1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3) *
     (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 + d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_plus_def)
-    apply(subst (1 2) delta_minus_def[symmetric])
-    apply(subst (1 3) delta_plus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_plus_def)
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta_def
     by(simp add: divide_simps assms(5-8))
 
   have "\<exists> r1 r2 r3. gypoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gypoly_def g\<^sub>y_def Delta\<^sub>y_def 
     apply(simp add: assms(1,2))
-    apply(subst (1 2) delta_plus_def[symmetric])
+    apply(rewrite in "_ / \<hole>" delta_plus_def[symmetric])+
     apply(simp add: divide_simps assms(10,12))
-    apply(subst left_diff_distrib)
+    apply(rewrite left_diff_distrib)
     apply(simp add: simp1gy simp2gy)
     unfolding delta_plus_def delta_minus_def
               e1_def e2_def e3_def e_def 
@@ -880,8 +876,8 @@ lemma coherence_2:
          (snd (ext_add (x1,y1) (x2,y2)) - snd (add (x1,y1) (x2,y2)))
          = - x2 * y2 * e' x1 y1 - x1 * y1 * e' x2 y2"
   apply(simp)  
-  apply(subst (2) delta_y_def[symmetric])
-  apply(subst delta_plus_def[symmetric])
+  apply(rewrite in "_ / \<hole>" delta_y_def[symmetric])
+  apply(rewrite in "_ / \<hole>" delta_plus_def[symmetric])
   apply(simp add: c_eq_1 assms(1,2) divide_simps)
   unfolding delta_plus_def delta_y_def e'_def
   apply(subst t_expr)+
@@ -4645,12 +4641,10 @@ proof -
     ((x2 * x3 - c * y2 * y3) * y1 * delta_plus x2 y2 x3 y3 -
      x1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) 
   "
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_x_def)
-    apply(subst (2) delta_x_def[symmetric])
-    apply(subst (2) delta_y_def[symmetric])
-    apply(subst (1) delta_minus_def[symmetric])
-    apply(subst (1) delta_plus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_x_def)
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
+                             delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta'_def delta_def
     by(simp add: divide_simps assms(5-8))
 
@@ -4661,21 +4655,19 @@ proof -
      (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3)) *
     (x3 * (x1 * y1 + x2 * y2) * delta_x x1 y1 x2 y2 -
      (x1 * y1 - x2 * y2) * y3 * delta_y x1 y1 x2 y2)"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_x_def)
-    apply(subst (5) delta_x_def[symmetric])
-    apply(subst (3) delta_y_def[symmetric])
-    apply(subst (1) delta_minus_def[symmetric])
-    apply(subst (1) delta_plus_def[symmetric])
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_x_def)
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
+                             delta_minus_def[symmetric] delta_plus_def[symmetric])+
     unfolding delta'_def delta_def
     by(simp add: divide_simps assms(5-8))
 
   have "\<exists> r1 r2 r3. gxpoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
     apply(simp add: assms(1,2))
-    apply(subst (2 4) delta_x_def[symmetric])+
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric])+
     apply(simp add: divide_simps assms(9,11))
-    apply(subst (3) left_diff_distrib)
+    apply(rewrite left_diff_distrib)
     apply(simp add: simp1gx simp2gx)
     unfolding delta_x_def delta_y_def delta_plus_def delta_minus_def
               e1_def e2_def e3_def e'_def
@@ -4688,48 +4680,21 @@ proof -
   then have "g\<^sub>x = 0" 
     using \<open>gxpoly = 0\<close> gxpoly_def by auto
 
-  have simp1gy: "(x1' * y1' + x3 * y3) * delta_y x1 y1 x3' y3' *
-       (delta' x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
-     ((x1 * y1 - x2 * y2) * (x1 * y1 + x2 * y2) +
-     x3 * y3 * (delta_x x1 y1 x2 y2 * delta_y x1 y1 x2 y2)) *
-    (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 +
-     y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3)"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_y_def)
-    thm assms(5-8)
-    apply(rewrite at "x2 * y1 - x1 * y2" 
-                     delta_x_def[symmetric])
-  
-    apply(subst (2) delta_y_def[symmetric])
-    apply(subst (1) delta_minus_def[symmetric])
-    apply(subst (1) delta_plus_def[symmetric])
-    unfolding delta'_def delta_def
-    by(simp add: divide_simps assms(5-8))
-
-  have simp2gy: "(x1 * y1 + x3' * y3') * delta_y x1' y1' x3 y3 *
-       (delta' x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
-     (x1 * y1 * (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3) +
-     (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3)) *
-    ((x1 * y1 - x2 * y2) * x3 * delta_y x1 y1 x2 y2 +
-     (x1 * y1 + x2 * y2) * y3 * delta_x x1 y1 x2 y2)"
-    apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
-    apply(subst delta_y_def)
-    apply(subst (3) delta_x_def[symmetric])
-    apply(subst (5) delta_y_def[symmetric])
-    apply(subst (1) delta_minus_def[symmetric])
-    apply(subst (1) delta_plus_def[symmetric])
-    unfolding delta'_def delta_def
-    by(simp add: divide_simps assms(5-8))
 
   have "\<exists> r1 r2 r3. gypoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gypoly_def g\<^sub>y_def Delta\<^sub>y_def 
     apply(simp add: assms(1,2))
-    apply(subst (2 4) delta_y_def[symmetric])
+    apply(rewrite in "_ / \<hole>" delta_y_def[symmetric])+
     apply(simp add: divide_simps assms(10,12))
     apply(subst left_diff_distrib)
-    apply(simp add: simp1gy simp2gy)
+    apply(rewrite delta_y_def)+
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
+                             delta_minus_def[symmetric] delta_plus_def[symmetric])+
+    unfolding delta'_def delta_def
+    apply(simp add: divide_simps assms(5-8))
     unfolding delta_x_def delta_y_def delta_plus_def delta_minus_def
-              e1_def e2_def e3_def e'_def
+              e1_def e2_def e3_def e'_def 
     by(simp add: c_eq_1 t_expr,algebra)
 
   then have "gypoly = 0" 
