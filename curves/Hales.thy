@@ -96,9 +96,12 @@ proof -
       "delta x1 y1 x2 y2 \<noteq> 0" using delta_def assms(5,6) by auto
   
   have simp1gx: "
-    (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
-     ((x1 * x2 - c * y1 * y2) * x3 * delta_plus x1 y1 x2 y2 - c * (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
-    (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 - d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
+    (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' * 
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+      ((x1 * x2 - c * y1 * y2) * x3 * delta_plus x1 y1 x2 y2 - 
+      c * (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
+      (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 - 
+      d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
   "
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply(subst delta_minus_def)
@@ -108,9 +111,12 @@ proof -
     by(simp add: divide_simps assms(5-8))
 
   have simp2gx:
-    "(x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 * (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
-     (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 - c * y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) *
-    (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 - d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
+    "(x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 * 
+     (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+       (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 - 
+       c * y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) *
+       (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 - 
+       d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
     apply((subst x1'_expr)+, (subst y1'_expr)+,(subst x3'_expr)+,(subst y3'_expr)+)
     apply(subst delta_minus_def)
     apply(subst (1 3) delta_minus_def[symmetric])
@@ -121,7 +127,7 @@ proof -
   have "\<exists> r1 r2 r3. gxpoly = r1 * e1 + r2 * e2 + r3 * e3"
     unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
     apply(simp add: assms(1,2))
-    apply(subst (1 2) delta_minus_def[symmetric])+
+    apply(subst (1 2) delta_minus_def[symmetric])
     apply(simp add: divide_simps assms(9,11))
     apply(subst (3) left_diff_distrib)
     apply(simp add: simp1gx simp2gx)
@@ -393,14 +399,14 @@ lemma e_e'_iff: "e x y = 0 \<longleftrightarrow> e' x y = 0"
 lemma circ_to_aff: "p \<in> e_circ \<Longrightarrow> p \<in> e'_aff"
   unfolding e_circ_def by auto
 
-text\<open>The case t^2 = 1 corresponds to a product of intersecting lines 
+text\<open>The case \<^text>\<open>t^2 = 1\<close> corresponds to a product of intersecting lines 
      which cannot be a group\<close>
 
 lemma t_2_1_lines:
   "t^2 = 1 \<Longrightarrow> e' x y = - (1 - x^2) * (1 - y^2)" 
   unfolding e'_def by algebra
 
-text\<open>The case t = 0 corresponds to a circle which has been treated before\<close>
+text\<open>The case \<^text>\<open>t = 0\<close> corresponds to a circle which has been treated before\<close>
 
 lemma t_0_circle:
   "t = 0 \<Longrightarrow> e' x y = x^2 + y^2 - 1" 
@@ -860,11 +866,11 @@ lemma coherence_1:
          (fst (ext_add (x1,y1) (x2,y2)) - fst (add (x1,y1) (x2,y2)))
          = x2 * y2 * e' x1 y1 - x1 * y1 * e' x2 y2"
   apply(simp)  
-  apply(subst (2) delta_x_def[symmetric])
-  apply(subst delta_minus_def[symmetric])
+  apply(rewrite in "_ / \<hole>" delta_x_def[symmetric])
+  apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric])
   apply(simp add: c_eq_1 assms(1,2) divide_simps)
   unfolding delta_minus_def delta_x_def e'_def
-  apply(subst t_expr)+
+  apply(simp add: t_expr)
   by(simp add: power2_eq_square field_simps)  
   
 lemma coherence_2:
@@ -897,45 +903,16 @@ proof -
                   "delta_y x1 y1 x2 y2 \<noteq> 0"
     using assms(1) delta'_def by auto
 
-  define closure1 where "closure1 =
-    2 - t^2 + t^2 * x1^2 - 2 * x2^2 - t^2 * x1^2 * x2^2 + 
-    t^2 * x2^4 + t^2 * y1^2 + t^4 * x1^2 * y1^2 - 
-    t^2 * x2^2 * y1^2 - 2 * y2^2 - t^2 * x1^2 * y2^2 + 
-    (4 * t^2 - 2 * t^4) * x2^2 * y2^2 - t^2 * y1^2 * y2^2 + 
-    t^2 * y2^4"
-
-  define closure2 where "closure2 = 
-    -2 + t^2 + (2 - 2 * t^2) * x1^2 + t^2 * x1^4 + t^2 * x2^2 -
-    t^2 * x1^2 * x2^2 + (2 - 2 * t^2) * y1^2 - t^2 * x2^2 * y1^2 + 
-    t^2 * y1^4 + t^2 * y2^2 - t^2 * x1^2 * y2^2 + t^4 * x2^2 * y2^2 - 
-    t^2 * y1^2 * y2^2"
-
-  define p where "p = 
-    -1 * t^4 * (x1^2 * x2^4 * y1^2 -x1^4 * x2^2 * y1^2 + 
-    t^2 * x1^4 * y1^4 - x1^2 * x2^2 * y1^4 + x1^4 * x2^2 * y2^2 - 
-    x1^2 * x2^4 * y2^2 - x1^4 * y1^2 * y2^2 + 4 * x1^2 * x2^2 * y1^2 * y2^2 - 
-    2 * t^2 * x1^2 * x2^2 * y1^2 * y2^2 - x2^4 * y1^2 * y2^2 - x1^2 * y1^4 * y2^2 + 
-    x2^2 * y1^4 * y2^2 - x1^2 * x2^2 * y2^4 + t^2 * x2^4 * y2^4 + x1^2 * y1^2 * y2^4 - 
-    x2^2 * y1^2 * y2^4)"
-
   have v3: "x3 = fst (ext_add (x1,y1) (x2,y2))"
            "y3 = snd (ext_add (x1,y1) (x2,y2))"
     using assms(4) by simp+
 
-  have "t^4 * (delta_x x1 y1 x2 y2)^2 * (delta_y x1 y1 x2 y2)^2 * e' x3 y3 = p"
-    unfolding e'_def v3
-    apply(simp)
-    apply(subst (2) delta_x_def[symmetric])+
-    apply(subst (2) delta_y_def[symmetric])+
-    apply(subst power_divide)+
-    apply(simp add: divide_simps deltas_nz)
-    unfolding p_def delta_x_def delta_y_def
-    by algebra    
-  also have "... = closure1 * e' x1 y1 +  closure2 * e' x2 y2"
-    unfolding p_def e'_def closure1_def closure2_def by algebra
-  finally have "t^4 * (delta_x x1 y1 x2 y2)^2 * (delta_y x1 y1 x2 y2)^2 * e' x3 y3 =
-                closure1 * e' x1 y1 +  closure2 * e' x2 y2" 
-    by blast
+  have "\<exists> a b. t^4 * (delta_x x1 y1 x2 y2)^2 * (delta_y x1 y1 x2 y2)^2 * e' x3 y3 = 
+               a * e' x1 y1 + b * e' x2 y2"
+    using deltas_nz
+    unfolding e'_def v3 delta_x_def delta_y_def
+    apply(simp add: divide_simps) 
+    by algebra
 
   then show "e' x3 y3 = 0"
     using assms(2,3) deltas_nz t_nz by auto  
@@ -949,26 +926,6 @@ lemma ext_add_closure_points:
   unfolding e'_aff_def by auto
 
 subsubsection \<open>Useful lemmas in the extension\<close>
-
-(*lemma inverse_generalized:
-  assumes "(a,b) \<in> e'_aff" 
-  shows "add (a,b) (a,-b) = (1,0)" 
-  using assms 
-  apply(simp) 
-  unfolding e'_def e'_aff_def
-  apply(simp add: t_expr c_eq_1)
-  apply(rule conjI)
-  thm inverse
-  using c_d_pos 
-  apply(safe)
-  using curve_addition.delta_plus_def delta_plus_self apply auto[1]
-  by (simp add: mult.commute mult.left_commute power2_eq_square)
-
-lemma inverse_generalized_points:
-  assumes "p \<in> e'_aff" 
-  shows "add p (i p) = (1,0)" 
-  using assms inverse_generalized 
-  by (metis i.simps prod.exhaust_sel)*)
 
 lemma inverse_generalized:
   assumes "(a,b) \<in> e'_aff" "delta_plus a b a b \<noteq> 0"
