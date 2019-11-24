@@ -953,6 +953,215 @@ lemma add_self:
     apply(simp_all add: algebra_simps) 
     by(simp add: semiring_normalization_rules(18) semiring_normalization_rules(29) two_not_zero)+
 
+subsection \<open>Some relations between deltas\<close>
+(* TODO: maybe remove this subsection except the lemas delta' to delta ...*)
+lemma mix_tau:
+  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
+  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "delta' x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
+  shows "delta x1 y1 x2 y2 \<noteq> 0"
+  using assms
+  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
+  apply(simp)
+  apply(simp add: t_nz algebra_simps)
+  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
+  apply(simp add: divide_simps t_nz)
+  by algebra
+
+lemma mix_tau_0:
+  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
+  assumes "delta x1 y1 x2 y2 = 0"
+  shows "delta' x1 y1 x2 y2 = 0 \<or> delta' x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) = 0" 
+  using assms
+  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
+  apply(simp)
+  apply(simp add: t_nz algebra_simps)
+  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
+  apply(simp add: divide_simps t_nz)
+  by algebra
+
+
+
+lemma mix_tau_prime:
+  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
+  assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
+  shows "delta' x1 y1 x2 y2 \<noteq> 0"
+  using assms
+  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
+  apply(simp)
+  apply(simp add: t_nz algebra_simps)
+  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
+  apply(simp add: divide_simps)
+  by algebra
+
+lemma tau_tau_d:
+  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
+  assumes "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
+  shows "delta x1 y1 x2 y2 \<noteq> 0"
+  using assms
+  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
+  apply(simp)
+  apply(simp add: t_expr)
+  apply(simp split: if_splits add: divide_simps t_nz)
+  apply(simp_all add: t_nz algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  apply algebra
+  by algebra
+
+lemma tau_tau_d':
+  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
+  assumes "delta' (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
+  shows "delta' x1 y1 x2 y2 \<noteq> 0"
+  using assms
+  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
+  apply(simp)
+  apply(simp add: t_expr)
+  apply(simp split: if_splits add: divide_simps t_nz)
+  by algebra
+
+lemma zero_coord_expr:
+  assumes "(x,y) \<in> e'_aff" "x = 0 \<or> y = 0"
+  shows "\<exists> r \<in> rotations. (x,y) = r (1,0)"
+proof -
+  consider (1) "x = 0" | (2) "y = 0" using assms by blast
+  then show ?thesis
+  proof(cases)
+    case 1
+    then have y_expr: "y = 1 \<or> y = -1"
+      using assms unfolding e'_aff_def e'_def by(simp,algebra) 
+    then show ?thesis 
+      using 1 unfolding rotations_def by auto
+  next
+    case 2
+    then have x_expr: "x = 1 \<or> x = -1"
+      using assms unfolding e'_aff_def e'_def by(simp,algebra) 
+    then show ?thesis 
+      using 2 unfolding rotations_def by auto
+  qed
+qed
+
+lemma delta_add_delta'_1: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes r_expr: "rx = fst (add (x1,y1) (x2,y2))" "ry = snd (add (x1,y1) (x2,y2))" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd: "delta x1 y1 x2 y2 \<noteq> 0" 
+  assumes pd': "delta rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
+  shows "delta' rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
+  using pd' unfolding delta_def delta_minus_def delta_plus_def
+                      delta'_def delta_x_def delta_y_def 
+  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  using pd in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
+                            e'_aff_def e'_def
+  apply(simp add: divide_simps t_expr)
+  apply(simp add: c_eq_1 algebra_simps)
+  by algebra
+
+lemma delta'_add_delta_1: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
+  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
+  using pd' unfolding delta_def delta_minus_def delta_plus_def
+                      delta'_def delta_x_def delta_y_def 
+  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  using in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
+                            e'_aff_def e'_def
+  apply(simp split: if_splits add: divide_simps t_expr)
+  apply(simp add: c_eq_1 algebra_simps)
+  by algebra
+
+lemma not_add_self:
+  assumes in_aff: "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  shows "delta x2 y2 (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) = 0"
+            "delta' x2 y2 (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) = 0"
+    using in_aff d_n1 
+    unfolding delta_def delta_plus_def delta_minus_def
+              delta'_def delta_x_def delta_y_def
+              e'_aff_def e'_def
+    apply(simp add: t_expr two_not_zero)
+    apply(safe)
+    by(simp_all add: algebra_simps t_nz power2_eq_square[symmetric] t_expr) 
+
+lemma funny_field_lemma_1: 
+  "((x1 * x2 - y1 * y2) * ((x1 * x2 - y1 * y2) * (x2 * (y2 * (1 + d * x1 * y1 * x2 * y2)))) +
+     (x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * y2\<^sup>2) * (1 - d * x1 * y1 * x2 * y2)) *
+    (1 + d * x1 * y1 * x2 * y2) \<noteq>
+    ((x1 * y2 + y1 * x2) * ((x1 * y2 + y1 * x2) * (x2 * (y2 * (1 - d * x1 * y1 * x2 * y2)))) +
+     (x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * x2\<^sup>2) * (1 + d * x1 * y1 * x2 * y2)) *
+    (1 - d * x1 * y1 * x2 * y2) \<Longrightarrow>
+    (d * ((x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * (x2 * y2))))\<^sup>2 =
+    ((1 - d * x1 * y1 * x2 * y2) * (1 + d * x1 * y1 * x2 * y2))\<^sup>2 \<Longrightarrow>
+    x1\<^sup>2 + y1\<^sup>2 - 1 = d * x1\<^sup>2 * y1\<^sup>2 \<Longrightarrow>
+    x2\<^sup>2 + y2\<^sup>2 - 1 = d * x2\<^sup>2 * y2\<^sup>2  \<Longrightarrow> False"
+  by algebra
+  
+
+lemma delta_add_delta'_2: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes r_expr: "rx = fst (add (x1,y1) (x2,y2))" "ry = snd (add (x1,y1) (x2,y2))" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd: "delta x1 y1 x2 y2 \<noteq> 0" 
+  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
+  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0" 
+  using pd' unfolding delta_def delta_minus_def delta_plus_def
+                      delta'_def delta_x_def delta_y_def 
+  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  apply safe
+  using pd unfolding r_expr delta_def delta_minus_def delta_plus_def
+  apply(simp)
+  apply(simp add: c_eq_1 divide_simps)
+  using in_aff unfolding e'_aff_def e'_def
+  apply(simp add: t_expr)
+  apply safe   
+  using funny_field_lemma_1 by blast
+
+lemma funny_field_lemma_2: " (x2 * y2)\<^sup>2 * ((x2 * y1 - x1 * y2) * (x1 * x2 + y1 * y2))\<^sup>2 \<noteq> ((x1 * y1 - x2 * y2) * (x1 * y1 + x2 * y2))\<^sup>2 \<Longrightarrow>
+    ((x1 * y1 - x2 * y2) * ((x1 * y1 - x2 * y2) * (x2 * (y2 * (x1 * x2 + y1 * y2)))) +
+     (x1 * y1 - x2 * y2) * ((x1 * y1 + x2 * y2) * x2\<^sup>2) * (x2 * y1 - x1 * y2)) *
+    (x1 * x2 + y1 * y2) =
+    ((x1 * y1 + x2 * y2) * ((x1 * y1 + x2 * y2) * (x2 * (y2 * (x2 * y1 - x1 * y2)))) +
+     (x1 * y1 - x2 * y2) * ((x1 * y1 + x2 * y2) * y2\<^sup>2) * (x1 * x2 + y1 * y2)) *
+    (x2 * y1 - x1 * y2) \<Longrightarrow>
+    x1\<^sup>2 + y1\<^sup>2 - 1 = d * x1\<^sup>2 * y1\<^sup>2 \<Longrightarrow>
+    x2\<^sup>2 + y2\<^sup>2 - 1 = d * x2\<^sup>2 * y2\<^sup>2 \<Longrightarrow> False"
+  by algebra
+
+lemma delta'_add_delta_2: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd: "delta' x1 y1 x2 y2 \<noteq> 0" 
+  assumes pd': "delta rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
+  shows "delta' rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
+  using pd' unfolding delta_def delta_minus_def delta_plus_def
+                      delta'_def delta_x_def delta_y_def 
+  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  apply safe
+  using pd unfolding r_expr delta'_def delta_x_def delta_y_def
+  apply(simp)
+  apply(simp split: if_splits add: c_eq_1 divide_simps)
+  using in_aff unfolding e'_aff_def e'_def
+  apply(simp add: t_expr)
+  apply safe  
+  using funny_field_lemma_2 by fast
+
+lemma delta'_add_delta_not_add: 
+  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
+  assumes pd: "delta' x1 y1 x2 y2 \<noteq> 0" 
+  assumes add_nz: "fst (ext_add (x1,y1) (x2,y2)) \<noteq> 0"  "snd (ext_add (x1,y1) (x2,y2)) \<noteq> 0"
+  shows pd': "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
+  using add_ext_add[OF ] 1 in_aff
+  using pd 1  unfolding delta_def delta_minus_def delta_plus_def
+                        delta'_def delta_x_def delta_y_def 
+                     e'_aff_def e'_def
+  apply(simp add: divide_simps t_nz)
+  apply(simp_all add: c_eq_1) 
+   apply(simp_all split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
+  using add_nz
+  apply(simp add: d_nz) 
+  using d_nz 
+  by (metis distrib_left mult_eq_0_iff)
+
 section \<open>Projective Edwards curves\<close>
 
 subsection \<open>No fixed-point lemma and dichotomies\<close>
@@ -1401,7 +1610,7 @@ proof(safe)
     unfolding trans_def gluing_def by(auto simp add: e_circ_def t_nz)
 qed
 
-typedef (Eprojt) e_proj where "e_proj = e'_aff_bit // gluing"
+definition e_proj where "e_proj = e'_aff_bit // gluing"
 
 subsubsection\<open>Point-class classification\<close>
 
@@ -1590,7 +1799,7 @@ function (domintros) proj_add :: "('a \<times> 'a) \<times> bit \<Rightarrow> ('
    if "delta' x1 y1 x2 y2 \<noteq> 0" and 
      "(x1, y1) \<in> e'_aff" and 
      "(x2, y2) \<in> e'_aff"
-  | "proj_add ((x1, y1), l) ((x2, y2), j) = ((1,0),0)" 
+  | "proj_add ((x1, y1), l) ((x2, y2), j) = undefined" 
    if "(x1, y1) \<notin> e'_aff \<or> (x2, y2) \<notin> e'_aff \<or> 
         (delta x1 y1 x2 y2 = 0 \<and> delta' x1 y1 x2 y2 = 0)"
   apply(fast)
@@ -2020,8 +2229,8 @@ proof -
 qed
 
 
-lemma
-  assumes "(q1,q2) \<in> gluing"
+lemma only_one:
+  assumes "(q1,q2) \<in> gluing" "proj_add p q1 \<noteq> undefined" "proj_add p q2 \<noteq> undefined"
   shows "(proj_add p q1, proj_add p q2) \<in> gluing"
 proof -
   obtain p1 p2 pl q11 q12 ql1 q21 q22 ql2 where p_expr:
@@ -2050,17 +2259,55 @@ proof -
       sorry
   next
     case 2
-    then have "\<tau> (fst (proj_add p q1)) = fst (proj_add p (\<tau> (q11,q12), ql1+1))"
-      
-      sorry
+    have e_proj: "gluing `` {((p1, p2), pl)} \<in> e_proj" "gluing `` {((q11, q12), ql1)} \<in> e_proj"
+      using assms proj_add.simps(3) e_proj_aff p_expr in_aff by blast+
+    have e_proj_tau: "gluing `` {(\<tau> (q11, q12), ql1)} \<in> e_proj"
+      using "2" e_proj_aff in_aff(2) by auto
+    have "\<tau> (fst (proj_add p q1)) = fst (proj_add p q2)"
+      unfolding p_expr 
+      using 2
+      apply(simp del: \<tau>.simps)
+      using covering_with_deltas[OF e_proj] 
+            covering_with_deltas[OF e_proj(1), of "fst (\<tau> (q11, q12))" "snd (\<tau> (q11, q12))", 
+                                 simplified prod.collapse, OF e_proj_tau,simplified tau_idemp_point]
+      apply(safe)
+      apply (metis add.simps add_ext_add curve_addition.commutativity e_proj(1) e_proj_aff ext_curve_addition.ext_add_comm_points ext_curve_addition_axioms fst_conv in_aff mix_tau_prime proj_add.simps snd_conv tau_idemp_explicit)
+      apply (metis curve_addition.commutativity e_proj(1) e_proj_aff ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(1) in_aff(2) proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_point)
+            apply (metis add_ext_add add_ext_add_2 assms(3) commutativity ext_curve_addition.ext_add_comm ext_curve_addition_axioms fst_conv in_aff(1) mix_tau_prime p_expr(1) p_expr(3) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+            apply (metis add_ext_add add_ext_add_2 assms(3) curve_addition.commutativity ext_curve_addition.ext_add_comm ext_curve_addition_axioms fst_conv in_aff(1) p_expr(1) p_expr(3) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+            apply (metis add.simps add_ext_add commutativity e_proj(1) e_proj_aff ext_add_comm_points fst_conv in_aff(1) in_aff(2) proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_explicit)
+            apply (metis add.simps add_ext_add assms(2) commutativity ext_curve_addition.ext_add_comm_points ext_curve_addition.mix_tau_prime ext_curve_addition_axioms fst_conv in_aff(2) p_expr(1) p_expr(2) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_explicit)
+            apply (metis assms(2) curve_addition.commutativity ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(2) mix_tau p_expr(1) p_expr(2) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+            apply (metis curve_addition.commutativity e_proj(1) e_proj_aff ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(1) in_aff(2) mix_tau proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_point)
+            apply (metis add_ext_add add_ext_add_2 assms(3) curve_addition.commutativity ext_curve_addition.ext_add_comm ext_curve_addition_axioms fst_conv in_aff(1) p_expr(1) p_expr(3) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+            apply (smt \<tau>.simps assms(3) curve_addition.commutativity division_ring_divide_zero ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(1) mix_tau mult_zero_right p_expr(1) p_expr(3) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) tau_idemp_explicit)
+      apply (metis assms(2) curve_addition.commutativity ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(2) mix_tau p_expr(1) p_expr(2) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+      apply (metis assms(2) curve_addition.commutativity ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(2) mix_tau p_expr(1) p_expr(2) proj_add.simps(1) proj_add.simps(2) proj_add.simps(3) snd_conv tau_idemp_point)
+            apply (metis Pair_inject add_ext_add c_eq_1 commutativity e_proj(1) e_proj_aff ext_curve_addition.ext_add_comm ext_curve_addition.mix_tau_prime ext_curve_addition_axioms in_aff(1) in_aff(2) proj_add.simps(1) proj_add.simps(2) surjective_pairing tau_idemp_explicit)
+            apply (metis add.simps add_ext_add curve_addition.commutativity e_proj(1) e_proj_aff ext_curve_addition.ext_add_comm ext_curve_addition_axioms fst_conv in_aff(1) in_aff(2) proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_explicit)
+            apply (metis curve_addition.commutativity e_proj(1) e_proj_aff ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(1) in_aff(2) proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_point)
+            by (metis curve_addition.commutativity e_proj(1) e_proj_aff ext_add_comm ext_curve_addition.add_ext_add_2 ext_curve_addition_axioms fst_conv in_aff(1) in_aff(2) mix_tau proj_add.simps(1) proj_add.simps(2) snd_conv tau_idemp_point)
     then show ?thesis 
       
       sorry
   qed
-
-
-
 qed
+
+lemma only_one_2:
+  assumes "(p1,p2) \<in> gluing" "(q1,q2) \<in> gluing" 
+          "proj_add p1 q1 \<noteq> undefined" "proj_add p1 q2 \<noteq> undefined"
+          "proj_add p2 q1 \<noteq> undefined" "proj_add p2 q2 \<noteq> undefined"
+  shows "(proj_add p1 q1, proj_add p2 q2) \<in> gluing"
+proof -
+  have "(proj_add p1 q1, proj_add p1 q2) \<in> gluing"
+    using only_one assms(2) assms(3) assms(4) by blast
+  also have "(proj_add p1 q2, proj_add p2 q2) \<in> gluing"
+    using only_one assms 
+    by (metis prod.collapse proj_add_comm)
+  finally show ?thesis
+    sorry
+qed
+
 
 
 lemma gluing_add_2:
@@ -2083,10 +2330,22 @@ proof -
     apply(rule quotientI[of _ _ gluing])
     using class_lemmas by force
 
+  {
+    fix g
+    assume "g \<in> proj_add_class (gluing `` {((x, y), l)}) (gluing `` {((x', y'), l')})"
+    then obtain p1 p2 where "g = gluing `` {proj_add p1 p2}" "p1 \<in> gluing `` {((x, y), l)}" "p2 \<in> gluing `` {((x', y'), l')}"
+      using proj_add_class.simps(1)[OF assms(1-2)] 
+      by (smt mem_Collect_eq quotientE)
+    have "fst (proj_add p1 p2) \<in> e'_aff"
+    then have "gluing `` {(add (x,y) (x',y'),l+l')} = gluing `` {proj_add p1 p2}"
+      using only_one 
+
+  }
   then show ?thesis
-    unfolding proj_addition_def oops
+    unfolding proj_addition_def 
+    
+    oops
    
-    term Abs_Integ
 qed
 
 lemma gluing_add_1: 
@@ -6253,214 +6512,7 @@ proof -
     using \<open>g\<^sub>y = 0\<close> \<open>g\<^sub>x = 0\<close> unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4) by (simp add: prod_eq_iff)
 qed
 
-subsection \<open>Some relations between deltas\<close>
-(* TODO: maybe remove this subsection except the lemas delta' to delta ...*)
-lemma mix_tau:
-  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
-  assumes "delta' x1 y1 x2 y2 \<noteq> 0" "delta' x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
-  shows "delta x1 y1 x2 y2 \<noteq> 0"
-  using assms
-  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
-  apply(simp)
-  apply(simp add: t_nz algebra_simps)
-  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
-  apply(simp add: divide_simps t_nz)
-  by algebra
 
-lemma mix_tau_0:
-  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
-  assumes "delta x1 y1 x2 y2 = 0"
-  shows "delta' x1 y1 x2 y2 = 0 \<or> delta' x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) = 0" 
-  using assms
-  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
-  apply(simp)
-  apply(simp add: t_nz algebra_simps)
-  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
-  apply(simp add: divide_simps t_nz)
-  by algebra
-
-
-
-lemma mix_tau_prime:
-  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
-  assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta x1 y1 (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
-  shows "delta' x1 y1 x2 y2 \<noteq> 0"
-  using assms
-  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
-  apply(simp)
-  apply(simp add: t_nz algebra_simps)
-  apply(simp add: power2_eq_square[symmetric] t_expr d_nz)
-  apply(simp add: divide_simps)
-  by algebra
-
-lemma tau_tau_d:
-  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
-  assumes "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
-  shows "delta x1 y1 x2 y2 \<noteq> 0"
-  using assms
-  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
-  apply(simp)
-  apply(simp add: t_expr)
-  apply(simp split: if_splits add: divide_simps t_nz)
-  apply(simp_all add: t_nz algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  apply algebra
-  by algebra
-
-lemma tau_tau_d':
-  assumes "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0"
-  assumes "delta' (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) (fst (\<tau> (x2,y2))) (snd (\<tau> (x2,y2))) \<noteq> 0" 
-  shows "delta' x1 y1 x2 y2 \<noteq> 0"
-  using assms
-  unfolding e'_aff_def e'_def delta_def delta_plus_def delta_minus_def delta'_def delta_y_def delta_x_def
-  apply(simp)
-  apply(simp add: t_expr)
-  apply(simp split: if_splits add: divide_simps t_nz)
-  by algebra
-
-lemma zero_coord_expr:
-  assumes "(x,y) \<in> e'_aff" "x = 0 \<or> y = 0"
-  shows "\<exists> r \<in> rotations. (x,y) = r (1,0)"
-proof -
-  consider (1) "x = 0" | (2) "y = 0" using assms by blast
-  then show ?thesis
-  proof(cases)
-    case 1
-    then have y_expr: "y = 1 \<or> y = -1"
-      using assms unfolding e'_aff_def e'_def by(simp,algebra) 
-    then show ?thesis 
-      using 1 unfolding rotations_def by auto
-  next
-    case 2
-    then have x_expr: "x = 1 \<or> x = -1"
-      using assms unfolding e'_aff_def e'_def by(simp,algebra) 
-    then show ?thesis 
-      using 2 unfolding rotations_def by auto
-  qed
-qed
-
-lemma delta_add_delta'_1: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes r_expr: "rx = fst (add (x1,y1) (x2,y2))" "ry = snd (add (x1,y1) (x2,y2))" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd: "delta x1 y1 x2 y2 \<noteq> 0" 
-  assumes pd': "delta rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
-  shows "delta' rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
-  using pd' unfolding delta_def delta_minus_def delta_plus_def
-                      delta'_def delta_x_def delta_y_def 
-  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  using pd in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
-                            e'_aff_def e'_def
-  apply(simp add: divide_simps t_expr)
-  apply(simp add: c_eq_1 algebra_simps)
-  by algebra
-
-lemma delta'_add_delta_1: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
-  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
-  using pd' unfolding delta_def delta_minus_def delta_plus_def
-                      delta'_def delta_x_def delta_y_def 
-  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  using in_aff unfolding r_expr delta_def delta_minus_def delta_plus_def
-                            e'_aff_def e'_def
-  apply(simp split: if_splits add: divide_simps t_expr)
-  apply(simp add: c_eq_1 algebra_simps)
-  by algebra
-
-lemma not_add_self:
-  assumes in_aff: "(x2,y2) \<in> e'_aff" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  shows "delta x2 y2 (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) = 0"
-            "delta' x2 y2 (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) = 0"
-    using in_aff d_n1 
-    unfolding delta_def delta_plus_def delta_minus_def
-              delta'_def delta_x_def delta_y_def
-              e'_aff_def e'_def
-    apply(simp add: t_expr two_not_zero)
-    apply(safe)
-    by(simp_all add: algebra_simps t_nz power2_eq_square[symmetric] t_expr) 
-
-lemma funny_field_lemma_1: 
-  "((x1 * x2 - y1 * y2) * ((x1 * x2 - y1 * y2) * (x2 * (y2 * (1 + d * x1 * y1 * x2 * y2)))) +
-     (x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * y2\<^sup>2) * (1 - d * x1 * y1 * x2 * y2)) *
-    (1 + d * x1 * y1 * x2 * y2) \<noteq>
-    ((x1 * y2 + y1 * x2) * ((x1 * y2 + y1 * x2) * (x2 * (y2 * (1 - d * x1 * y1 * x2 * y2)))) +
-     (x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * x2\<^sup>2) * (1 + d * x1 * y1 * x2 * y2)) *
-    (1 - d * x1 * y1 * x2 * y2) \<Longrightarrow>
-    (d * ((x1 * x2 - y1 * y2) * ((x1 * y2 + y1 * x2) * (x2 * y2))))\<^sup>2 =
-    ((1 - d * x1 * y1 * x2 * y2) * (1 + d * x1 * y1 * x2 * y2))\<^sup>2 \<Longrightarrow>
-    x1\<^sup>2 + y1\<^sup>2 - 1 = d * x1\<^sup>2 * y1\<^sup>2 \<Longrightarrow>
-    x2\<^sup>2 + y2\<^sup>2 - 1 = d * x2\<^sup>2 * y2\<^sup>2  \<Longrightarrow> False"
-  by algebra
-  
-
-lemma delta_add_delta'_2: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes r_expr: "rx = fst (add (x1,y1) (x2,y2))" "ry = snd (add (x1,y1) (x2,y2))" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd: "delta x1 y1 x2 y2 \<noteq> 0" 
-  assumes pd': "delta' rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
-  shows "delta rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0" 
-  using pd' unfolding delta_def delta_minus_def delta_plus_def
-                      delta'_def delta_x_def delta_y_def 
-  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  apply safe
-  using pd unfolding r_expr delta_def delta_minus_def delta_plus_def
-  apply(simp)
-  apply(simp add: c_eq_1 divide_simps)
-  using in_aff unfolding e'_aff_def e'_def
-  apply(simp add: t_expr)
-  apply safe   
-  using funny_field_lemma_1 by blast
-
-lemma funny_field_lemma_2: " (x2 * y2)\<^sup>2 * ((x2 * y1 - x1 * y2) * (x1 * x2 + y1 * y2))\<^sup>2 \<noteq> ((x1 * y1 - x2 * y2) * (x1 * y1 + x2 * y2))\<^sup>2 \<Longrightarrow>
-    ((x1 * y1 - x2 * y2) * ((x1 * y1 - x2 * y2) * (x2 * (y2 * (x1 * x2 + y1 * y2)))) +
-     (x1 * y1 - x2 * y2) * ((x1 * y1 + x2 * y2) * x2\<^sup>2) * (x2 * y1 - x1 * y2)) *
-    (x1 * x2 + y1 * y2) =
-    ((x1 * y1 + x2 * y2) * ((x1 * y1 + x2 * y2) * (x2 * (y2 * (x2 * y1 - x1 * y2)))) +
-     (x1 * y1 - x2 * y2) * ((x1 * y1 + x2 * y2) * y2\<^sup>2) * (x1 * x2 + y1 * y2)) *
-    (x2 * y1 - x1 * y2) \<Longrightarrow>
-    x1\<^sup>2 + y1\<^sup>2 - 1 = d * x1\<^sup>2 * y1\<^sup>2 \<Longrightarrow>
-    x2\<^sup>2 + y2\<^sup>2 - 1 = d * x2\<^sup>2 * y2\<^sup>2 \<Longrightarrow> False"
-  by algebra
-
-lemma delta'_add_delta_2: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes r_expr: "rx = fst (ext_add (x1,y1) (x2,y2))" "ry = snd (ext_add (x1,y1) (x2,y2))" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd: "delta' x1 y1 x2 y2 \<noteq> 0" 
-  assumes pd': "delta rx ry (fst (\<tau> (i (x2,y2)))) (snd (\<tau> (i (x2,y2)))) \<noteq> 0"
-  shows "delta' rx ry (fst (i (x2,y2))) (snd (i (x2,y2))) \<noteq> 0"
-  using pd' unfolding delta_def delta_minus_def delta_plus_def
-                      delta'_def delta_x_def delta_y_def 
-  apply(simp split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  apply safe
-  using pd unfolding r_expr delta'_def delta_x_def delta_y_def
-  apply(simp)
-  apply(simp split: if_splits add: c_eq_1 divide_simps)
-  using in_aff unfolding e'_aff_def e'_def
-  apply(simp add: t_expr)
-  apply safe  
-  using funny_field_lemma_2 by fast
-
-lemma delta'_add_delta_not_add: 
-  assumes 1: "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
-  assumes in_aff: "(x1,y1) \<in> e'_aff" "(x2,y2) \<in> e'_aff"
-  assumes pd: "delta' x1 y1 x2 y2 \<noteq> 0" 
-  assumes add_nz: "fst (ext_add (x1,y1) (x2,y2)) \<noteq> 0"  "snd (ext_add (x1,y1) (x2,y2)) \<noteq> 0"
-  shows pd': "delta (fst (\<tau> (x1,y1))) (snd (\<tau> (x1,y1))) x2 y2 \<noteq> 0"
-  using add_ext_add[OF ] 1 in_aff
-  using pd 1  unfolding delta_def delta_minus_def delta_plus_def
-                        delta'_def delta_x_def delta_y_def 
-                     e'_aff_def e'_def
-  apply(simp add: divide_simps t_nz)
-  apply(simp_all add: c_eq_1) 
-   apply(simp_all split: if_splits add: divide_simps t_nz 1 algebra_simps power2_eq_square[symmetric] t_expr d_nz)
-  using add_nz
-  apply(simp add: d_nz) 
-  using d_nz 
-  by (metis distrib_left mult_eq_0_iff)
 
 subsection \<open>Lemmas for associativity\<close>
 
