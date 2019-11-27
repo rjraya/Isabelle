@@ -4613,12 +4613,19 @@ val thms = [th1,th3]
 val x1'_expr = Goal.prove ctxt [] []
                                @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
                           (fn _ =>
-                                  Subgoal.FOCUS foc_tac @{context} 1
-                                  THEN all_tac)
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
+
 \<close>
 
 ML \<open>
-print_tac @{context} "foo"
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
 \<close>
 
 ML\<open>
@@ -4707,7 +4714,9 @@ proof -
                   THEN simp_tac @{context} 1\<close>)
   have x1''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(subst fstI[OF assms(1)])
-    by(rule arg_cong[OF assms(3)])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3),of fst]
+    apply(subst arg_cong[OF assms(3),of fst])
+    by(simp)
   have x1'''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(simp add: fstI[OF assms(1)] arg_cong[OF assms(3), of fst])
     thm fstI[OF assms(1)] arg_cong[OF assms(3), of fst]
