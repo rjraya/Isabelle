@@ -4538,11 +4538,54 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+(*
 lemma fstI: "z = (x,y) \<Longrightarrow> x = fst z"
   by simp
 lemma sndI: "z = (x,y) \<Longrightarrow> y = snd z"
   by simp
 
+
+
+
+ML \<open>
+val pretty_term = Syntax.pretty_term
+fun pretty_cterm ctxt ctrm = pretty_term ctxt (Thm.term_of ctrm)
+fun pretty_cterms ctxt ctrms = Pretty.block (Pretty.commas (map (pretty_cterm ctxt) ctrms))
+fun pretty_thm_no_vars ctxt thm =
+let
+val ctxt' = Config.put show_question_marks false ctxt
+in
+pretty_term ctxt' (Thm.prop_of thm)
+end
+
+fun pretty_thms_no_vars ctxt thms =
+      Pretty.block (Pretty.commas (map (pretty_thm_no_vars ctxt) thms))
+
+
+fun foc_tac {context, params, prems, asms, concl, schematics} =
+  let
+    fun assgn1 f1 f2 xs =
+    let
+      val out = map (fn (x, y) => Pretty.enum ":=" "" "" [f1 x, f2 y]) xs
+    in
+      Pretty.list "" "" out
+    end
+    fun assgn2 f xs = assgn1 (fn (n,T) => pretty_term context (Var (n,T))) f xs
+    val pps = map (fn (s, pp) => Pretty.block [Pretty.str s, pp])
+      [("params: ", assgn1 Pretty.str (pretty_cterm context) params),
+       ("assumptions: ", pretty_cterms context asms),
+       ("conclusion: ", pretty_cterm context concl),
+       ("premises: ", pretty_thms_no_vars context prems),
+       ("schematics: ", assgn2 (pretty_cterm context) (snd schematics))]
+    in
+    tracing (Pretty.string_of (Pretty.chunks pps)); all_tac
+end
+\<close>
+
+schematic_goal
+  shows "\<And> x y. A x y \<Longrightarrow> B y x \<longrightarrow> C (?z y) x"
+  apply(tactic \<open>Subgoal.FOCUS foc_tac @{context} 1 \<close>)
+  sorry
 
 ML \<open>
 val ctxt0 = @{context};
@@ -4570,13 +4613,20 @@ val th3 = Thm.instantiate' [SOME @{ctyp "'a"}] [SOME @{cterm "fst::'a\<times>'a 
 val thms = [th1,th3]
 val x1'_expr = Goal.prove ctxt [] []
                                @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
-                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th1] 1
-                                  THEN EqSubst.eqsubst_tac ctxt [1] [th3] 1
-                                  THEN simp_tac ctxt 1)
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
+
 \<close>
 
 ML \<open>
-print_tac @{context} "foo"
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
 \<close>
 
 ML\<open>
@@ -4665,7 +4715,9 @@ proof -
                   THEN simp_tac @{context} 1\<close>)
   have x1''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(subst fstI[OF assms(1)])
-    by(rule arg_cong[OF assms(3)])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3),of fst]
+    apply(subst arg_cong[OF assms(3),of fst])
+    by(simp)
   have x1'''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(simp add: fstI[OF assms(1)] arg_cong[OF assms(3), of fst])
     thm fstI[OF assms(1)] arg_cong[OF assms(3), of fst]
@@ -4732,6 +4784,8 @@ proof -
     unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4)
     by (simp add: prod_eq_iff)
 qed
+
+*)
 
 lemma ext_ext_ext_add_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"

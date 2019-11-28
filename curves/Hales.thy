@@ -4,6 +4,10 @@ begin
 
 section\<open>Affine Edwards curves\<close>
 
+ML \<open>Thy_Header.args\<close>
+
+ML \<open>parser\<close>
+
 class ell_field = field + 
   assumes two_not_zero: "2 \<noteq> 0"
 
@@ -4538,6 +4542,7 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+
 lemma fstI: "z = (x,y) \<Longrightarrow> x = fst z"
   by simp
 lemma sndI: "z = (x,y) \<Longrightarrow> y = snd z"
@@ -4586,6 +4591,9 @@ schematic_goal
   apply(tactic \<open>Subgoal.FOCUS foc_tac @{context} 1 \<close>)
   sorry
 
+declare [[ML_debugger = true]]
+
+
 ML \<open>
 val ctxt0 = @{context};
 val ctxt = ctxt0;
@@ -4613,12 +4621,19 @@ val thms = [th1,th3]
 val x1'_expr = Goal.prove ctxt [] []
                                @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
                           (fn _ =>
-                                  Subgoal.FOCUS foc_tac @{context} 1
-                                  THEN all_tac)
-\<close>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
 
+\<close>
+(*
 ML \<open>
-print_tac @{context} "foo"
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
 \<close>
 
 ML\<open>
@@ -4707,7 +4722,9 @@ proof -
                   THEN simp_tac @{context} 1\<close>)
   have x1''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(subst fstI[OF assms(1)])
-    by(rule arg_cong[OF assms(3)])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3),of fst]
+    apply(subst arg_cong[OF assms(3),of fst])
+    by(simp)
   have x1'''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     apply(simp add: fstI[OF assms(1)] arg_cong[OF assms(3), of fst])
     thm fstI[OF assms(1)] arg_cong[OF assms(3), of fst]
@@ -4774,6 +4791,8 @@ proof -
     unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4)
     by (simp add: prod_eq_iff)
 qed
+
+*)
 
 lemma ext_ext_ext_add_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
