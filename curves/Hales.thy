@@ -27,8 +27,9 @@ definition delta :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rig
 lemma delta_com: 
   "(delta x0 y0 x1 y1 = 0) = (delta x1 y1 x0 y0 = 0)"
   unfolding delta_def delta_plus_def delta_minus_def 
-  by algebra
-
+  apply algebra
+  done
+ML \<open>Outer_Syntax.command\<close>
 fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
  "add (x1,y1) (x2,y2) =
     ((x1*x2 - c*y1*y2) div (1-d*x1*y1*x2*y2), 
@@ -4538,19 +4539,27 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+lemma fstI: "x = (y, z) \<Longrightarrow> y = fst x"
+  by simp
+
+lemma sndI: "x = (y, z) \<Longrightarrow> z = snd x"
+  by simp
+
 ML \<open>
 val ctxt0 = @{context};
 val ctxt = ctxt0;
 val (_,ctxt) = Variable.add_fixes ["z1'","x1'","y1'",
                                    "z3'","x3'", "y3'", 
                                    "x1", "y1", "x2", "y2", "x3", "y3"] ctxt;
-val (assms,ctxt) = Assumption.add_assumes [@{cprop "z1' = (x1',y1')"}, @{cprop "z3' = (x3',y3')"},
+val (assms,ctxt) = Assumption.add_assumes 
+                       [@{cprop "z1' = (x1'::'a,y1'::'a)"}, @{cprop "z3' = (x3'::'a,y3'::'a)"},
                         @{cprop "z1' = ext_add (x1,y1) (x2,y2)"},@{cprop "z3' = add (x2,y2) (x3,y3)"},
                         @{cprop "delta_x x1 y1 x2 y2 \<noteq> 0"},@{cprop "delta_y x1 y1 x2 y2 \<noteq> 0"},
                         @{cprop "delta_minus x2 y2 x3 y3 \<noteq> 0"}, @{cprop "delta_plus x2 y2 x3 y3 \<noteq> 0"},
                         @{cprop "delta_x x1' y1' x3 y3 \<noteq> 0"}, @{cprop "delta_y x1' y1' x3 y3 \<noteq> 0"},
                         @{cprop "delta_x x1 y1 x3' y3' \<noteq> 0"}, @{cprop "delta_y x1 y1 x3' y3' \<noteq> 0"},
-                        @{cprop "e' x1 y1 = 0"}, @{cprop "e' x2 y2 = 0"}, @{cprop "e' x3 y3 = 0"} ] ctxt;
+                        @{cprop "e' x1 y1 = 0"}, @{cprop "e' x2 y2 = 0"}, @{cprop "e' x3 y3 = 0"} 
+                       ] ctxt;
 val goal = @{prop "ext_add (ext_add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (add (x2,y2) (x3,y3))"};
 val Deltax = @{cterm "(delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
                      (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)"};
@@ -4558,42 +4567,66 @@ val Deltay = @{cterm "(delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
                       (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)"};
 val gx = @{cterm "fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"};
 val gy = @{cterm "snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"};
-Proof_Context.get_fact;
-Proof_Context.note_thmss;
-Proof_Context.add_facts
-\<close>
 
-ML \<open>
-val x1'_expr = Goal.prove ctxt [] (map Thm.full_prop_of assms)
-                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
-                          (fn _ => asm_full_simp_tac  @{context} 1) ;
-
-\<close>
-
-
-ML\<open>
-val a = nth (Assumption.all_assms_of ctxt) 2;
-(Assumption.all_assms_of ctxt);
-Goal.prove;
-Binding.pos_of
-
+val th1 = @{thm fstI}  OF  [(nth assms 0)]
+val th2 = Thm.instantiate' [SOME @{ctyp "'a"}] 
+                           [SOME @{cterm "fst::'a\<times>'a \<Rightarrow> 'a"}]  
+                           (@{thm arg_cong} OF [(nth assms 2)])
 val x1'_expr = Goal.prove ctxt [] []
-                               goal
-                          (fn _ => simp_tac  @{context} 1)
-                         
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac ctxt [1] [th2] 1
+                                  THEN simp_tac ctxt 1)
+val th3 = @{thm sndI}  OF  [(nth assms 0)]
+val th4 = Thm.instantiate' [SOME @{ctyp "'a"}] 
+                           [SOME @{cterm "snd::'a\<times>'a \<Rightarrow> 'a"}]  
+                           (@{thm arg_cong} OF [(nth assms 2)])
+val y1'_expr = Goal.prove ctxt [] []
+                               @{prop "y1' = snd (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th3] 1
+                                  THEN EqSubst.eqsubst_tac ctxt [1] [th4] 1
+                                  THEN simp_tac ctxt 1)
+val th5 = @{thm fstI}  OF  [(nth assms 1)]
+val th6 = Thm.instantiate' [SOME @{ctyp "'a"}] 
+                           [SOME @{cterm "fst::'a\<times>'a \<Rightarrow> 'a"}]  
+                           (@{thm arg_cong} OF [(nth assms 3)])
+val x3'_expr = Goal.prove ctxt [] []
+                               @{prop "x3' = fst (add (x2,y2) (x3,y3))"}
+                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th5] 1
+                                  THEN EqSubst.eqsubst_tac ctxt [1] [th6] 1
+                                  THEN simp_tac ctxt 1)
+val th7 = @{thm sndI}  OF  [(nth assms 1)]
+val th8 = Thm.instantiate' [SOME @{ctyp "'a"}] 
+                           [SOME @{cterm "snd::'a\<times>'a \<Rightarrow> 'a"}]  
+                           (@{thm arg_cong} OF [(nth assms 3)])
+val y3'_expr = Goal.prove ctxt [] []
+                               @{prop "y3' = snd (add (x2,y2) (x3,y3))"}
+                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th7] 1
+                                  THEN EqSubst.eqsubst_tac ctxt [1] [th8] 1
+                                  THEN simp_tac ctxt 1)
+
+val y3'_expr = Goal.prove ctxt [] []
+ @{prop "\<exists> r1 r2 r3. (fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')) * 
+                     ((delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
+   (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3))
+ = r1 * e' x1 y1 + r2 * e' x2 y2 + r3 * e' x3 y3"}
+ (fn _ =>)
+
+    apply(tactic
+    \<open>CCONVERSION (Rewrite.rewrite_conv @{context} ([
+        Rewrite.Term (@{const divide('a)} $ 
+                      Term.dummy_pattern (TVar (("'a",0), [])) $ 
+                      (Rewrite.mk_hole 1 (TVar (("'a",0), []))),
+                      []),
+        Rewrite.In
+       ], NONE) [@{thm delta_x_def[symmetric]}]) 0\<close>)
+
 \<close>
 
+ML \<open>type_of @{term c} \<close>
 
-
-ML \<open>
-
-oal.prove ctxt ["x"] [] goal
-    (fn _ => EqSubst.eqsubst_tac @{context} [1] [@{thm sin_pi_2}] 1
-             THEN EqSubst.eqsubst_tac @{context} [1] 
-                [@{thm cos_periods[of 8 "8 div 2",simplified]}] 1
-             THEN simp_tac @{context} 1
-             THEN simp_tac @{context} 1)\<close>
-
+ML \<open>is_TFree @{typ 'a}\<close>     
+ML \<open>TFree\<close>
 
 lemma taylored_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
@@ -4604,8 +4637,7 @@ lemma taylored_assoc:
           "delta_x x1 y1 x3' y3' \<noteq> 0" "delta_y x1 y1 x3' y3' \<noteq> 0"
   assumes "e' x1 y1 = 0" "e' x2 y2 = 0" "e' x3 y3 = 0" 
   shows "ext_add (ext_add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (add (x2,y2) (x3,y3))" 
-proof -
- 
+proof - 
   define Delta\<^sub>x where "Delta\<^sub>x = 
    (delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
@@ -4614,7 +4646,7 @@ proof -
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
   define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
-
+  
   have x1'_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     using assms(1,3) by simp
   have y1'_expr: "y1' = snd (ext_add (x1,y1) (x2,y2))"
@@ -4627,18 +4659,51 @@ proof -
   have non_unfolded_adds:
       "delta' x1 y1 x2 y2 \<noteq> 0" using delta'_def assms(5,6) by auto
 
+
+
   have "\<exists> r1 r2 r3. g\<^sub>x * Delta\<^sub>x = r1 * e' x1 y1 + r2 * e' x2 y2 + r3 * e' x3 y3"
-    apply(simp add: assms(1,2) g\<^sub>x_def Delta\<^sub>x_def )
-    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric])+
-    apply(simp add: divide_simps assms(9,11))
-    apply(rewrite left_diff_distrib)
-    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+ 
-    apply simp
-    apply(rewrite delta_x_def)+
+    apply(tactic \<open>asm_full_simp_tac (@{context} addsimps 
+                                [@{thm g\<^sub>x_def},@{thm Delta\<^sub>x_def},@{thm assms(1)},@{thm assms(2)}]) 1\<close>)
+    apply(tactic
+    \<open>CCONVERSION (Rewrite.rewrite_conv @{context} ([
+        Rewrite.Term (@{const divide('a)} $ 
+                      Term.dummy_pattern (TVar (("'a",0), [])) $ 
+                      (Rewrite.mk_hole 1 (TVar (("'a",0), []))),
+                      []),
+        Rewrite.In
+       ], NONE) [@{thm delta_x_def[symmetric]}]) 0\<close>)
+
+    apply(tactic \<open>
+    let
+      val pat = [
+        Rewrite.Term (@{const divide('a)} $ 
+                      Term.dummy_pattern (TVar (("'a",0), [])) $ 
+                      (Rewrite.mk_hole 1 (TVar (("'a",0), []))),
+                      []),
+        Rewrite.In
+       ]
+      val to = NONE
+    in CCONVERSION (Rewrite.rewrite_conv @{context} (pat, to) [@{thm delta_x_def[symmetric]}]) 1 
+    end\<close>)
+
+    apply(rewrite in "?x / \<hole>" delta_x_def[symmetric])+
+
+    apply(tactic \<open>asm_full_simp_tac (@{context}
+                   addsimps (@{thms divide_simps} @ @{thms assms(9-11)})) 1\<close>)
+    apply(subst left_diff_distrib x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(tactic \<open>simp_tac @{context} 1\<close>)
+    apply(subst delta_x_def)+
+
     apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
                              delta_minus_def[symmetric] delta_plus_def[symmetric])+
-    apply(simp add: divide_simps assms(5-8) delta'_def delta_def)
-    apply(simp add: c_eq_1 t_expr delta_x_def delta_y_def delta_plus_def delta_minus_def  e'_def)  
+
+    apply(tactic \<open>asm_full_simp_tac (@{context} 
+                   addsimps (@{thms divide_simps} @ @{thms assms(5-8)} @ 
+                             [@{thm delta'_def}, @{thm delta_def}])) 1\<close>)
+    apply(tactic \<open>asm_full_simp_tac (@{context} addsimps
+                    [@{thm c_eq_1},@{thm t_expr(1)},@{thm delta_x_def},
+                     @{thm delta_y_def}, @{thm delta_plus_def}, 
+                     @{thm delta_minus_def}, @{thm e'_def}]) 1\<close>)
     by algebra
 
   then have "g\<^sub>x * Delta\<^sub>x = 0" 
