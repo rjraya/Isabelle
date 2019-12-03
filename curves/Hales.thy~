@@ -4539,27 +4539,87 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+<<<<<<< HEAD
 lemma fstI: "x = (y, z) \<Longrightarrow> y = fst x"
   by simp
 
 lemma sndI: "x = (y, z) \<Longrightarrow> z = snd x"
   by simp
 
+=======
+(*
+lemma fstI: "z = (x,y) \<Longrightarrow> x = fst z"
+  by simp
+lemma sndI: "z = (x,y) \<Longrightarrow> y = snd z"
+  by simp
+
+
+
+
+ML \<open>
+val pretty_term = Syntax.pretty_term
+fun pretty_cterm ctxt ctrm = pretty_term ctxt (Thm.term_of ctrm)
+fun pretty_cterms ctxt ctrms = Pretty.block (Pretty.commas (map (pretty_cterm ctxt) ctrms))
+fun pretty_thm_no_vars ctxt thm =
+let
+val ctxt' = Config.put show_question_marks false ctxt
+in
+pretty_term ctxt' (Thm.prop_of thm)
+end
+
+fun pretty_thms_no_vars ctxt thms =
+      Pretty.block (Pretty.commas (map (pretty_thm_no_vars ctxt) thms))
+
+
+fun foc_tac {context, params, prems, asms, concl, schematics} =
+  let
+    fun assgn1 f1 f2 xs =
+    let
+      val out = map (fn (x, y) => Pretty.enum ":=" "" "" [f1 x, f2 y]) xs
+    in
+      Pretty.list "" "" out
+    end
+    fun assgn2 f xs = assgn1 (fn (n,T) => pretty_term context (Var (n,T))) f xs
+    val pps = map (fn (s, pp) => Pretty.block [Pretty.str s, pp])
+      [("params: ", assgn1 Pretty.str (pretty_cterm context) params),
+       ("assumptions: ", pretty_cterms context asms),
+       ("conclusion: ", pretty_cterm context concl),
+       ("premises: ", pretty_thms_no_vars context prems),
+       ("schematics: ", assgn2 (pretty_cterm context) (snd schematics))]
+    in
+    tracing (Pretty.string_of (Pretty.chunks pps)); all_tac
+end
+\<close>
+
+schematic_goal
+  shows "\<And> x y. A x y \<Longrightarrow> B y x \<longrightarrow> C (?z y) x"
+  apply(tactic \<open>Subgoal.FOCUS foc_tac @{context} 1 \<close>)
+  sorry
+
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
 ML \<open>
 val ctxt0 = @{context};
 val ctxt = ctxt0;
 val (_,ctxt) = Variable.add_fixes ["z1'","x1'","y1'",
                                    "z3'","x3'", "y3'", 
                                    "x1", "y1", "x2", "y2", "x3", "y3"] ctxt;
+<<<<<<< HEAD
 val (assms,ctxt) = Assumption.add_assumes 
                        [@{cprop "z1' = (x1'::'a,y1'::'a)"}, @{cprop "z3' = (x3'::'a,y3'::'a)"},
+=======
+val (assms,ctxt) = Assumption.add_assumes [@{cprop "z1' = (x1',y1')"}, @{cprop "z3' = (x3',y3')"},
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
                         @{cprop "z1' = ext_add (x1,y1) (x2,y2)"},@{cprop "z3' = add (x2,y2) (x3,y3)"},
                         @{cprop "delta_x x1 y1 x2 y2 \<noteq> 0"},@{cprop "delta_y x1 y1 x2 y2 \<noteq> 0"},
                         @{cprop "delta_minus x2 y2 x3 y3 \<noteq> 0"}, @{cprop "delta_plus x2 y2 x3 y3 \<noteq> 0"},
                         @{cprop "delta_x x1' y1' x3 y3 \<noteq> 0"}, @{cprop "delta_y x1' y1' x3 y3 \<noteq> 0"},
                         @{cprop "delta_x x1 y1 x3' y3' \<noteq> 0"}, @{cprop "delta_y x1 y1 x3' y3' \<noteq> 0"},
+<<<<<<< HEAD
                         @{cprop "e' x1 y1 = 0"}, @{cprop "e' x2 y2 = 0"}, @{cprop "e' x3 y3 = 0"} 
                        ] ctxt;
+=======
+                        @{cprop "e' x1 y1 = 0"}, @{cprop "e' x2 y2 = 0"}, @{cprop "e' x3 y3 = 0"} ] ctxt;
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
 val goal = @{prop "ext_add (ext_add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (add (x2,y2) (x3,y3))"};
 val Deltax = @{cterm "(delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
                      (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)"};
@@ -4567,6 +4627,7 @@ val Deltay = @{cterm "(delta_y x1' y1' x3 y3)*(delta_y x1 y1 x3' y3')*
                       (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)"};
 val gx = @{cterm "fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"};
 val gy = @{cterm "snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"};
+<<<<<<< HEAD
 
 val th1 = @{thm fstI}  OF  [(nth assms 0)]
 val th2 = Thm.instantiate' [SOME @{ctyp "'a"}] 
@@ -4617,6 +4678,88 @@ ML \<open>type_of @{term c} \<close>
 
 ML \<open>is_TFree @{typ 'a}\<close>     
 ML \<open>TFree\<close>
+=======
+val th1 = @{thm fstI}  OF  [(nth assms 0)]
+val th2 = (@{thm arg_cong} OF [(nth assms 2)])
+val th3 = Thm.instantiate' [SOME @{ctyp "'a"}] [SOME @{cterm "fst::'a\<times>'a \<Rightarrow> 'a"}] th2
+val thms = [th1,th3]
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
+
+\<close>
+
+ML \<open>
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
+\<close>
+
+ML\<open>
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th1] 1
+                                   THEN EqSubst.eqsubst_tac ctxt [1] [th3] 1
+                                   THEN simp_tac ctxt 1)
+val x1'_expr = Goal.prove ctxt [] []
+                               @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
+                          (fn _ => EqSubst.eqsubst_tac @{context} [1] [@{thm fstI[OF assms(2)]}] 1
+                                   THEN asm_full_simp_tac ctxt 1
+                                   ) ;
+val a = nth (Assumption.all_assms_of ctxt) 2;
+(Assumption.all_assms_of ctxt);
+Goal.prove;
+Binding.pos_of
+
+val x1'_expr = Goal.prove ctxt [] []
+                               goal
+                          (fn _ => resolve_tac @{context} )
+                         
+\<close>
+
+
+lemma
+  assumes "\<And>a b. P ((a + 1) * (1 + b)) "
+  shows "\<And>a b :: nat. P ((a + 1) * (b + 1))"
+  apply (tactic \<open>
+    let
+      val (x, ctxt) = yield_singleton Variable.add_fixes "x" \<^context>
+      (* Note that the pattern order is reversed *)
+      val pat = [
+        Rewrite.For [(x, SOME \<^typ>\<open>nat\<close>)],
+        Rewrite.In,
+        Rewrite.Term (@{const plus(nat)} $ Free (x, \<^typ>\<open>nat\<close>) $ \<^term>\<open>1 :: nat\<close>, [])]
+      val to = NONE
+    in CCONVERSION (Rewrite.rewrite_conv ctxt (pat, to) @{thms add.commute}) 1 end
+  \<close>)
+  apply (fact assms)
+  done
+
+lemma
+  assumes "\<And>a b. P ((a + 1) * (1 + b)) "
+  shows "\<And>a b :: nat. P ((a + 1) * (b + 1))"
+  apply(rewrite at "x+1" in for (x) add.commute)
+  apply (fact assms)
+  done
+
+ML \<open>
+
+Goal.prove ctxt ["x"] [] goal
+    (fn _ => EqSubst.eqsubst_tac @{context} [1] [@{thm sin_pi_2}] 1
+             THEN EqSubst.eqsubst_tac @{context} [1] 
+                [@{thm cos_periods[of 8 "8 div 2",simplified]}] 1
+             THEN simp_tac @{context} 1
+             THEN simp_tac @{context} 1)\<close>
+
+
+
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
 
 lemma taylored_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
@@ -4627,7 +4770,12 @@ lemma taylored_assoc:
           "delta_x x1 y1 x3' y3' \<noteq> 0" "delta_y x1 y1 x3' y3' \<noteq> 0"
   assumes "e' x1 y1 = 0" "e' x2 y2 = 0" "e' x3 y3 = 0" 
   shows "ext_add (ext_add (x1,y1) (x2,y2)) (x3,y3) = ext_add (x1,y1) (add (x2,y2) (x3,y3))" 
+<<<<<<< HEAD
 proof - 
+=======
+proof -
+ 
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
   define Delta\<^sub>x where "Delta\<^sub>x = 
    (delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
@@ -4636,6 +4784,7 @@ proof -
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
   define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
+<<<<<<< HEAD
   
   have x1'_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
     using assms(1,3) by simp
@@ -4643,6 +4792,29 @@ proof -
     using assms(1,3) by simp
   have x3'_expr: "x3' = fst (add (x2,y2) (x3,y3))"
     using assms(2,4) by simp
+=======
+  thm assms
+  
+  have x1'_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
+    by(tactic \<open>EqSubst.eqsubst_tac @{context} [1] [@{thm fstI[OF assms(1)]}] 1
+                  THEN EqSubst.eqsubst_tac @{context} [1] [@{thm arg_cong[OF assms(3), of fst]}] 1
+                  THEN simp_tac @{context} 1\<close>)
+  have x1''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
+    apply(subst fstI[OF assms(1)])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3),of fst]
+    apply(subst arg_cong[OF assms(3),of fst])
+    by(simp)
+  have x1'''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
+    apply(simp add: fstI[OF assms(1)] arg_cong[OF assms(3), of fst])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3), of fst]
+  have y1'_expr: "y1' = snd (ext_add (x1,y1) (x2,y2))"
+    apply(subst sndI[OF assms(1)])
+    by(rule arg_cong[OF assms(3)])
+  have x3'_expr: "x3' = fst (add (x2,y2) (x3,y3))"
+    by(tactic \<open>EqSubst.eqsubst_tac @{context} [1] [@{thm fstI[OF assms(2)]}] 1
+                  THEN EqSubst.eqsubst_tac @{context} [1] [@{thm arg_cong[OF assms(4), of fst]}] 1
+                  THEN simp_tac @{context} 1\<close>)
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
   have y3'_expr: "y3' = snd (add (x2,y2) (x3,y3))"
     using assms(2,4) by simp
 
@@ -4650,6 +4822,7 @@ proof -
       "delta' x1 y1 x2 y2 \<noteq> 0" using delta'_def assms(5,6) by auto
 
   have "\<exists> r1 r2 r3. g\<^sub>x * Delta\<^sub>x = r1 * e' x1 y1 + r2 * e' x2 y2 + r3 * e' x3 y3"
+<<<<<<< HEAD
     apply(tactic \<open>asm_full_simp_tac (@{context} addsimps 
                                 [@{thm g\<^sub>x_def},@{thm Delta\<^sub>x_def},@{thm assms(1)},@{thm assms(2)}]) 1\<close>)
     apply(tactic \<open>
@@ -4685,6 +4858,19 @@ proof -
                     [@{thm c_eq_1},@{thm t_expr(1)},@{thm delta_x_def},
                      @{thm delta_y_def}, @{thm delta_plus_def}, 
                      @{thm delta_minus_def}, @{thm e'_def}]) 1\<close>)
+=======
+    apply(simp add: assms(1,2) g\<^sub>x_def Delta\<^sub>x_def )
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric])+
+    apply(simp add: divide_simps assms(9,11))
+    apply(rewrite left_diff_distrib)
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+ 
+    apply simp
+    apply(rewrite delta_x_def)+
+    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
+                             delta_minus_def[symmetric] delta_plus_def[symmetric])+
+    apply(simp add: divide_simps assms(5-8) delta'_def delta_def)
+    apply(simp add: c_eq_1 t_expr delta_x_def delta_y_def delta_plus_def delta_minus_def  e'_def)  
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
     by algebra
 
   then have "g\<^sub>x * Delta\<^sub>x = 0" 
@@ -4723,6 +4909,11 @@ proof -
     unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4)
     by (simp add: prod_eq_iff)
 qed
+<<<<<<< HEAD
+=======
+
+*)
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
 
 lemma ext_ext_ext_add_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"

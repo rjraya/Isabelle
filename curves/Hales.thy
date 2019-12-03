@@ -4,6 +4,10 @@ begin
 
 section\<open>Affine Edwards curves\<close>
 
+ML \<open>Thy_Header.args\<close>
+
+ML \<open>parser\<close>
+
 class ell_field = field + 
   assumes two_not_zero: "2 \<noteq> 0"
 
@@ -4539,6 +4543,7 @@ proof -
     by (simp add: prod_eq_iff)
 qed
 
+<<<<<<< HEAD
 lemma fstI: "x = (y, z) \<Longrightarrow> y = fst x"
   by simp
 
@@ -4574,9 +4579,11 @@ val th2 = Thm.instantiate' [SOME @{ctyp "'a"}]
                            (@{thm arg_cong} OF [(nth assms 2)])
 val x1'_expr = Goal.prove ctxt [] []
                                @{prop "x1' = fst (ext_add (x1,y1) (x2,y2))"}
-                          (fn _ => EqSubst.eqsubst_tac ctxt [1] [th1] 1
-                                  THEN EqSubst.eqsubst_tac ctxt [1] [th2] 1
-                                  THEN simp_tac ctxt 1)
+                          (fn _ =>
+                                  EqSubst.eqsubst_tac @{context} [1] [th1] 1
+                                  THEN EqSubst.eqsubst_tac @{context} [1] [th2] 1
+                                  THEN simp_tac @{context} 1)
+
 val th3 = @{thm sndI}  OF  [(nth assms 0)]
 val th4 = Thm.instantiate' [SOME @{ctyp "'a"}] 
                            [SOME @{cterm "snd::'a\<times>'a \<Rightarrow> 'a"}]  
@@ -4657,15 +4664,6 @@ val case1 = Goal.prove ctxt [] []
                           (map (nth assms) [4,5,6,7,8,9,10,12,13,14]) @ @{thms delta'_def delta_def}) 1 )
 \<close>
 
-ML \<open>
- assms(5-6) assms(7-11) assms(13-15)
-have "g\<^sub>x = 0"
-    apply(tactic \<open>Method.insert_tac @{context} @{thms div1} 1\<close> )
-    by(simp add: assms(5-6) assms(7-11) assms(13-15) delta'_def delta_def Delta\<^sub>x_def g\<^sub>x_def)
-
-\<close>
-
-
 lemma taylored_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
   assumes "z1' = ext_add (x1,y1) (x2,y2)" "z3' = add (x2,y2) (x3,y3)"
@@ -4684,13 +4682,30 @@ proof -
    (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
   define g\<^sub>x where "g\<^sub>x = fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')"
   define g\<^sub>y where "g\<^sub>y = snd(ext_add z1' (x3,y3)) - snd(ext_add (x1,y1) z3')"
+<<<<<<< HEAD
+=======
+  thm assms
+>>>>>>> ec69a08811201316a07e665db972ab9b0ee74965
   
   have x1'_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
-    using assms(1,3) by simp
+    by(tactic \<open>EqSubst.eqsubst_tac @{context} [1] [@{thm fstI[OF assms(1)]}] 1
+                  THEN EqSubst.eqsubst_tac @{context} [1] [@{thm arg_cong[OF assms(3), of fst]}] 1
+                  THEN simp_tac @{context} 1\<close>)
+  have x1''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
+    apply(subst fstI[OF assms(1)])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3),of fst]
+    apply(subst arg_cong[OF assms(3),of fst])
+    by(simp)
+  have x1'''_expr: "x1' = fst (ext_add (x1,y1) (x2,y2))"
+    apply(simp add: fstI[OF assms(1)] arg_cong[OF assms(3), of fst])
+    thm fstI[OF assms(1)] arg_cong[OF assms(3), of fst]
   have y1'_expr: "y1' = snd (ext_add (x1,y1) (x2,y2))"
-    using assms(1,3) by simp
+    apply(subst sndI[OF assms(1)])
+    by(rule arg_cong[OF assms(3)])
   have x3'_expr: "x3' = fst (add (x2,y2) (x3,y3))"
-    using assms(2,4) by simp
+    by(tactic \<open>EqSubst.eqsubst_tac @{context} [1] [@{thm fstI[OF assms(2)]}] 1
+                  THEN EqSubst.eqsubst_tac @{context} [1] [@{thm arg_cong[OF assms(4), of fst]}] 1
+                  THEN simp_tac @{context} 1\<close>)
   have y3'_expr: "y3' = snd (add (x2,y2) (x3,y3))"
     using assms(2,4) by simp
 
@@ -4770,6 +4785,8 @@ proof -
     unfolding g\<^sub>x_def g\<^sub>y_def assms(3,4)
     by (simp add: prod_eq_iff)
 qed
+
+*)
 
 lemma ext_ext_ext_add_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
