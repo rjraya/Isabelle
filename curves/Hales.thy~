@@ -4605,8 +4605,18 @@ val y3'_expr = Goal.prove ctxt [] []
                                   THEN EqSubst.eqsubst_tac ctxt [1] [th8] 1
                                   THEN simp_tac ctxt 1)
 
+val y3'_expr = Goal.prove ctxt [] []
+ @{prop "\<exists> r1 r2 r3. (fst(ext_add z1' (x3,y3)) - fst(ext_add (x1,y1) z3')) * 
+                     ((delta_x x1' y1' x3 y3)*(delta_x x1 y1 x3' y3')*
+   (delta' x1 y1 x2 y2)*(delta x2 y2 x3 y3))
+ = r1 * e' x1 y1 + r2 * e' x2 y2 + r3 * e' x3 y3"}
 
 \<close>
+
+ML \<open>type_of @{term c} \<close>
+
+ML \<open>is_TFree @{typ 'a}\<close>     
+ML \<open>TFree\<close>
 
 lemma taylored_assoc: 
   assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
@@ -4639,34 +4649,35 @@ proof -
   have non_unfolded_adds:
       "delta' x1 y1 x2 y2 \<noteq> 0" using delta'_def assms(5,6) by auto
 
-
-
   have "\<exists> r1 r2 r3. g\<^sub>x * Delta\<^sub>x = r1 * e' x1 y1 + r2 * e' x2 y2 + r3 * e' x3 y3"
     apply(tactic \<open>asm_full_simp_tac (@{context} addsimps 
                                 [@{thm g\<^sub>x_def},@{thm Delta\<^sub>x_def},@{thm assms(1)},@{thm assms(2)}]) 1\<close>)
-    
     apply(tactic \<open>
-    CCONVERSION (Rewrite.rewrite_conv ctxt ([], NONE) @{thms delta_x_def[symmetric]}) 1 
-    \<close>)
-    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric])+
-    apply(tactic \<open>
-    let
-      val pat = [
-        Rewrite.Term (@{const divide('a)} $ Rewrite.rewrite_HOLE),
-        Rewrite.In
-       ]
-      val to = NONE
-    in CCONVERSION (Rewrite.rewrite_conv ctxt (pat, to) @{thms delta_x_def[symmetric]}) 1 
-    end\<close>)
-    apply(tactic \<open>asm_full_simp_tac (@{context} 
-                   addsimps (@{thms divide_simps} @ @{thms assms(9-11)})) 1\<close>)
+   let 
+    val pat = [Rewrite.In,Rewrite.Term (@{const divide('a)} $ Var (("c", 0), \<^typ>\<open>'a\<close>) $ 
+                                        Rewrite.mk_hole 1 (\<^typ>\<open>'a\<close>), []),Rewrite.At]
+    val to = NONE
+   in
+    CCONVERSION (Rewrite.rewrite_conv @{context} (pat, to) @{thms delta_x_def[symmetric]}) 1 
+   end
+  \<close>)+
+    apply(tactic \<open>asm_full_simp_tac (@{context}
+                   addsimps (@{thms divide_simps} @ @{thms assms(9-11)})) 1\<close>)    
     apply(subst left_diff_distrib x1'_expr y1'_expr x3'_expr y3'_expr)+
     apply(tactic \<open>simp_tac @{context} 1\<close>)
-    apply(subst delta_x_def)+
+    apply(rewrite delta_x_def)+
 
-    apply(rewrite in "_ / \<hole>" delta_x_def[symmetric] delta_y_def[symmetric] 
-                             delta_minus_def[symmetric] delta_plus_def[symmetric])+
-
+    apply(tactic \<open>
+   let 
+    val pat = [Rewrite.In,Rewrite.Term (@{const divide('a)} $ Var (("c", 0), \<^typ>\<open>'a\<close>) $ 
+                                       Rewrite.mk_hole 1 (\<^typ>\<open>'a\<close>), []),Rewrite.In]
+    val to = NONE
+   in
+    CCONVERSION (Rewrite.rewrite_conv @{context} (pat, to) @{thms delta_x_def[symmetric] delta_y_def[symmetric] 
+                             delta_minus_def[symmetric] delta_plus_def[symmetric] 
+                             }) 1 
+   end
+  \<close>)+
     apply(tactic \<open>asm_full_simp_tac (@{context} 
                    addsimps (@{thms divide_simps} @ @{thms assms(5-8)} @ 
                              [@{thm delta'_def}, @{thm delta_def}])) 1\<close>)
