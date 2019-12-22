@@ -29,7 +29,7 @@ lemma delta_com:
   unfolding delta_def delta_plus_def delta_minus_def 
   apply algebra
   done
-ML \<open>Outer_Syntax.command\<close>
+
 fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
  "add (x1,y1) (x2,y2) =
     ((x1*x2 - c*y1*y2) div (1-d*x1*y1*x2*y2), 
@@ -4414,6 +4414,7 @@ let
                             (fn _ => EqSubst.eqsubst_tac ctxt [1] [th3] 1
                                     THEN EqSubst.eqsubst_tac ctxt [1] [th4] 1
                                     THEN simp_tac ctxt 1)
+
   val th5 = @{thm fstI}  OF  [(nth assms 1)]
   val th6 = Thm.instantiate' [SOME @{ctyp "'a"}] 
                              [SOME @{cterm "fst::'a\<times>'a \<Rightarrow> 'a"}]  
