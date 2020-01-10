@@ -1193,7 +1193,57 @@ proof -
   qed
 qed
 
-lemma dichotomy_1:
+lemma ideal_membership_1:
+  fixes x0 x1 y0 y1 :: "'a"
+  assumes "x0 \<noteq> 0" "y0 \<noteq> 0" "x1 \<noteq> 0" "y1 \<noteq> 0"
+  shows "\<exists> q1 q2 q3 q4.
+          x0^2 - y1^2 = 
+              q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
+              q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
+              q3*(x0 * y0 - x1 * y1) +
+              q4*(-x0 * x1 + y0 * y1)
+        "
+        " \<exists> q1 q2 q3 q4.
+          y0^2 - x1^2 = 
+              q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
+              q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
+              q3*(x0 * y0 - x1 * y1) +
+              q4*(-x0 * x1 + y0 * y1)
+        "
+        "\<exists> q1 q2 q3 q4.
+          x0 * y0 - x1 * y1 = 
+              q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
+              q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
+              q3*(x0 * y0 - x1 * y1) +
+              q4*(-x0 * x1 + y0 * y1)
+        "
+  using assms by algebra+
+
+(*
+{-1 + x0^2 + y0^2 - t^2 x0^2 y0^2, -1 + x1^2 + y1^2 - t^2 x1^2 y1^2, 
+ x0 y0 - x1 y1, x1 y0 + x0 y1, -1 + q x0 x1 y0 y1}
+
+(x0^2 - y1^2), q (y0^2 - x1^2), x0 y0 - x1 y1
+*)
+
+lemma ideal_membership_2:
+  fixes x0 x1 y0 y1 t :: "'b::idom"
+  assumes "x0 \<noteq> 0" "y0 \<noteq> 0" "x1 \<noteq> 0" "y1 \<noteq> 0"
+  shows "\<exists> q1 q2 q3 q4.
+          y0^2 - x1^2 = 
+              q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
+              q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
+              q3*(x0 * y0 - x1 * y1) +
+              q4*(x1 * y0 + x0 * y1) 
+        "      
+  using assms 
+  apply(tactic \<open>Groebner.ring_tac [] [] @{context} 1\<close>)
+  apply algebra
+  
+  sorry
+
+
+lemma dichotomy_1_with_ideals:
   assumes "p \<in> e'_aff" "q \<in> e'_aff" 
   shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or> 
          (p,q) \<in> e'_aff_0 \<or> (p,q) \<in> e'_aff_1" 
@@ -1233,6 +1283,7 @@ proof -
       using \<open>q \<in> e_circ\<close> \<tau>_circ circ_to_aff tq_expr apply fastforce
       using assms(1) p_expr by auto
 
+
     define \<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
       "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
     define p\<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
@@ -1242,29 +1293,49 @@ proof -
     define \<delta>_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
       "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y a1 b1 (1/(t*x0)) (1/(t*y0)))"
 
+    have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
+     unfolding \<delta>'_def delta_minus_def 
+     by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+    have p\<delta>'_expr: "p\<delta>' a0 b0 = a0 * b0 + a1 * b1"
+      unfolding p\<delta>'_def delta_plus_def 
+      by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+    have \<delta>_plus_expr: "\<delta>_plus a0 b0 = b1 * b0 - a1 * a0" 
+      unfolding \<delta>_plus_def delta_x_def
+      by(simp add: divide_simps a0_nz a1_nz t_nz)
+    have \<delta>_minus_expr: "\<delta>_minus a0 b0 = a1 * b0 + b1 * a0" 
+      unfolding \<delta>_minus_def delta_y_def
+      by(simp add: divide_simps a0_nz a1_nz t_nz)              
+
     have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+      (* We may assume that \<delta>\<^sub>0\<^sub>x (P,Q) = 0 *)
     proof(cases "delta_minus a1 b1 (fst q) (snd q) = 0")
       case True
-      then have t1: "delta_minus a1 b1 (fst q) (snd q) = 0" 
-        using \<open>delta x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> delta_def p_def q_def by auto
+      then have t1: "delta_minus a1 b1 (fst q) (snd q) = 0" by auto
       then show ?thesis 
       proof(cases "\<delta>_plus a0 b0 = 0")
         case True
         then have cas1: "delta_minus a1 b1 (fst q) (snd q) = 0"
                         "\<delta>_plus a0 b0 = 0" 
           using t1 by auto
-        have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
-         unfolding \<delta>'_def delta_minus_def 
-         by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+
+        have "\<exists> q1 q2 q3 q4. 
+          a0*b0 - a1*b1 = q1 * \<delta>' a0 b0 + q3 * \<delta>_plus a0 b0"
+          unfolding \<delta>'_expr \<delta>_plus_expr \<delta>_minus_expr
+          using True \<delta>_plus_expr by auto
 
         have eq1': "a0*b0 - a1*b1 = 0" 
-          using \<delta>'_expr q_def tau_sq tq_expr cas1(1) unfolding \<delta>'_def by fastforce
+          using \<delta>'_expr q_def tau_sq tq_expr cas1(1) 
+          unfolding \<delta>'_def by fastforce
+
         then have eq1: "a0 = a1 * (b1 / b0)"  
           using a0_nz(2) by(simp add: divide_simps) 
-    
+
+        
+
         have eq2: "b0^2 - a1^2 = 0"
-          using cas1(2) unfolding \<delta>_plus_def delta_x_def 
-          by(simp add: divide_simps a0_nz a1_nz t_nz eq1 power2_eq_square[symmetric])
+          using cas1(2) eq1 a0_nz a1_nz unfolding \<delta>_plus_expr
+          apply(simp add: field_simps) 
+          by algebra
         
         have eq3: "a0^2 - b1^2 = 0"
           using eq1 eq2 
@@ -1290,10 +1361,6 @@ proof -
                         "\<delta>_minus a0 b0 = 0"               
           using t1 \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
                 delta'_def 3 q_def p_def tq_expr by auto
-        
-        have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
-          unfolding \<delta>'_def delta_minus_def 
-          by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
 
         have eq1: "a1 * b0 + b1 * a0  = 0"
           using cas2(2) unfolding \<delta>_minus_def delta_y_def 
@@ -1356,12 +1423,9 @@ proof -
         case True
         then have cas1: "delta_plus a1 b1 (fst q) (snd q) = 0"
                         "\<delta>_minus a0 b0 = 0" using t1 by auto
-        have \<delta>'_expr: "p\<delta>' a0 b0 = a0 * b0 + a1 * b1"
-          unfolding p\<delta>'_def delta_plus_def 
-          by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
-        
+
         have eq1': "a0 * b0 + a1 * b1 = 0"
-          using \<delta>'_expr cas1(1) p\<delta>'_def q_def tau_sq tq_expr by auto 
+          using p\<delta>'_expr cas1(1) p\<delta>'_def q_def tau_sq tq_expr by auto 
         then have eq1: "a0 = - (a1 * b1) / b0"  
           using a0_nz(2) 
           by(simp add: divide_simps,algebra) 
@@ -1398,11 +1462,288 @@ proof -
                          "\<delta>_plus a0 b0 = 0"               
           using t1 False \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
                 delta'_def p_def q_def tq_expr by auto
-        have \<delta>'_expr: "p\<delta>' a0 b0 = a0*b0 + a1*b1"
-          unfolding p\<delta>'_def delta_plus_def 
-          by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+
         then have eq1: "a0*b0 + a1*b1 = 0" 
-          using p\<delta>'_def \<delta>'_expr tq_expr q_def tau_sq cas2(1) by force
+          using p\<delta>'_def p\<delta>'_expr tq_expr q_def tau_sq cas2(1) by force
+
+        have eq2: "b0 * b1 - a0 * a1 = 0" 
+          using cas2 unfolding \<delta>_plus_def delta_x_def 
+          by(simp add: algebra_simps t_nz a0_nz)  
+
+        define c1 where "c1 = a0^2*b0^2" 
+        define c2 where "c2 = a0^2*a1^2"
+        have c_eqs: "c1 = a0^2*b0^2" "c2 = a0^2*a1^2"
+                    "c1 = a1^2*b1^2" "c2 = b0^2*b1^2"
+          using c1_def c2_def eq1 eq2 by algebra+
+
+        have "c1 * (a0^2 + b0^2 - 1)  = c1 * (a1^2 + b1^2 - 1)"
+          using in_aff c_eqs 
+          unfolding e'_aff_def e'_def
+          by(simp add: a1_nz a0_nz)
+        then have eq3: "(c1-c2) * (a0^2-a1^2) = 0"
+                       "(c1-c2) * (b0^2-b1^2) = 0"
+          apply(simp_all add: algebra_simps)
+          unfolding c1_def c2_def
+          using c_eqs by algebra+
+
+        then consider
+          (1) "c1 = c2" |
+          (2) "a0^2-a1^2 = 0" "b0^2-b1^2 = 0" by force
+        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        proof(cases)
+          case 1
+          then have "b0^2 = a1^2" "a0^2 = b1^2"
+            using c_eqs a0_nz a1_nz by auto 
+          then show ?thesis
+            using eq2 by algebra          
+        next
+          case 2
+          then have "b0 = b1 \<or> b0 = -b1" "a0 = a1 \<or> a0 = -a1"
+            by algebra+
+          then show ?thesis
+            using eq1 eq2 False \<delta>_minus_def a1_nz(1) a1_nz(2) delta_y_def by auto
+        qed
+        then have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          unfolding p_expr by auto
+
+        then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
+          unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
+        then obtain g where "g \<in> rotations \<and> \<tau> q = (g \<circ> i) p"
+          by blast
+        then have "q = (\<tau> \<circ> g \<circ> i) p"
+          using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
+        then show "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+          unfolding symmetries_def rotations_def 
+          using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast  
+      qed
+    qed
+    then show ?thesis 
+      using \<open>p \<in> e_circ\<close> by blast
+  qed
+qed
+
+lemma dichotomy_1:
+  assumes "p \<in> e'_aff" "q \<in> e'_aff" 
+  shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or> 
+         (p,q) \<in> e'_aff_0 \<or> (p,q) \<in> e'_aff_1" 
+proof -
+  obtain x1 y1 where p_def: "p = (x1,y1)" by fastforce
+  obtain x2 y2 where q_def: "q = (x2,y2)" by fastforce
+  
+  consider (1) "(p,q) \<in> e'_aff_0" |
+           (2) "(p,q) \<in> e'_aff_1" |
+           (3) "(p,q) \<notin> e'_aff_0 \<and> (p,q) \<notin> e'_aff_1" by blast
+  then show ?thesis
+  proof(cases)
+    case 1 then show ?thesis by blast  
+  next
+    case 2 then show ?thesis by simp
+  next
+    case 3
+    then have "delta x1 y1 x2 y2 = 0" "delta' x1 y1 x2 y2 = 0"
+      unfolding p_def q_def e'_aff_0_def e'_aff_1_def using assms 
+      by (simp add: assms p_def q_def)+
+    have "x1 \<noteq> 0" "y1 \<noteq> 0" "x2 \<noteq> 0" "y2 \<noteq> 0" 
+      using \<open>delta x1 y1 x2 y2 = 0\<close> 
+      unfolding delta_def delta_plus_def delta_minus_def by auto
+    then have "p \<in> e_circ" "q \<in> e_circ"
+      unfolding e_circ_def using assms p_def q_def by blast+
+    
+    obtain a0 b0 where tq_expr: "\<tau> q = (a0,b0)" by fastforce
+    then have q_expr: "q = \<tau> (a0,b0)" using tau_idemp_explicit q_def by auto
+    obtain a1 b1 where p_expr: "p = (a1,b1)" by fastforce
+    have a0_nz: "a0 \<noteq> 0" "b0 \<noteq> 0"
+      using \<open>\<tau> q = (a0, b0)\<close> \<open>x2 \<noteq> 0\<close> \<open>y2 \<noteq> 0\<close> comp_apply q_def tau_sq by auto
+
+    have a1_nz: "a1 \<noteq> 0" "b1 \<noteq> 0"
+      using \<open>p = (a1, b1)\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> p_def by auto
+
+    have in_aff: "(a0,b0) \<in> e'_aff" "(a1,b1) \<in> e'_aff"
+      using \<open>q \<in> e_circ\<close> \<tau>_circ circ_to_aff tq_expr apply fastforce
+      using assms(1) p_expr by auto
+
+
+    define \<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
+      "\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_minus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
+    define p\<delta>' :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where 
+      "p\<delta>'= (\<lambda> x0 y0. x0 * y0 * delta_plus a1 b1 (1/(t*x0)) (1/(t*y0)))" 
+    define \<delta>_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+      "\<delta>_plus = (\<lambda> x0 y0. t * x0 * y0 * delta_x a1 b1 (1/(t*x0)) (1/(t*y0)))"
+    define \<delta>_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+      "\<delta>_minus = (\<lambda> x0 y0. t * x0 * y0 * delta_y a1 b1 (1/(t*x0)) (1/(t*y0)))"
+
+    have \<delta>'_expr: "\<delta>' a0 b0 = a0*b0 - a1*b1"
+     unfolding \<delta>'_def delta_minus_def 
+     by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+    have p\<delta>'_expr: "p\<delta>' a0 b0 = a0 * b0 + a1 * b1"
+      unfolding p\<delta>'_def delta_plus_def 
+      by(simp add: algebra_simps a0_nz a1_nz power2_eq_square[symmetric] t_expr d_nz)
+    have \<delta>_plus_expr: "\<delta>_plus a0 b0 = b1 * b0 - a1 * a0" 
+      unfolding \<delta>_plus_def delta_x_def
+      by(simp add: divide_simps a0_nz a1_nz t_nz)
+    have \<delta>_minus_expr: "\<delta>_minus a0 b0 = a1 * b0 + b1 * a0" 
+      unfolding \<delta>_minus_def delta_y_def
+      by(simp add: divide_simps a0_nz a1_nz t_nz)              
+
+    have "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+      (* We may assume that \<delta>\<^sub>0\<^sub>x (P,Q) = 0 *)
+    proof(cases "delta_minus a1 b1 (fst q) (snd q) = 0")
+      case True
+      then have t1: "delta_minus a1 b1 (fst q) (snd q) = 0" by auto
+      then show ?thesis 
+      proof(cases "\<delta>_plus a0 b0 = 0")
+        case True
+        then have cas1: "delta_minus a1 b1 (fst q) (snd q) = 0"
+                        "\<delta>_plus a0 b0 = 0" 
+          using t1 by auto
+
+        have "\<exists> q1 q2 q3 q4. 
+          a0*b0 - a1*b1 = q1 * \<delta>' a0 b0 + q3 * \<delta>_plus a0 b0"
+          unfolding \<delta>'_expr \<delta>_plus_expr \<delta>_minus_expr
+          using True \<delta>_plus_expr by auto
+
+        have eq1': "a0*b0 - a1*b1 = 0" 
+          using \<delta>'_expr q_def tau_sq tq_expr cas1(1) 
+          unfolding \<delta>'_def by fastforce
+
+        then have eq1: "a0 = a1 * (b1 / b0)"  
+          using a0_nz(2) by(simp add: divide_simps) 
+
+        
+
+        have eq2: "b0^2 - a1^2 = 0"
+          using cas1(2) eq1 a0_nz a1_nz unfolding \<delta>_plus_expr
+          apply(simp add: field_simps) 
+          by algebra
+        
+        have eq3: "a0^2 - b1^2 = 0"
+          using eq1 eq2 
+          by(simp add: divide_simps a0_nz a1_nz eq1 eq2 power2_eq_square right_diff_distrib')
+    
+        have "(a0,b0) = (b1,a1) \<or> (a0,b0) = (-b1,-a1)" 
+          using eq2 eq3 eq1' by algebra        
+        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}" by simp
+        moreover have "{(b1,a1),(-b1,-a1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          using \<open>p = (a1, b1)\<close> by auto
+        ultimately have "\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p"
+          unfolding rotations_def by (auto simp add: \<open>\<tau> q = (a0, b0)\<close>)
+
+        then obtain g where "g \<in> rotations" "\<tau> q = (g \<circ> i) p" by blast
+        then have "q = (\<tau> \<circ> g \<circ> i) p"
+          using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
+        then show ?thesis
+          using tau_rot_sym \<open>g \<in> rotations\<close> symmetries_def by blast     
+    next
+      case False
+        (* in this case we need to use the in_aff equations *)
+        then have cas2: "delta_minus a1 b1 (fst q) (snd q) = 0"
+                        "\<delta>_minus a0 b0 = 0"               
+          using t1 \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
+                delta'_def 3 q_def p_def tq_expr by auto
+
+        have eq1: "a1 * b0 + b1 * a0  = 0"
+          using cas2(2) unfolding \<delta>_minus_def delta_y_def 
+          by(simp add: divide_simps a0_nz a1_nz t_nz power2_eq_square[symmetric])
+         
+        have eq2: "a0*b0 - a1*b1 = 0"
+          using \<delta>'_expr q_def tau_sq tq_expr cas2(1) unfolding \<delta>'_def by fastforce
+
+        define c1 where "c1 = a0^2*b0^2" 
+        define c2 where "c2 = a1^2*b0^2"
+        have c_eqs: "c1 = a0^2*b0^2" "c2 = a1^2*b0^2"
+                    "c1 = a1^2*b1^2" "c2 = a0^2*b1^2"
+          using c1_def c2_def eq1 eq2 by algebra+
+
+        have "c1 * (a0^2 + b0^2 - 1)  = c1 * (a1^2 + b1^2 - 1)"
+          using in_aff c_eqs 
+          unfolding e'_aff_def e'_def
+          by(simp add: a1_nz a0_nz)
+        then have eq3: "(c1-c2) * (a0^2-b1^2) = 0"
+                       "(c1-c2) * (a1^2-b0^2) = 0"
+          apply(simp_all add: algebra_simps)
+          unfolding c1_def c2_def
+          using c_eqs by algebra+
+        then consider
+          (1) "c1 = c2" |
+          (2) "a0^2 - b1^2 = 0" "a1^2-b0^2 = 0" by force
+        then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        proof(cases)
+          case 1
+          then have "b0^2 = b1^2" "a0^2 = a1^2"
+            using c_eqs a0_nz a1_nz by auto      
+          then have "b0 = b1 \<or> b0 = -b1" "a0 = a1 \<or> a0 = -a1"
+            by algebra+
+          then show ?thesis
+            using eq2 eq1 a0_nz(1) a1_nz(2) nonzero_mult_div_cancel_left 
+                  two_not_zero by force
+        next
+          case 2
+          then show ?thesis 
+            using eq2 by algebra
+        qed
+        then  have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          using p_expr by auto
+        then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
+          unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
+        then obtain g where "g \<in> rotations \<and> \<tau> q = (g \<circ> i) p"
+          by blast
+        then have "q = (\<tau> \<circ> g \<circ> i) p"
+          using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
+        then show ?thesis
+          unfolding symmetries_def rotations_def 
+          using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast  
+    qed
+    next
+      case False  
+      then have t1: "delta_plus a1 b1 (fst q) (snd q) = 0" 
+        using \<open>delta x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> delta_def p_def q_def by auto
+      then show ?thesis 
+      proof(cases "\<delta>_minus a0 b0 = 0")
+        case True
+        then have cas1: "delta_plus a1 b1 (fst q) (snd q) = 0"
+                        "\<delta>_minus a0 b0 = 0" using t1 by auto
+
+        have eq1': "a0 * b0 + a1 * b1 = 0"
+          using p\<delta>'_expr cas1(1) p\<delta>'_def q_def tau_sq tq_expr by auto 
+        then have eq1: "a0 = - (a1 * b1) / b0"  
+          using a0_nz(2) 
+          by(simp add: divide_simps,algebra) 
+        have eq2: "b0^2 - b1^2 = 0"
+          using cas1(2) unfolding \<delta>_minus_def delta_y_def  
+          by(simp add: divide_simps t_nz a0_nz a1_nz eq1 power2_eq_square[symmetric])
+        have eq3: "a0^2 - a1^2 = 0" 
+          using eq2 eq1'
+          by(simp add: algebra_simps divide_simps a0_nz a1_nz eq1 power2_eq_square)
+        
+        from eq2 have pos1: "b0 = b1 \<or> b0 = -b1" by algebra
+        from eq3 have pos2: "a0 = a1 \<or> a0 = -a1" by algebra
+        have "(a0 = a1 \<and> b0 = -b1) \<or> (a0 = -a1 \<and> b0 = b1)"
+          using pos1 pos2 eq2 eq3 eq1' by fastforce 
+        then have "(a0,b0) = (a1,-b1) \<or> (a0,b0) = (-a1,b1)" by auto        
+        then have "(a0,b0) \<in> {(a1,-b1),(-a1,b1)}" by simp
+        moreover have "{(a1,-b1),(-a1,b1)} \<subseteq> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          using \<open>p = (a1, b1)\<close> p_def by auto
+        ultimately have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"
+          by blast
+
+        then have "(\<exists> g \<in> rotations. \<tau> q = (g \<circ> i) p)"
+          unfolding rotations_def by (simp add: \<open>\<tau> q = (a0, b0)\<close>)
+        then obtain g where "g \<in> rotations \<and> \<tau> q = (g \<circ> i) p"
+          by blast
+        then have "q = (\<tau> \<circ> g \<circ> i) p"
+          using tau_sq \<open>\<tau> q = (a0, b0)\<close> q_def by auto
+        then show "(\<exists> g \<in> symmetries. q = (g \<circ> i) p)"
+          unfolding symmetries_def rotations_def 
+          using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast     
+      next
+      case False
+        then have cas2: "delta_plus a1 b1 (fst q) (snd q) = 0"
+                         "\<delta>_plus a0 b0 = 0"               
+          using t1 False \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
+                delta'_def p_def q_def tq_expr by auto
+
+        then have eq1: "a0*b0 + a1*b1 = 0" 
+          using p\<delta>'_def p\<delta>'_expr tq_expr q_def tau_sq cas2(1) by force
 
         have eq2: "b0 * b1 - a0 * a1 = 0" 
           using cas2 unfolding \<delta>_plus_def delta_x_def 

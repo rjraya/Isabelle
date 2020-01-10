@@ -2,6 +2,8 @@ theory Hales
   imports  "HOL-Algebra.Group"  "HOL-Library.Bit" "HOL-Library.Rewrite"
 begin
 
+declare [[quick_and_dirty=true]]
+
 
 section\<open>Affine Edwards curves\<close>
 
@@ -17,7 +19,101 @@ fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times
     ((x1*x2 - c*y1*y2) div (1-d*x1*y1*x2*y2), 
      (x1*y2+y1*x2) div (1+d*x1*y1*x2*y2))"
 
+definition delta_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+ "delta_plus x1 y1 x2 y2 = 1 + d * x1 * y1 * x2 * y2"
+
+definition delta_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+ "delta_minus x1 y1 x2 y2 = 1 - d * x1 * y1 * x2 * y2"
+
+definition delta :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+ "delta x1 y1 x2 y2 = (delta_plus x1 y1 x2 y2) * 
+                      (delta_minus x1 y1 x2 y2)"
+
+definition e :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+ "e x y = x^2 + c * y^2 - 1 - d * x^2 * y^2"
+
+lemma associativity: 
+  assumes "z1' = (x1',y1')" "z3' = (x3',y3')"
+  assumes "z1' = add (x1,y1) (x2,y2)" "z3' = add (x2,y2) (x3,y3)"
+  assumes "delta_minus x1 y1 x2 y2 \<noteq> 0" "delta_plus x1 y1 x2 y2 \<noteq> 0"
+          "delta_minus x2 y2 x3 y3 \<noteq> 0" "delta_plus x2 y2 x3 y3 \<noteq> 0"
+          "delta_minus x1' y1' x3 y3 \<noteq> 0" "delta_plus x1' y1' x3 y3 \<noteq> 0"
+          "delta_minus x1 y1 x3' y3' \<noteq> 0" "delta_plus x1 y1 x3' y3' \<noteq> 0"
+  assumes "e x1 y1 = 0" "e x2 y2 = 0" "e x3 y3 = 0" 
+  shows "add (add (x1,y1) (x2,y2)) (x3,y3) = add (x1,y1) (add (x2,y2) (x3,y3))" 
+proof -
+  define e1 where "e1 = e x1 y1"
+  define e2 where "e2 = e x2 y2"
+  define e3 where "e3 = e x3 y3"
+  define Delta\<^sub>x where "Delta\<^sub>x = 
+   (delta_minus x1' y1' x3 y3)*(delta_minus x1 y1 x3' y3')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+  define Delta\<^sub>y where "Delta\<^sub>y =
+   (delta_plus x1' y1' x3 y3)*(delta_plus x1 y1 x3' y3')*
+   (delta x1 y1 x2 y2)*(delta x2 y2 x3 y3)" 
+  define g\<^sub>x where "g\<^sub>x = fst(add z1' (x3,y3)) - fst(add (x1,y1) z3')"
+  define g\<^sub>y where "g\<^sub>y = snd(add z1' (x3,y3)) - snd(add (x1,y1) z3')"
+  define gxpoly where "gxpoly = g\<^sub>x * Delta\<^sub>x"
+  define gypoly where "gypoly = g\<^sub>y * Delta\<^sub>y"
+
+  have x1'_expr: "x1' = (x1 * x2 - c * y1 * y2) / (1 - d * x1 * y1 * x2 * y2)"
+    using assms(1,3) by simp
+  have y1'_expr: "y1' = (x1 * y2 + y1 * x2) / (1 + d * x1 * y1 * x2 * y2)"
+    using assms(1,3) by simp
+  have x3'_expr: "x3' = (x2 * x3 - c * y2 * y3) / (1 - d * x2 * y2 * x3 * y3)"
+    using assms(2,4) by simp
+  have y3'_expr: "y3' = (x2 * y3 + y2 * x3) / (1 + d * x2 * y2 * x3 * y3)"
+    using assms(2,4) by simp
+  
+  have non_unfolded_adds:
+      "delta x1 y1 x2 y2 \<noteq> 0" using delta_def assms(5,6) by auto
+  
+  have simp1gx: "
+    (x1' * x3 - c * y1' * y3) * delta_minus x1 y1 x3' y3' * 
+    (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+      ((x1 * x2 - c * y1 * y2) * x3 * delta_plus x1 y1 x2 y2 - 
+      c * (x1 * y2 + y1 * x2) * y3 * delta_minus x1 y1 x2 y2) *
+      (delta_minus x2 y2 x3 y3 * delta_plus x2 y2 x3 y3 - 
+      d * x1 * y1 * (x2 * x3 - c * y2 * y3) * (x2 * y3 + y2 * x3))
+  "
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_minus_def)
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
+    unfolding delta_def
+    by(simp add: divide_simps assms(5-8))
+
+  have simp2gx:
+    "(x1 * x3' - c * y1 * y3') * delta_minus x1' y1' x3 y3 * 
+     (delta x1 y1 x2 y2 * delta x2 y2 x3 y3) = 
+       (x1 * (x2 * x3 - c * y2 * y3) * delta_plus x2 y2 x3 y3 - 
+       c * y1 * (x2 * y3 + y2 * x3) * delta_minus x2 y2 x3 y3) *
+       (delta_minus x1 y1 x2 y2 * delta_plus x1 y1 x2 y2 - 
+       d * (x1 * x2 - c * y1 * y2) * (x1 * y2 + y1 * x2) * x3 * y3)"
+    apply(rewrite x1'_expr y1'_expr x3'_expr y3'_expr)+
+    apply(rewrite delta_minus_def)
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric] delta_plus_def[symmetric])+
+    unfolding delta_def
+    by(simp add: divide_simps assms(5-8))
+  
+  have "\<exists> r1 r2 r3. gxpoly = r1 * e1 + r2 * e2 + r3 * e3"
+    unfolding gxpoly_def g\<^sub>x_def Delta\<^sub>x_def 
+    apply(simp add: assms(1,2))
+    apply(rewrite in "_ / \<hole>" delta_minus_def[symmetric])+
+    apply(simp add: divide_simps assms(9,11))
+    apply(rewrite left_diff_distrib)
+    apply(simp add: simp1gx simp2gx)
+    unfolding delta_plus_def delta_minus_def
+              e1_def e2_def e3_def e_def
+    by algebra
+
+  then show ?thesis
+    sorry
+
+qed
+
 end
+
+
 
 section\<open>Extension\<close>
 (* Generalize for c \<noteq> 1 *)
@@ -38,15 +134,7 @@ definition t where "t = t'"
 fun \<tau> :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where 
   "\<tau> (x,y) = (1/(t*x),1/(t*y))"
 
-definition delta_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
- "delta_plus x1 y1 x2 y2 = 1 + d * x1 * y1 * x2 * y2"
 
-definition delta_minus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
- "delta_minus x1 y1 x2 y2 = 1 - d * x1 * y1 * x2 * y2"
-
-definition delta :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
- "delta x1 y1 x2 y2 = (delta_plus x1 y1 x2 y2) * 
-                      (delta_minus x1 y1 x2 y2)"
 
 
 definition delta_x :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
@@ -66,7 +154,6 @@ definition gluing :: "((('a \<times> 'a) \<times> bit) \<times> (('a \<times> 'a
                ((x0 \<noteq> 0 \<and> y0 \<noteq> 0 \<and> (x1,y1) = \<tau> (x0,y0) \<and> j = l+1) \<or>
                 (x0 = x1 \<and> y0 = y1 \<and> l = j))}"
 
-declare [[quick_and_dirty=true]]
 
 lemma coherence:
   assumes "delta x1 y1 x2 y2 \<noteq> 0" "delta' x1 y1 x2 y2 \<noteq> 0" 
@@ -136,5 +223,7 @@ definition proj_addition where
   "proj_addition c1 c2 = the_elem (proj_add_class c1 c2)"
 
 
+
+end
 
 end

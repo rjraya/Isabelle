@@ -48,9 +48,9 @@
 \isanewline
 \isacommand{fun}\isamarkupfalse%
 \ add\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
-\ {\isachardoublequoteopen}add\ {\isacharparenleft}x{\isadigit{1}}{\isacharcomma}y{\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}y{\isadigit{2}}{\isacharparenright}\ {\isacharequal}\isanewline
-\ \ \ \ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharasterisk}x{\isadigit{2}}\ {\isacharminus}\ c{\isacharasterisk}y{\isadigit{1}}{\isacharasterisk}y{\isadigit{2}}{\isacharparenright}\ div\ {\isacharparenleft}{\isadigit{1}}{\isacharminus}d{\isacharasterisk}x{\isadigit{1}}{\isacharasterisk}y{\isadigit{1}}{\isacharasterisk}x{\isadigit{2}}{\isacharasterisk}y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ \isanewline
-\ \ \ \ \ {\isacharparenleft}x{\isadigit{1}}{\isacharasterisk}y{\isadigit{2}}{\isacharplus}y{\isadigit{1}}{\isacharasterisk}x{\isadigit{2}}{\isacharparenright}\ div\ {\isacharparenleft}{\isadigit{1}}{\isacharplus}d{\isacharasterisk}x{\isadigit{1}}{\isacharasterisk}y{\isadigit{1}}{\isacharasterisk}x{\isadigit{2}}{\isacharasterisk}y{\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ {\isachardoublequoteopen}add\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}y\isactrlsub {\isadigit{2}}{\isacharparenright}\ {\isacharequal}\isanewline
+\ \ \ \ {\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharasterisk}x\isactrlsub {\isadigit{2}}\ {\isacharminus}\ c{\isacharasterisk}y\isactrlsub {\isadigit{1}}{\isacharasterisk}y\isactrlsub {\isadigit{2}}{\isacharparenright}\ div\ {\isacharparenleft}{\isadigit{1}}{\isacharminus}d{\isacharasterisk}x\isactrlsub {\isadigit{1}}{\isacharasterisk}y\isactrlsub {\isadigit{1}}{\isacharasterisk}x\isactrlsub {\isadigit{2}}{\isacharasterisk}y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ \isanewline
+\ \ \ \ \ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharasterisk}y\isactrlsub {\isadigit{2}}{\isacharplus}y\isactrlsub {\isadigit{1}}{\isacharasterisk}x\isactrlsub {\isadigit{2}}{\isacharparenright}\ div\ {\isacharparenleft}{\isadigit{1}}{\isacharplus}d{\isacharasterisk}x\isactrlsub {\isadigit{1}}{\isacharasterisk}y\isactrlsub {\isadigit{1}}{\isacharasterisk}x\isactrlsub {\isadigit{2}}{\isacharasterisk}y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}\isanewline
 \isanewline
 \isacommand{definition}\isamarkupfalse%
 \ delta{\isacharunderscore}plus\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
@@ -299,35 +299,23 @@
 %
 \endisadelimproof
 \isanewline
+\isacommand{type{\isacharunderscore}synonym}\isamarkupfalse%
+\ {\isacharparenleft}{\isacharprime}b{\isacharparenright}\ ppoint\ {\isacharequal}\ {\isacartoucheopen}{\isacharparenleft}{\isacharparenleft}{\isacharprime}b\ {\isasymtimes}\ {\isacharprime}b{\isacharparenright}\ {\isasymtimes}\ bit{\isacharparenright}{\isacartoucheclose}\isanewline
+\isanewline
 \isacommand{function}\isamarkupfalse%
-\ {\isacharparenleft}domintros{\isacharparenright}\ proj{\isacharunderscore}add\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit\ {\isasymRightarrow}\ {\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit\ {\isasymRightarrow}\ {\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit{\isachardoublequoteclose}\isanewline
-\ \ \isakeyword{where}\ \isanewline
-\ \ \ \ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ l{\isacharparenright}\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}add\ {\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ l{\isacharplus}j{\isacharparenright}{\isachardoublequoteclose}\isanewline
-\ \ \ \isakeyword{if}\ {\isachardoublequoteopen}delta\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}{\isachardoublequoteclose}\ \isakeyword{and}\ \isanewline
-\ \ \ \ \ {\isachardoublequoteopen}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\ \isakeyword{and}\ \isanewline
-\ \ \ \ \ {\isachardoublequoteopen}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\ \isanewline
-\ \ {\isacharbar}\ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ l{\isacharparenright}\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}ext{\isacharunderscore}add\ {\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ l{\isacharplus}j{\isacharparenright}{\isachardoublequoteclose}\isanewline
-\ \ \ \isakeyword{if}\ {\isachardoublequoteopen}delta{\isacharprime}\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}{\isachardoublequoteclose}\ \isakeyword{and}\ \isanewline
-\ \ \ \ \ {\isachardoublequoteopen}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\ \isakeyword{and}\ \isanewline
-\ \ \ \ \ {\isachardoublequoteopen}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\isanewline
-\ \ {\isacharbar}\ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ l{\isacharparenright}\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}\ {\isacharequal}\ undefined{\isachardoublequoteclose}\ \isanewline
-\ \ \ \isakeyword{if}\ {\isachardoublequoteopen}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}\ {\isasymnotin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymor}\ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}\ {\isasymnotin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymor}\ \isanewline
-\ \ \ \ \ \ \ \ {\isacharparenleft}delta\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isacharequal}\ {\isadigit{0}}\ {\isasymand}\ delta{\isacharprime}\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isacharequal}\ {\isadigit{0}}{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ proj{\isacharunderscore}add\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ ppoint\ {\isasymtimes}{\isacharprime}a\ ppoint\ {\isasymRightarrow}\ {\isacharprime}a\ ppoint{\isachardoublequoteclose}\ \isakeyword{where}\ \isanewline
+\ \ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ l{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}add\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ l{\isacharplus}j{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ \isakeyword{if}\ {\isachardoublequoteopen}delta\ x\isactrlsub {\isadigit{1}}\ y\isactrlsub {\isadigit{1}}\ x\isactrlsub {\isadigit{2}}\ y\isactrlsub {\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isasymand}\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\ \isanewline
+{\isacharbar}\ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ l{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}ext{\isacharunderscore}add\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ l{\isacharplus}j{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ \isakeyword{if}\ {\isachardoublequoteopen}delta{\isacharprime}\ x\isactrlsub {\isadigit{1}}\ y\isactrlsub {\isadigit{1}}\ x\isactrlsub {\isadigit{2}}\ y\isactrlsub {\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isasymand}\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isachardoublequoteclose}\isanewline
 %
 \isadelimproof
 \ \ %
 \endisadelimproof
 %
 \isatagproof
-\isacommand{apply}\isamarkupfalse%
-{\isacharparenleft}fast{\isacharparenright}\isanewline
-\ \ \isacommand{apply}\isamarkupfalse%
-{\isacharparenleft}fastforce{\isacharparenright}\isanewline
-\ \ \isacommand{using}\isamarkupfalse%
-\ coherence\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}def\ \isacommand{apply}\isamarkupfalse%
-\ force\isanewline
-\ \ \isacommand{by}\isamarkupfalse%
-\ auto%
+\isacommand{sorry}\isamarkupfalse%
+%
 \endisatagproof
 {\isafoldproof}%
 %
@@ -356,15 +344,15 @@
 \isanewline
 \isacommand{definition}\isamarkupfalse%
 \ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ \isakeyword{where}\isanewline
-\ \ {\isachardoublequoteopen}e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isacharequal}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}y{\isadigit{1}}{\isacharparenright}{\isacharcomma}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}y{\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardot}\ {\isacharparenleft}x{\isadigit{1}}{\isacharcomma}y{\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}y{\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ delta\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isacharbraceright}{\isachardoublequoteclose}\isanewline
+\ \ {\isachardoublequoteopen}e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isacharequal}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardot}\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}y\isactrlsub {\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ delta\ x\isactrlsub {\isadigit{1}}\ y\isactrlsub {\isadigit{1}}\ x\isactrlsub {\isadigit{2}}\ y\isactrlsub {\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isacharbraceright}{\isachardoublequoteclose}\isanewline
 \isanewline
 \isacommand{definition}\isamarkupfalse%
 \ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}\ \isakeyword{where}\isanewline
-\ \ {\isachardoublequoteopen}e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}\ {\isacharequal}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}y{\isadigit{1}}{\isacharparenright}{\isacharcomma}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}y{\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardot}\ {\isacharparenleft}x{\isadigit{1}}{\isacharcomma}y{\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}y{\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ delta{\isacharprime}\ x{\isadigit{1}}\ y{\isadigit{1}}\ x{\isadigit{2}}\ y{\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isacharbraceright}{\isachardoublequoteclose}\isanewline
+\ \ {\isachardoublequoteopen}e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}\ {\isacharequal}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}{\isachardot}\ {\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}y\isactrlsub {\isadigit{1}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}y\isactrlsub {\isadigit{2}}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ delta{\isacharprime}\ x\isactrlsub {\isadigit{1}}\ y\isactrlsub {\isadigit{1}}\ x\isactrlsub {\isadigit{2}}\ y\isactrlsub {\isadigit{2}}\ {\isasymnoteq}\ {\isadigit{0}}\ {\isacharbraceright}{\isachardoublequoteclose}\isanewline
 \isanewline
 \isacommand{definition}\isamarkupfalse%
 \ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}bit\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharparenleft}{\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit{\isacharparenright}\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
@@ -375,32 +363,38 @@
 \ e{\isacharunderscore}proj\ \isakeyword{where}\ {\isachardoublequoteopen}e{\isacharunderscore}proj\ {\isacharequal}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}bit\ {\isacharslash}{\isacharslash}\ gluing{\isachardoublequoteclose}\isanewline
 \isanewline
 \isanewline
+\isacommand{term}\isamarkupfalse%
+\ {\isachardoublequoteopen}proj{\isacharunderscore}add\ {\isacharbackquote}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}{\isachardot}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}\ {\isasymin}\ c\isactrlsub {\isadigit{1}}\ {\isasymtimes}\ c\isactrlsub {\isadigit{2}}\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isasymunion}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}{\isacharbraceright}\ {\isachardoublequoteclose}\isanewline
+\isanewline
+\isanewline
+\isanewline
+\isacommand{term}\isamarkupfalse%
+\ {\isachardoublequoteopen}{\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}{\isachardot}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}\ {\isasymin}\ c\isactrlsub {\isadigit{1}}\ {\isasymtimes}\ c\isactrlsub {\isadigit{2}}\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isasymunion}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}{\isacharbraceright}\ {\isachardoublequoteclose}\isanewline
+\isanewline
+\isacommand{type{\isacharunderscore}synonym}\isamarkupfalse%
+\ {\isacharparenleft}{\isacharprime}b{\isacharparenright}\ pclass\ {\isacharequal}\ {\isacartoucheopen}{\isacharparenleft}{\isacharprime}b{\isacharparenright}\ ppoint\ set{\isacartoucheclose}\isanewline
+\isanewline
 \isacommand{function}\isamarkupfalse%
-\ {\isacharparenleft}domintros{\isacharparenright}\ proj{\isacharunderscore}add{\isacharunderscore}class\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharparenleft}{\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit\ {\isacharparenright}\ set\ {\isasymRightarrow}\isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit\ {\isacharparenright}\ set\ {\isasymRightarrow}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}{\isacharprime}a\ {\isasymtimes}\ {\isacharprime}a{\isacharparenright}\ {\isasymtimes}\ bit\ {\isacharparenright}\ set{\isacharparenright}\ set{\isachardoublequoteclose}\isanewline
-\ \ \isakeyword{where}\ \isanewline
-\ \ \ \ {\isachardoublequoteopen}proj{\isacharunderscore}add{\isacharunderscore}class\ c{\isadigit{1}}\ c{\isadigit{2}}\ {\isacharequal}\ \isanewline
-\ \ \ \ \ \ \ \ {\isacharparenleft}\isanewline
-\ \ \ \ \ \ \ \ \ \ {\isacharbraceleft}\isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ proj{\isacharunderscore}add\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}\ {\isacharparenleft}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}\ {\isacharbar}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ x{\isadigit{1}}\ y{\isadigit{1}}\ i\ x{\isadigit{2}}\ y{\isadigit{2}}\ j{\isachardot}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}\ {\isasymin}\ c{\isadigit{1}}\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}\ {\isasymin}\ c{\isadigit{2}}\ {\isasymand}\ \isanewline
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x{\isadigit{1}}{\isacharcomma}\ y{\isadigit{1}}{\isacharparenright}{\isacharcomma}\ {\isacharparenleft}x{\isadigit{2}}{\isacharcomma}\ y{\isadigit{2}}{\isacharparenright}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isasymunion}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}\isanewline
-\ \ \ \ \ \ \ \ \ \ {\isacharbraceright}\ {\isacharslash}{\isacharslash}\ gluing\isanewline
-\ \ \ \ \ \ \ \ {\isacharparenright}{\isachardoublequoteclose}\ \isanewline
-\ \ \ \isakeyword{if}\ {\isachardoublequoteopen}c{\isadigit{1}}\ {\isasymin}\ e{\isacharunderscore}proj{\isachardoublequoteclose}\ \isakeyword{and}\ {\isachardoublequoteopen}c{\isadigit{2}}\ {\isasymin}\ e{\isacharunderscore}proj{\isachardoublequoteclose}\ \isanewline
-\ \ {\isacharbar}\ {\isachardoublequoteopen}proj{\isacharunderscore}add{\isacharunderscore}class\ c{\isadigit{1}}\ c{\isadigit{2}}\ {\isacharequal}\ undefined{\isachardoublequoteclose}\ \isanewline
-\ \ \ \isakeyword{if}\ {\isachardoublequoteopen}c{\isadigit{1}}\ {\isasymnotin}\ e{\isacharunderscore}proj\ {\isasymor}\ c{\isadigit{2}}\ {\isasymnotin}\ e{\isacharunderscore}proj{\isachardoublequoteclose}\ \isanewline
+\ proj{\isacharunderscore}add{\isacharunderscore}class\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharparenleft}{\isacharprime}a{\isacharparenright}\ pclass\ {\isasymRightarrow}\ {\isacharparenleft}{\isacharprime}a{\isacharparenright}\ pclass\ {\isasymRightarrow}\ {\isacharparenleft}{\isacharprime}a{\isacharparenright}\ pclass\ set{\isachardoublequoteclose}\isanewline
+\isakeyword{where}\ \isanewline
+\ \ {\isachardoublequoteopen}proj{\isacharunderscore}add{\isacharunderscore}class\ c\isactrlsub {\isadigit{1}}\ c\isactrlsub {\isadigit{2}}\ {\isacharequal}\ \ \ \ \ \ \ \isanewline
+\ \ \ \ \ \ \ \ {\isacharparenleft}proj{\isacharunderscore}add\ {\isacharbackquote}\ {\isacharbraceleft}{\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}{\isachardot}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ i{\isacharparenright}{\isacharcomma}{\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharcomma}\ j{\isacharparenright}{\isacharparenright}\ {\isasymin}\ c\isactrlsub {\isadigit{1}}\ {\isasymtimes}\ c\isactrlsub {\isadigit{2}}\ {\isasymand}\ \isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isacharparenleft}x\isactrlsub {\isadigit{1}}{\isacharcomma}\ y\isactrlsub {\isadigit{1}}{\isacharparenright}{\isacharcomma}\ {\isacharparenleft}x\isactrlsub {\isadigit{2}}{\isacharcomma}\ y\isactrlsub {\isadigit{2}}{\isacharparenright}{\isacharparenright}\ {\isasymin}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{0}}\ {\isasymunion}\ e{\isacharprime}{\isacharunderscore}aff{\isacharunderscore}{\isadigit{1}}{\isacharbraceright}{\isacharparenright}\ {\isacharslash}{\isacharslash}\ gluing\isanewline
+\ \ \ \ \ \ {\isachardoublequoteclose}\ \isanewline
+\ \isakeyword{if}\ {\isachardoublequoteopen}c\isactrlsub {\isadigit{1}}\ {\isasymin}\ e{\isacharunderscore}proj{\isachardoublequoteclose}\ \isakeyword{and}\ {\isachardoublequoteopen}c\isactrlsub {\isadigit{2}}\ {\isasymin}\ e{\isacharunderscore}proj{\isachardoublequoteclose}\ \isanewline
 %
 \isadelimproof
 \ \ %
 \endisadelimproof
 %
 \isatagproof
-\isacommand{by}\isamarkupfalse%
-\ {\isacharparenleft}meson\ surj{\isacharunderscore}pair{\isacharparenright}\ auto%
+\isacommand{sorry}\isamarkupfalse%
+%
 \endisatagproof
 {\isafoldproof}%
 %
@@ -429,7 +423,9 @@
 \isanewline
 \isacommand{definition}\isamarkupfalse%
 \ proj{\isacharunderscore}addition\ \isakeyword{where}\ \isanewline
-\ \ {\isachardoublequoteopen}proj{\isacharunderscore}addition\ c{\isadigit{1}}\ c{\isadigit{2}}\ {\isacharequal}\ the{\isacharunderscore}elem\ {\isacharparenleft}proj{\isacharunderscore}add{\isacharunderscore}class\ c{\isadigit{1}}\ c{\isadigit{2}}{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ \ {\isachardoublequoteopen}proj{\isacharunderscore}addition\ c\isactrlsub {\isadigit{1}}\ c\isactrlsub {\isadigit{2}}\ {\isacharequal}\ the{\isacharunderscore}elem\ {\isacharparenleft}proj{\isacharunderscore}add{\isacharunderscore}class\ c\isactrlsub {\isadigit{1}}\ c\isactrlsub {\isadigit{2}}{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\isanewline
+\isanewline
 \isanewline
 \isanewline
 \isanewline
@@ -453,7 +449,7 @@
 %
 \end{isabellebody}%
 \endinput
-%:%file=~/Documents/Isabelle/curves_safe/Hales.thy%:%
+%:%file=~/Isabelle/curves_safe/Hales.thy%:%
 %:%10=1%:%
 %:%11=1%:%
 %:%12=2%:%
@@ -672,84 +668,82 @@
 %:%303=164%:%
 %:%304=165%:%
 %:%305=166%:%
-%:%306=167%:%
-%:%307=168%:%
-%:%308=169%:%
-%:%309=170%:%
-%:%310=171%:%
-%:%311=172%:%
-%:%312=173%:%
-%:%313=174%:%
-%:%314=175%:%
-%:%315=176%:%
-%:%318=177%:%
-%:%322=177%:%
-%:%323=177%:%
-%:%324=178%:%
-%:%325=178%:%
-%:%326=179%:%
-%:%327=179%:%
-%:%328=179%:%
-%:%329=180%:%
-%:%330=180%:%
-%:%335=180%:%
-%:%338=181%:%
-%:%339=182%:%
-%:%340=182%:%
-%:%342=182%:%
-%:%346=182%:%
-%:%347=182%:%
-%:%348=182%:%
-%:%355=182%:%
-%:%356=183%:%
-%:%357=184%:%
-%:%358=184%:%
-%:%359=185%:%
-%:%361=187%:%
-%:%362=188%:%
+%:%306=166%:%
+%:%307=167%:%
+%:%308=168%:%
+%:%309=169%:%
+%:%310=170%:%
+%:%313=171%:%
+%:%317=171%:%
+%:%323=171%:%
+%:%326=172%:%
+%:%327=173%:%
+%:%328=173%:%
+%:%330=173%:%
+%:%334=173%:%
+%:%335=173%:%
+%:%336=173%:%
+%:%343=173%:%
+%:%344=174%:%
+%:%345=175%:%
+%:%346=175%:%
+%:%347=176%:%
+%:%349=178%:%
+%:%350=179%:%
+%:%351=180%:%
+%:%352=180%:%
+%:%353=181%:%
+%:%355=183%:%
+%:%356=184%:%
+%:%357=185%:%
+%:%358=185%:%
+%:%359=186%:%
+%:%360=187%:%
+%:%361=188%:%
+%:%362=189%:%
 %:%363=189%:%
-%:%364=189%:%
-%:%365=190%:%
+%:%364=190%:%
+%:%365=191%:%
+%:%366=192%:%
 %:%367=192%:%
-%:%368=193%:%
 %:%369=194%:%
-%:%370=194%:%
-%:%371=195%:%
-%:%372=196%:%
-%:%373=197%:%
+%:%370=195%:%
+%:%371=196%:%
+%:%372=197%:%
+%:%373=198%:%
 %:%374=198%:%
-%:%375=198%:%
-%:%376=199%:%
-%:%377=200%:%
-%:%378=201%:%
-%:%379=201%:%
-%:%381=203%:%
+%:%376=200%:%
+%:%377=201%:%
+%:%378=202%:%
+%:%379=202%:%
+%:%380=203%:%
+%:%381=204%:%
 %:%382=204%:%
 %:%383=205%:%
-%:%392=214%:%
-%:%393=215%:%
-%:%394=216%:%
-%:%395=217%:%
-%:%398=218%:%
-%:%402=218%:%
-%:%403=218%:%
-%:%408=218%:%
-%:%411=219%:%
-%:%412=220%:%
-%:%413=220%:%
-%:%415=220%:%
-%:%419=220%:%
-%:%420=220%:%
-%:%421=220%:%
-%:%428=220%:%
-%:%429=221%:%
-%:%430=222%:%
+%:%384=206%:%
+%:%388=210%:%
+%:%389=211%:%
+%:%392=212%:%
+%:%396=212%:%
+%:%402=212%:%
+%:%405=213%:%
+%:%406=214%:%
+%:%407=214%:%
+%:%409=214%:%
+%:%413=214%:%
+%:%414=214%:%
+%:%415=214%:%
+%:%422=214%:%
+%:%423=215%:%
+%:%424=216%:%
+%:%425=216%:%
+%:%426=217%:%
+%:%427=218%:%
+%:%428=219%:%
+%:%429=220%:%
+%:%430=221%:%
 %:%431=222%:%
 %:%432=223%:%
-%:%433=224%:%
-%:%434=225%:%
-%:%435=226%:%
-%:%436=227%:%
-%:%437=227%:%
-%:%440=228%:%
-%:%445=229%:%
+%:%433=223%:%
+%:%436=224%:%
+%:%441=225%:%

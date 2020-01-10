@@ -15,9 +15,9 @@ locale curve_addition =
 begin   
 
 fun add :: "'a \<times> 'a \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a \<times> 'a" where
- "add (x1,y1) (x2,y2) =
-    ((x1*x2 - c*y1*y2) div (1-d*x1*y1*x2*y2), 
-     (x1*y2+y1*x2) div (1+d*x1*y1*x2*y2))"
+ "add (x\<^sub>1,y\<^sub>1) (x\<^sub>2,y\<^sub>2) =
+    ((x\<^sub>1*x\<^sub>2 - c*y\<^sub>1*y\<^sub>2) div (1-d*x\<^sub>1*y\<^sub>1*x\<^sub>2*y\<^sub>2), 
+     (x\<^sub>1*y\<^sub>2+y\<^sub>1*x\<^sub>2) div (1+d*x\<^sub>1*y\<^sub>1*x\<^sub>2*y\<^sub>2))"
 
 definition delta_plus :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
  "delta_plus x1 y1 x2 y2 = 1 + d * x1 * y1 * x2 * y2"
@@ -161,35 +161,26 @@ lemma coherence:
   shows "ext_add (x1,y1) (x2,y2) = add (x1,y1) (x2,y2)"
   sorry
 
-function (domintros) proj_add :: "('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit \<Rightarrow> ('a \<times> 'a) \<times> bit"
-  where 
-    "proj_add ((x1, y1), l) ((x2, y2), j) = (add (x1, y1) (x2, y2), l+j)"
-   if "delta x1 y1 x2 y2 \<noteq> 0" and 
-     "(x1, y1) \<in> e'_aff" and 
-     "(x2, y2) \<in> e'_aff" 
-  | "proj_add ((x1, y1), l) ((x2, y2), j) = (ext_add (x1, y1) (x2, y2), l+j)"
-   if "delta' x1 y1 x2 y2 \<noteq> 0" and 
-     "(x1, y1) \<in> e'_aff" and 
-     "(x2, y2) \<in> e'_aff"
-  | "proj_add ((x1, y1), l) ((x2, y2), j) = undefined" 
-   if "(x1, y1) \<notin> e'_aff \<or> (x2, y2) \<notin> e'_aff \<or> 
-        (delta x1 y1 x2 y2 = 0 \<and> delta' x1 y1 x2 y2 = 0)"
-  apply(fast)
-  apply(fastforce)
-  using coherence e'_aff_def apply force
-  by auto
+type_synonym ('b) ppoint = \<open>(('b \<times> 'b) \<times> bit)\<close>
+
+function proj_add :: "'a ppoint \<times>'a ppoint \<Rightarrow> 'a ppoint" where 
+  "proj_add (((x\<^sub>1, y\<^sub>1), l),((x\<^sub>2, y\<^sub>2), j)) = (add (x\<^sub>1, y\<^sub>1) (x\<^sub>2, y\<^sub>2), l+j)"
+ if "delta x\<^sub>1 y\<^sub>1 x\<^sub>2 y\<^sub>2 \<noteq> 0 \<and> (x\<^sub>1, y\<^sub>1) \<in> e'_aff \<and> (x\<^sub>2, y\<^sub>2) \<in> e'_aff" 
+| "proj_add (((x\<^sub>1, y\<^sub>1), l),((x\<^sub>2, y\<^sub>2), j)) = (ext_add (x\<^sub>1, y\<^sub>1) (x\<^sub>2, y\<^sub>2), l+j)"
+ if "delta' x\<^sub>1 y\<^sub>1 x\<^sub>2 y\<^sub>2 \<noteq> 0 \<and> (x\<^sub>1, y\<^sub>1) \<in> e'_aff \<and> (x\<^sub>2, y\<^sub>2) \<in> e'_aff"
+  sorry
 
 termination proj_add using "termination" by blast
 
 definition e'_aff_0 where
-  "e'_aff_0 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e'_aff \<and> 
-                                 (x2,y2) \<in> e'_aff \<and> 
-                                 delta x1 y1 x2 y2 \<noteq> 0 }"
+  "e'_aff_0 = {((x\<^sub>1,y\<^sub>1),(x\<^sub>2,y\<^sub>2)). (x\<^sub>1,y\<^sub>1) \<in> e'_aff \<and> 
+                                 (x\<^sub>2,y\<^sub>2) \<in> e'_aff \<and> 
+                                 delta x\<^sub>1 y\<^sub>1 x\<^sub>2 y\<^sub>2 \<noteq> 0 }"
 
 definition e'_aff_1 where
-  "e'_aff_1 = {((x1,y1),(x2,y2)). (x1,y1) \<in> e'_aff \<and> 
-                                 (x2,y2) \<in> e'_aff \<and> 
-                                 delta' x1 y1 x2 y2 \<noteq> 0 }"
+  "e'_aff_1 = {((x\<^sub>1,y\<^sub>1),(x\<^sub>2,y\<^sub>2)). (x\<^sub>1,y\<^sub>1) \<in> e'_aff \<and> 
+                                 (x\<^sub>2,y\<^sub>2) \<in> e'_aff \<and> 
+                                 delta' x\<^sub>1 y\<^sub>1 x\<^sub>2 y\<^sub>2 \<noteq> 0 }"
 
 definition e'_aff_bit :: "(('a \<times> 'a) \<times> bit) set" where
  "e'_aff_bit = e'_aff \<times> UNIV"
@@ -198,29 +189,34 @@ definition e'_aff_bit :: "(('a \<times> 'a) \<times> bit) set" where
 definition e_proj where "e_proj = e'_aff_bit // gluing"
 
 
-function (domintros) proj_add_class :: "(('a \<times> 'a) \<times> bit ) set \<Rightarrow>
-                                        (('a \<times> 'a) \<times> bit ) set \<Rightarrow> 
-                                        ((('a \<times> 'a) \<times> bit ) set) set"
-  where 
-    "proj_add_class c1 c2 = 
-        (
-          {
-            proj_add ((x1, y1), i) ((x2, y2), j) | 
-              x1 y1 i x2 y2 j. 
-              ((x1, y1), i) \<in> c1 \<and> 
-              ((x2, y2), j) \<in> c2 \<and> 
-              ((x1, y1), (x2, y2)) \<in> e'_aff_0 \<union> e'_aff_1
-          } // gluing
-        )" 
-   if "c1 \<in> e_proj" and "c2 \<in> e_proj" 
-  | "proj_add_class c1 c2 = undefined" 
-   if "c1 \<notin> e_proj \<or> c2 \<notin> e_proj" 
-  by (meson surj_pair) auto
+term "proj_add ` {(((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)). 
+                (((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)) \<in> c\<^sub>1 \<times> c\<^sub>2 \<and> 
+                ((x\<^sub>1, y\<^sub>1), (x\<^sub>2, y\<^sub>2)) \<in> e'_aff_0 \<union> e'_aff_1} "
+
+
+
+term "{(((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)). 
+                (((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)) \<in> c\<^sub>1 \<times> c\<^sub>2 \<and> 
+                ((x\<^sub>1, y\<^sub>1), (x\<^sub>2, y\<^sub>2)) \<in> e'_aff_0 \<union> e'_aff_1} "
+
+type_synonym ('b) pclass = \<open>('b) ppoint set\<close>
+
+function proj_add_class :: "('a) pclass \<Rightarrow> ('a) pclass \<Rightarrow> ('a) pclass set"
+where 
+  "proj_add_class c\<^sub>1 c\<^sub>2 =       
+        (proj_add ` {(((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)). 
+                (((x\<^sub>1, y\<^sub>1), i),((x\<^sub>2, y\<^sub>2), j)) \<in> c\<^sub>1 \<times> c\<^sub>2 \<and> 
+                ((x\<^sub>1, y\<^sub>1), (x\<^sub>2, y\<^sub>2)) \<in> e'_aff_0 \<union> e'_aff_1}) // gluing
+      " 
+ if "c\<^sub>1 \<in> e_proj" and "c\<^sub>2 \<in> e_proj" 
+  sorry
 
 termination proj_add_class using "termination" by auto
 
 definition proj_addition where 
-  "proj_addition c1 c2 = the_elem (proj_add_class c1 c2)"
+  "proj_addition c\<^sub>1 c\<^sub>2 = the_elem (proj_add_class c\<^sub>1 c\<^sub>2)"
+
+
 
 
 
