@@ -1244,7 +1244,7 @@ lemma ideal_membership_2:
 *)
 lemma ideal_membership_3:
   shows "\<exists> q1 q2 q3 q4.
-          2*y0*(x0^2 - y1^2) = 
+          x1^2*y0^2*(x0^2 - y1^2) = 
               q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
               q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
               q3*(x0 * y0 + x1 * y1) +
@@ -1395,13 +1395,13 @@ proof -
     have cases2: "\<delta>_minus a0 b0 = 0 \<or> \<delta>_plus a0 b0 = 0" 
       using \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
                 delta'_def q_def p_def tq_expr by auto
-      
+    
     consider 
       (1) "\<delta>' a0 b0 = 0" "\<delta>_minus a0 b0 = 0" |
       (2) "\<delta>' a0 b0 = 0" "\<delta>_plus a0 b0 = 0" |
       (3) "p\<delta>' a0 b0 = 0" "\<delta>_minus a0 b0 = 0" |
-      (4) "p\<delta>' a0 b0 = 0" "\<delta>_plus a0 b0 = 0" using cases1 cases2 by auto
-    then have "(a0,b0) = (b1,a1) \<or> (a0,b0) = (-b1,-a1)" 
+      (4) "p\<delta>' a0 b0 = 0" "\<delta>_plus a0 b0 = 0" "\<delta>' a0 b0 \<noteq> 0" "\<delta>_minus a0 b0 \<noteq> 0" using cases1 cases2 by auto
+    then have "(a0,b0) = (b1,a1) \<or> (a0,b0) = (-b1,-a1) \<or> (a0,b0) = (a1,-b1) \<or> (a0,b0) = (-a1,b1)" 
       (* We may assume that \<delta>\<^sub>0\<^sub>x (P,Q) = 0 *)
     proof(cases)
       case 1
@@ -1443,51 +1443,40 @@ proof -
          apply algebra
         by algebra
       then show ?thesis 
-        
-        sorry
+        by algebra
     next
       case 4
-      have "i = 1" 
-       have zeros: "b1 * b0 - a1 * a0 = 0" "a0 * b0 + a1 * b1 = 0" 
-        using 4 \<delta>_plus_expr p\<delta>'_expr
-        by auto 
-      have "b0\<^sup>2 - a1\<^sup>2 = 0" "a0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 - a1 * b1 = 0" 
-        using ideal_membership_1[of a0 b0 a1 b1, OF a0_nz a1_nz]
-              a0_nz a1_nz in_aff zeros
+      have zeros: "a0 * b0 + a1 * b1 = 0" "b1 * b0 - a1 * a0 = 0" 
+                  "a1 * b0 + b1 * a0 \<noteq> 0" "a0 * b0 - a1 * b1 \<noteq> 0"
+        using 4 \<delta>_plus_expr p\<delta>'_expr \<delta>_minus_expr \<delta>'_expr by auto
+      then have "a0^2-b1^2 = 0" 
+        using a0_nz a1_nz in_aff zeros
         unfolding e'_aff_def e'_def
-          apply simp_all 
-        by algebra+
+          apply simp_all         
+        by algebra
+
+
+      define c1 where "c1 = a0^2*b0^2" 
+      define c2 where "c2 = a0^2*a1^2"
+      have c_eqs: "c1 = a0^2*b0^2" "c2 = a0^2*a1^2"
+                  "c1 = a1^2*b1^2" "c2 = b0^2*b1^2"
+        using c1_def c2_def zeros by algebra+
+
+      have "a0^2-b1^2 = 0" "a1^2 - b0^2 = 0"
+        using c_eqs a0_nz a1_nz 
+        using \<open>a0\<^sup>2 - b1\<^sup>2 = 0\<close> by auto  
+      then have "(a0,b0) \<in> {(b1,a1),(-b1,-a1)}"
+        using a0_nz a1_nz in_aff zeros
+      unfolding e'_aff_def e'_def
+        apply simp_all         
+      by algebra
+
       then show ?thesis 
         by algebra
     qed
 
         
-      thm ideal_membership_2(3)[of a0 b0 b1 a1, OF a0_nz a1_nz(2,1)]
-      then show ?thesis 
-      proof(cases "\<delta>_minus a0 b0 = 0")
-        case True
-        then have 2: "a1 * b0 + b1 * a0 = 0" 
-          using \<delta>_minus_expr by auto
-        then have "a0\<^sup>2 - a1\<^sup>2 = 0" "b0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 - b1 * a1 = 0"
-          using ideal_membership_1(1)[of "a0" b0 b1 a1] 1 2 a0_nz a1_nz
-                in_aff
-          unfolding e'_aff_def e'_def 
-          subgoal 
-            apply simp 
-            sorry
-        then show ?thesis 
-          sorry
-      next
-        case False
-        then have "\<delta>_plus a0 b0 = 0" 
-          unfolding 
-        then show ?thesis sorry
-      qed
-        sorry
-    next
-      case False
-      then show ?thesis sorry
-    qed
+      
   qed
 qed
 
@@ -1705,7 +1694,7 @@ proof -
           unfolding symmetries_def rotations_def 
           using tau_rot_sym \<open>g \<in> rotations \<and> \<tau> q = (g \<circ> i) p\<close> symmetries_def by blast     
       next
-      case False
+        case False
         then have cas2: "delta_plus a1 b1 (fst q) (snd q) = 0"
                          "\<delta>_plus a0 b0 = 0"               
           using t1 False \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
