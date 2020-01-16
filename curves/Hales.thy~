@@ -1447,6 +1447,7 @@ proof -
         sorry
     next
       case 4
+      have "i = 1" 
        have zeros: "b1 * b0 - a1 * a0 = 0" "a0 * b0 + a1 * b1 = 0" 
         using 4 \<delta>_plus_expr p\<delta>'_expr
         by auto 
