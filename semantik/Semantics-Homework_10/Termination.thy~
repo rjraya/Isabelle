@@ -97,7 +97,7 @@ lemma if_terminates:
   by (metis sIfBlockE terminating.simps)
 
 (* Observation: (c,s) \<rightarrow>\<^sub>g (c',s') \<Longrightarrow> (c;;cc,s) \<rightarrow>\<^sub>g (c';;cc, s') *)
-
+thm terminating.induct
 lemma seq_termination_1:
   assumes "terminating (c1;;c2,s)"
   shows "terminating (c1,s)"

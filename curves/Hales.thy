@@ -1193,15 +1193,6 @@ proof -
   qed
 qed
 
-lemma ideal_membership_lemma:
-  shows "\<exists> q1 q2 q3 q4.
-          2*x0*y0*(y0^2 - x1^2) = 
-              q1*(-1 + x0^2 + y0^2 - t^2 * x0^2 * y0^2) +
-              q2*(-1 + x1^2 + y1^2 - t^2 * x1^2 * y1^2) +
-              q3*(x0 * y0 - x1 * y1) +
-              q4*(x1 * y0 + x0 * y1)"   
-  by algebra+
-
 lemma dichotomy_1:
   assumes "p \<in> e'_aff" "q \<in> e'_aff" 
   shows "(p \<in> e_circ \<and> (\<exists> g \<in> symmetries. q = (g \<circ> i) p)) \<or> 
@@ -1272,7 +1263,12 @@ proof -
     have cases2: "\<delta>_minus a0 b0 = 0 \<or> \<delta>_plus a0 b0 = 0" 
       using \<delta>_minus_def \<delta>_plus_def \<open>delta' x1 y1 x2 y2 = 0\<close> \<open>p = (a1, b1)\<close> 
                 delta'_def q_def p_def tq_expr by auto
-    
+    (* Observation: the zeroness of \<delta>' and p\<delta>' are exclusive
+    have exclusive_cases:
+      "\<not> (\<delta>' a0 b0 = 0 \<and> p\<delta>' a0 b0 = 0)"
+      using \<delta>'_expr \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> ext_add_inverse p\<delta>'_expr p_def p_expr 
+      by fastforce*)
+      
     consider 
       (1) "\<delta>' a0 b0 = 0" "\<delta>_minus a0 b0 = 0" |
       (2) "\<delta>' a0 b0 = 0" "\<delta>_plus a0 b0 = 0" |
@@ -1283,12 +1279,18 @@ proof -
                 (a0,b0) = (a1,-b1) \<or> (a0,b0) = (-a1,b1)" 
     proof(cases)
       case 1
-      have zeros: "a0 * b0 - a1 * b1 = 0" "a1 * b0 + a0 * b1 = 0" 
-        using 1 \<delta>_minus_expr \<delta>'_expr
-        by(simp_all add: algebra_simps)
-      have "b0\<^sup>2 - a1\<^sup>2 = 0" "a0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 - a1 * b1 = 0" 
-        using ideal_membership_lemma[of a0 b0 a1 b1]
-              a0_nz in_aff zeros 
+      have zeros: "a0 * b0 - a1 * b1 = 0" "a1 * b0 + a0 * b1 = 0"
+        using 1 \<delta>_minus_expr \<delta>'_expr 
+        by(simp_all add: algebra_simps) 
+      have "\<exists> q1 q2 q3 q4.
+        2*a0*b0*(b0^2 - a1^2) = 
+            q1*(-1 + a0^2 + b0^2 - t^2 * a0^2 * b0^2) +
+            q2*(-1 + a1^2 + b1^2 - t^2 * a1^2 * b1^2) +
+            q3*(a0 * b0 - a1 * b1) +
+            q4*(a1 * b0 + a0 * b1)"   
+        by algebra     
+      then have "b0\<^sup>2 - a1\<^sup>2 = 0" "a0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 - a1 * b1 = 0" 
+        using a0_nz in_aff zeros 
         unfolding e'_aff_def e'_def 
           apply simp_all 
          apply(simp_all add: algebra_simps two_not_zero)
@@ -1298,8 +1300,7 @@ proof -
     next
       case 2
       have zeros: "b1 * b0 - a1 * a0 = 0" "a0 * b0 - a1 * b1 = 0" 
-        using 2 \<delta>_plus_expr \<delta>'_expr
-        by auto 
+        using 2 \<delta>_plus_expr \<delta>'_expr by auto 
       have "b0\<^sup>2 - a1\<^sup>2 = 0" "a0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 - a1 * b1 = 0" 
         using in_aff zeros
         unfolding e'_aff_def e'_def
@@ -1310,28 +1311,24 @@ proof -
     next
       case 3
       have zeros: "a1 * b0 + b1 * a0 = 0" "a0 * b0 + a1 * b1 = 0" 
-        using 3 \<delta>_minus_expr p\<delta>'_expr
-        by auto
+        using 3 \<delta>_minus_expr p\<delta>'_expr by auto
       have "a0\<^sup>2 - a1\<^sup>2 = 0" "b0\<^sup>2 - b1\<^sup>2 = 0" "a0 * b0 + a1 * b1 = 0" 
         using in_aff zeros
         unfolding e'_aff_def e'_def
         apply simp_all 
         by algebra+ 
-
       then show ?thesis 
         by algebra
     next
       case 4
       have zeros: "a0 * b0 + a1 * b1 = 0" "a1 * b0 + b1 * a0 \<noteq> 0" 
         using 4 p\<delta>'_expr \<delta>_minus_expr \<delta>'_expr by auto
-      
       have "a0^2-b1^2 = 0" "a1^2 - b0^2  = 0"
         using in_aff zeros
         unfolding e'_aff_def e'_def
         by algebra+
-
       then show ?thesis 
-        using zeros(2) cases2 \<delta>_minus_expr \<delta>_plus_expr by algebra
+        using cases2 \<delta>_minus_expr \<delta>_plus_expr by algebra
     qed
 
     then have "(a0,b0) \<in> {i p, (\<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> i) p, (\<rho> \<circ> \<rho> \<circ> \<rho> \<circ> i) p}"

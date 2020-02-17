@@ -107,6 +107,16 @@ proof (induction "(c1;;c2,s)" arbitrary: c1 s rule: terminating.induct)
     using Seq2 terminating.intros by force
 qed
 
+(*
+lemma seq_termination_1':
+  assumes "terminating c"
+  assumes "c = (c1;;c2,s)"
+  shows "terminating (c1,s)"
+  using assms
+  apply(induction arbitrary: c1 s  rule: terminating.induct)
+  using Seq2 terminating.intros by force
+*)
+
 lemma seq_termination_2: 
   "terminating (c1;;c2,s) \<Longrightarrow>
   (c1,s) \<Rightarrow>\<^sub>g t \<Longrightarrow>
