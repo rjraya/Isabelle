@@ -102,6 +102,7 @@ lemma seq_termination_1:
   assumes "terminating (c1;;c2,s)"
   shows "terminating (c1,s)"
   using assms
+  thm terminating.induct list.induct 
 proof (induction "(c1;;c2,s)" arbitrary: c1 s rule: terminating.induct)
   case 1 then show ?case
     using Seq2 terminating.intros by force

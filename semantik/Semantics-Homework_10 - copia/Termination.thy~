@@ -17,9 +17,8 @@ text \<open>
  the second one if some of the proofs that deal with the do case. In particular,
  when one deduces (DO gcs OD,s) \<open>\<rightarrow>\<^sub>g\<close> (c;;DO gcs OD,s).
 
- Instead we would like about what happens after executing c, since instantiating
- the indution rule with "(DO gcs OD,s)" will assume that all derivations are also
- of this form.
+ Instead, we would like to know about what happens after executing c, since instantiating
+ the indution rule with "(DO gcs OD,s)" will assume that all derivations are also of this form.
 \<close>
 
 inductive terminating' where
@@ -34,7 +33,7 @@ lemma trans_terminating: "terminating s \<longleftrightarrow> terminating' s"
 
 text \<open>
  We reused here the ideas we had in the exercise sheet 6. In fact, we realized
- that the induction principle provided by the terminating.induct formula are just
+ that the induction principle provided by the terminating.induct formula is just
  as good as this rephrasing. However, we maintain it for the derivations that use
  it later. It could very well be refactored.
 \<close>

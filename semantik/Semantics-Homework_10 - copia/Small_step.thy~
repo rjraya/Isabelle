@@ -10,7 +10,7 @@ text \<open>
  \<open>\<Rightarrow>\<^sub>g\<close> would no longer reflect accurately the terminating behaviour of \<open>\<rightarrow>\<^sub>g\<close>. 
   In particular, there would be two kind of terminating behaviours for \<open>\<rightarrow>\<^sub>g\<close>:
   
-  - abortion: here \<open>\<rightarrow>\<^sub>g\<close> would terminates but \<open>\<Rightarrow>\<^sub>g\<close> would not yield a final state. 
+  - abortion: here \<open>\<rightarrow>\<^sub>g\<close> would terminate but \<open>\<Rightarrow>\<^sub>g\<close> would not yield a final state. 
               this would happen when we get a blocking if as the first command.
   - termination: here \<open>\<rightarrow>\<^sub>g\<close> would terminate and \<open>\<Rightarrow>\<^sub>g\<close> would yield a final state. 
                  this would happen when we get SKIP as the last command.
@@ -20,7 +20,7 @@ text \<open>
   based on this function.
 
   However, this approach was removed because it would complicate the notion of weakest
-  precondition. Indeed, Dijkstra states: we shall use the notation wp(S, R),
+  precondition. Indeed, Dijkstra states that we shall use the notation wp(S, R) for:
    
   the weakest precondition for the initial state of the system such that
   activation of S is guaranteed to lead to a PROPERLY terminating activity ...
@@ -28,6 +28,8 @@ text \<open>
   that is, we should exclude abortion from the terminating relation. With this semantics
   the abortion situations lead to self infinite loops.
 \<close>
+
+subsection \<open>Small-step semantics definition\<close>
 
 inductive gsmall_step :: "com \<times> state \<Rightarrow> com \<times> state \<Rightarrow> bool" (infix "\<rightarrow>\<^sub>g" 55)
 where
@@ -45,7 +47,7 @@ abbreviation small_steps :: "com \<times> state \<Rightarrow> com \<times> state
 abbreviation small_1_steps :: "com \<times> state \<Rightarrow> com \<times> state \<Rightarrow> bool" (infix "\<rightarrow>\<^sub>g+" 55)
   where "x \<rightarrow>\<^sub>g+ y \<equiv> (gsmall_step\<^sup>+\<^sup>+ x y)"
 
-text \<open>Proof automation.\<close>
+subsection \<open>Proof automation.\<close>
 
 lemmas gsmall_step_induct = gsmall_step.induct[split_format(complete)]
 declare gsmall_step.intros[simp,intro]
@@ -55,10 +57,15 @@ inductive_cases sSeqE[elim!]: "(c1 ;; c2, s) \<rightarrow>\<^sub>g t"
 inductive_cases sIfBlockE[elim!]: "(IF gs FI, s) \<rightarrow>\<^sub>g t"
 inductive_cases sDoWhileE[elim]: "(DO gcs OD, s) \<rightarrow>\<^sub>g t"
 
-section \<open>Relation to big-step semantics\<close>
-
 lemmas star_induct = converse_rtranclp_induct2 (* Pairs *)
 lemmas star_induct1 = converse_rtranclp_induct (* No pairs *)
+
+section \<open>Relation to big-step semantics\<close>
+
+text \<open> 
+ With the small-step semantics that we have chosen the proofs here are completely
+ analogous to the ones seen in class for IMP.
+\<close>
 
 lemma star_seq2: "(c1,s) \<rightarrow>\<^sub>g* (c1',s') \<Longrightarrow> (c1;;c2,s) \<rightarrow>\<^sub>g* (c1';;c2,s')"
 proof(induction rule: star_induct)
@@ -92,18 +99,22 @@ done
 theorem big_iff_small: "cs \<Rightarrow>\<^sub>g t \<longleftrightarrow> cs \<rightarrow>\<^sub>g* (SKIP,t)" 
   by(metis big_to_small small_to_big)
 
-section \<open>Final configurations\<close>
+section \<open>Final configurations and non-determinism\<close>
+
+text \<open>
+ Again the choice of the semantics proves useful to characterize what states are final.
+ As in the case of IMP, only SKIP-configurations will be final.
+\<close>
 
 definition "final cs \<longleftrightarrow> \<not>(\<exists>cs'. cs \<rightarrow>\<^sub>g cs')"
 
-lemma skip_final: "c = SKIP \<Longrightarrow> final (c,s)"
+lemma skip_final: "c = SKIP \<Longrightarrow> final (c,s)" 
   using final_def gsmall_step.cases by fast
 
 lemma final_commands:
   "final (c,s) \<Longrightarrow> (c = SKIP) "
-  unfolding final_def
-  apply(induction c)
-  by(simp,blast,fast,blast,blast)
+  unfolding final_def 
+  by(induction c,simp,blast,fast,blast+)
 
 lemma final_iff_SKIP:
   "final (c,s) = (c = SKIP)"
@@ -111,8 +122,19 @@ lemma final_iff_SKIP:
   using final_commands apply blast
   by (simp add: skip_final)
 
+text \<open>
+ The characterization of final configurations let us rewrite the relation between the
+ small and the big step semantics in a more comprehensible way.
+\<close>
+
 lemma big_iff_small_termination: "(\<exists> t. cs \<Rightarrow>\<^sub>g t) = (\<exists> cs'. cs \<rightarrow>\<^sub>g* cs' \<and> final cs')"
   by (simp add: big_iff_small final_iff_SKIP)
+
+text \<open>
+ We give a counterexample, to prove that the small-step semantics is also non-deterministic.
+ This again is a difference with the IMP language with important implications for the subsequent
+ theories.
+\<close>
 
 lemma sdeterminism_counterexample:
   "gcs = [(Bc True,SKIP),(Bc True,s\<^sub>2 ::= (N 1) ;; SKIP)] \<Longrightarrow>
@@ -136,6 +158,16 @@ text \<open>
 \<close>
 
 section \<open>The number of successors of \<open>\<rightarrow>\<^sub>g\<close> is finite\<close>
+
+text \<open>
+ We need this section in combination with some results in the termination theory,
+ namely, the results stating that a terminating \<open>\<rightarrow>\<^sub>g\<close> ensures that the number of 
+ leaves of the trees derivations are finite.
+
+ This is needed while deriving the weakest precondition for the DO command as was
+ stated in the paper by Dijkstra. It is however, an interesting result by itself.
+ In particular, it made us work with properties related to finiteness of sets. 
+\<close>
 
 lemma skip_size: "{cs'.(SKIP,s) \<rightarrow>\<^sub>g cs'} = {}"
   using final_def skip_final by auto
