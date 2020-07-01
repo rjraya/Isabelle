@@ -922,7 +922,6 @@ proof -
       using "5" bound_removeAll by blast
   qed
 
-
 nominal_function cv :: "ty option \<Rightarrow> env \<Rightarrow> bool \<Rightarrow> vrs list \<Rightarrow> vrs list"
 where
   "cv (Some (Tvar x)) E b seen = 
@@ -936,7 +935,7 @@ where
     (if b then removeAll x (cv (Some S) E False seen @ cv (Some T) E True seen) 
      else removeAll x (cv (Some S) E True seen @ cv (Some T) E False seen))"
 | "atom X \<sharp> (E,seen) \<Longrightarrow> cv (Some (\<forall>X<:B. T)) E b seen = 
-    (if b then (cv (Some B) E False seen @ (removeAl-l X (cv (Some T) E True seen))) 
+    (if b then (cv (Some B) E False seen @ (removeAll X (cv (Some T) E True seen))) 
      else (cv (Some B) E True seen @ (removeAll X (cv (Some T) E False seen))))"
 | "cv (Some (C \<triangleright> T)) E b seen = 
     (if b then C @ cv (Some T) E True seen else cv (Some T) E False seen)"
@@ -1086,16 +1085,79 @@ proof(cases "SN")
 qed simp
 
 lemma 
-  assumes gen: "\<turnstile> E ok" "TVarB x T \<in> set E"
+  assumes "\<turnstile> E ok" "(\<forall> x \<in> set S'. \<not> (out_capset x T))"
+  assumes used: "distinct (S' @ S)" 
+  shows "cv (Some T) E True (S' @ S) =
+         cv (Some T) E True S"
+  using used
+proof(induction "(length E - length S, size T)"
+        arbitrary: T S S' rule: less_induct)
+    case less
+    then show ?case 
+      using assms
+      apply(cases rule: ty.strong_exhaust[of T _ "(E,S)"])
+      subgoal for x1            
+          apply(simp split: if_splits option.splits)
+        apply safe
+        apply(subst seen_permute[of "x1 # S' @ S" "S' @ (x1 # S)"])
+             apply simp
+        
+             defer 1
+             defer 1
+        apply (metis Un_iff add.commute add_lessD1 append_Cons diff_less_mono2 distinct.simps(2) distinct_append impossible_Cons inf_commute not_less set_append)       
+      thm seen_permute[of "x1 # S' @ S" "S' @ (x1 # S)"]
+      sorry
+    sorry 
+qed
+
+
+lemma
+  assumes "\<turnstile> E ok" "seen_correct (S' @ S) E"
+  shows "cv (Some T) E True (S' @ S) = cv (Some T) E True S"
+  using assms
+proof(induction "(length E - length (S' @ S), size T)"
+        arbitrary: T S S' rule: less_induct)
+  case less
+  then show ?case 
+    apply(cases rule: ty.strong_exhaust[of T _ "(E,S)"])
+    subgoal for x1
+      apply(simp split: if_splits option.splits)
+      apply safe
+    
+    sorry sorry
+qed
+
+lemma 
+  assumes "\<turnstile> E ok" "TVarB x T \<in> set E"
   shows "cv (Some T) E True [x] = 
          cv (Some T) E True []"
-  using gen
-proof(induction "(length E - length S1, size T)"
-        arbitrary: T S1 rule: less_induct)
-  case less
-  thm init
-  then show ?case 
-    sorry
+proof(cases "atom x \<sharp> T")
+  case True
+  then show ?thesis sorry
+next
+  case False
+  obtain E' rest where 
+    e_expr: "E = rest @ [TVarB x T] @ E'"
+    by (metis append_Cons append_Nil assms(2) in_set_conv_decomp_last) 
+  then show ?thesis 
+  proof(induction E')
+    case Nil
+    then have "E = rest @ [TVarB x T]" by simp
+    then have "\<turnstile> [TVarB x T] ok" 
+      using \<open>E = rest @ [TVarB x T]\<close> assms(1) validE_append by blast
+    then have "T closed_in [x]"
+              "in_capset x T" 
+              "\<not> out_capset x T"
+      apply auto[1]
+      using \<open>\<turnstile> [TVarB x T] ok\<close> False 
+             fresh_def by blast+
+    then show ?case
+      apply simp
+      sorry
+  next
+    case (Cons a E')
+    then show ?case sorry
+  qed    
 qed
 
 subsubsection \<open>Characterization of cv\<close>
