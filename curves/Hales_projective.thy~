@@ -1,4 +1,4 @@
-theory Hales_projective
+theory Hales_projective_independence
   imports  "HOL-Algebra.Group"  "HOL-Library.Bit" "HOL-Library.Rewrite"
 begin
 
