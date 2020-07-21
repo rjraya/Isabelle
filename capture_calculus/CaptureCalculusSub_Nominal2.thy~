@@ -175,9 +175,10 @@ lemma fresh_dom:
   fixes X::"vrs"
   assumes a: "atom X \<sharp> \<Gamma>" 
   shows "atom X \<sharp> (ty_dom \<Gamma>)"
+        "atom X \<sharp> (trm_dom \<Gamma>)"
   using a
   apply(induct \<Gamma>)
-  by (auto simp add: fresh_Nil fresh_Cons fresh_append tyvrs_fresh(1))
+  by(auto simp add: fresh_Nil fresh_Cons fresh_append tyvrs_fresh)
 
 subsection \<open>Type ok\<close>
 
@@ -414,7 +415,7 @@ qed
 
 lemma closed_in_fresh: "atom X \<sharp> ty_dom \<Gamma> \<Longrightarrow> T closed_in (ty_dom \<Gamma>) \<Longrightarrow> atom X \<sharp> T"
   by (auto simp add: closed_in_def fresh_def ty_dom_supp)
-                                               
+
 inductive
   valid_rel :: "env \<Rightarrow> bool" ("\<turnstile> _ ok" [100] 100)
 where
@@ -468,7 +469,7 @@ proof (induct)
         using fresh_Cons fresh_append fresh_at_base by fastforce
     qed (simp)
   }
-  ultimately show "T=S" by auto
+  ultimately show "T=S" using fresh_dom by auto
 qed auto
 
 lemma uniqueness_of_ctxt':
@@ -490,7 +491,7 @@ proof induct
         using fresh_Cons fresh_append fresh_at_base(2) by fastforce
     qed (simp)
   }
-  ultimately show "T=S" by auto
+  ultimately show "T=S" using fresh_dom by auto
 qed auto
 
 lemma validE_append:
@@ -526,7 +527,7 @@ next
       using valid_consT(2)[OF e_expr(2)] valid_consT(7) by fast
     then show ?thesis 
       apply(simp add: e_expr fresh_Cons)
-      by (metis doms_append(1) e_expr(2) fresh_append fresh_def fresh_ineq_at_base valid_consT.hyps(3) valid_consT.prems)
+      by (metis fresh_dom doms_append(1) e_expr(2) fresh_append fresh_def fresh_ineq_at_base valid_consT.hyps(3) valid_consT.prems)
   qed (simp add: fresh_Nil)
 next
   case (valid_cons \<Gamma>'' x T)
@@ -550,6 +551,11 @@ lemma fresh_removeAll:
   "(atom x) \<sharp> removeAll x list" 
   apply(induction list)
   by(auto simp add: fresh_Nil fresh_Cons)
+
+lemma fresh_removeAll':
+  "(atom x) \<sharp> removeAll y list \<Longrightarrow> x = y \<or> atom x \<sharp> list" 
+  apply(induction list)
+  by(auto simp add: fresh_Cons split: if_splits)
 
 lemma bound_removeAll:
   assumes "[[atom x]]lst. l = [[atom xa]]lst. la"
@@ -771,7 +777,7 @@ lemma extract_append:
   using assms
   apply(induction E')
   apply(simp_all split: option.splits, safe)
-  using extract_fresh_none extract_subtype_b_iff by auto
+  using extract_fresh_none extract_subtype_b_iff fresh_dom by auto
 
 lemma extract_skip_fresh:
   assumes "atom x \<sharp> (ty_dom E')"
@@ -1416,7 +1422,7 @@ proof(induction "(length \<Delta>, size T)"
             using split_list by fastforce
           also have "atom x1 \<sharp> (ty_dom \<Delta>')" "atom x1 \<sharp> (ty_dom \<Delta>'')" 
             using calculation fresh_sub_bind less.prems(2) ty_dom_supp(1) apply fastforce
-            by (metis append_Cons append_assoc calculation doms_append(1) fresh_append less.prems(2) validE(1) validE_append)
+            by (metis fresh_dom append_Cons append_assoc calculation doms_append(1) fresh_append less.prems(2) validE(1) validE_append)
           moreover have x_expr: "x2 = \<Delta>'' @ \<Gamma>" "x2b = \<Delta>'' @ B @ \<Gamma>"
             using 1(1)
             apply(simp add: delta_eq)
@@ -1443,7 +1449,7 @@ proof(induction "(length \<Delta>, size T)"
                     "atom x1 \<sharp> (ty_dom B)"
                     "atom x1 \<sharp> (ty_dom \<Delta>)"
             apply (metis append_Cons delta_eq fresh_def fresh_sub_bind fresh_vrs_list less.prems(2) list.set_intros(1) ty_dom.simps(2) tyvrs_of.simps(2) validE_append)
-             apply (metis append_Cons calculation doms_append(1) fresh_append less.prems(2) validE(1) validE_append)
+             apply (metis fresh_dom append_Cons calculation doms_append(1) fresh_append less.prems(2) validE(1) validE_append)
             using b fresh_def fresh_sub_bind fresh_vrs_list less.prems(1) ty_dom_inclusion validE_append apply blast
             using b fresh_def fresh_sub_bind fresh_vrs_list less.prems(2) ty_dom_inclusion by blast
           moreover have x_expr: "x2 = \<Gamma>''" "x2b = \<Gamma>''"
@@ -1641,16 +1647,16 @@ lemma listmem_eqvt [eqvt]:
 inductive 
   subtype_of :: "env \<Rightarrow> ty \<Rightarrow> ty \<Rightarrow> bool"   ("_\<turnstile>_<:_" [100,100,100] 100)
   where
-  SA_refl[intro]:      "\<Gamma> \<turnstile> T <: T"
+  SA_refl[intro]:      "\<turnstile> \<Gamma> ok \<Longrightarrow> \<Gamma> \<turnstile> T <: T"
 | SA_trans[intro]:     "\<lbrakk>\<Gamma> \<turnstile> R <: S; \<Gamma> \<turnstile> S <: T\<rbrakk> \<Longrightarrow> \<Gamma> \<turnstile> R <: T"
-| SA_TVar[intro]:      "\<lbrakk>ListMem X (ty_dom \<Gamma>); extract_subtype X \<Gamma> = (Some T, E')\<rbrakk>\<Longrightarrow> 
+| SA_TVar[intro]:      "\<lbrakk>\<turnstile> \<Gamma> ok; ListMem X (ty_dom \<Gamma>); extract_subtype X \<Gamma> = (Some T, E')\<rbrakk>\<Longrightarrow> 
                          \<Gamma> \<turnstile> Tvar X <: T"
-| SA_Top[intro]:       "cv T \<Gamma> True = [] \<Longrightarrow> \<Gamma> \<turnstile> T <: Top"
+| SA_Top[intro]:       "\<lbrakk>\<turnstile> \<Gamma> ok; cv T \<Gamma> True = []\<rbrakk> \<Longrightarrow> \<Gamma> \<turnstile> T <: Top"
 | SA_arrow[intro]:     "\<lbrakk>\<Gamma> \<turnstile> S\<^sub>2 <: S\<^sub>1; ((VarB x S\<^sub>2) # \<Gamma>) \<turnstile> T\<^sub>1 <: T\<^sub>2\<rbrakk> \<Longrightarrow> 
                          \<Gamma> \<turnstile> (Arrow x S\<^sub>1 T\<^sub>1) <: (Arrow x S\<^sub>2 T\<^sub>2)" 
 | SA_all[intro]:       "\<lbrakk>\<Gamma> \<turnstile> S\<^sub>2 <: S\<^sub>1; ((VarB x S\<^sub>2) # \<Gamma>) \<turnstile> T\<^sub>1 <: T\<^sub>2\<rbrakk> \<Longrightarrow> 
                         \<Gamma> \<turnstile> (\<forall>X<:S\<^sub>1. T\<^sub>1) <: (\<forall>X<:S\<^sub>2. T\<^sub>2)"
-| SA_captr[intro]:     "\<Gamma> \<turnstile> T <: (C \<triangleright> T)"
+| SA_captr[intro]:     "\<turnstile> \<Gamma> ok \<Longrightarrow> \<Gamma> \<turnstile> T <: (C \<triangleright> T)"
 | SA_capti[intro]:     "\<lbrakk>\<Gamma> \<turnstile> S <: T; set C \<subseteq> set (cv T E True)\<rbrakk> \<Longrightarrow> 
                          \<Gamma> \<turnstile> (C \<triangleright> S) <: T"
 
@@ -1660,7 +1666,14 @@ nominal_inductive subtype_of done
 
 inductive_cases subE:
   "\<Gamma> \<turnstile> T <: Tvar X"
-print_theorems
+
+lemma subtyping_ok:
+  assumes "\<Gamma> \<turnstile> S <: T"
+  shows   "\<turnstile> \<Gamma> ok"
+  using assms 
+  apply (induct) 
+  by simp_all
+
 subsection \<open>Typing\<close>
 
 definition removeAllList :: "vrs list \<Rightarrow> vrs list \<Rightarrow> vrs list" where
@@ -1677,6 +1690,7 @@ inductive
   typing :: "env \<Rightarrow> trm \<Rightarrow> ty \<Rightarrow> bool" ("_ \<turnstile> _ : _" [60,60,60] 60) 
 where
   T_Var[intro]: "\<lbrakk> VarB x T \<in> set \<Gamma>; \<turnstile> \<Gamma> ok\<rbrakk> \<Longrightarrow> \<Gamma> \<turnstile> Var x : T"
+| T_Sub[intro]: "\<lbrakk> \<Gamma> \<turnstile> t: S; \<Gamma> \<turnstile> S <: T\<rbrakk> \<Longrightarrow> \<Gamma> \<turnstile> t : T"
 | T_App[intro]: "\<lbrakk> \<Gamma> \<turnstile> t : (C \<triangleright> Arrow x R T); 
                    \<Gamma> \<turnstile> s : S;
                    \<Gamma> \<turnstile> S <: R[x \<mapsto> (cv S \<Gamma> True)]\<^sub>c \<rbrakk> \<Longrightarrow> 
@@ -1708,15 +1722,6 @@ lemma typing_ok:
   using assms 
   apply (induct) 
   using valid_rel.cases by auto
-
-
-lemma subsumption:
-  assumes "\<Gamma> \<turnstile> t: S" "\<Gamma> \<turnstile> S <: T" 
-  shows "\<Gamma> \<turnstile> t: T"
-  using assms
-  apply(nominal_induct \<Gamma> t S arbitrary:  rule: typing.strong_induct)
-  subgoal for x Ta \<Gamma> 
-  oops
 
 section \<open>Inversion lemmas\<close>
 
@@ -1771,73 +1776,195 @@ lemma
     apply(simp add: cap_subst_def)
     by blast
   oops
-   
-lemma type_weaken:
-  assumes "(\<Delta>@\<Gamma>) \<turnstile> t : T"
-  and     "\<turnstile> (\<Delta> @ B # \<Gamma>) ok"
-  shows   "(\<Delta> @ B # \<Gamma>) \<turnstile> t : T"
+
+lemma fresh_capsubst:
+  assumes "atom x \<sharp> T"
+  shows "T = T[x \<mapsto> S]\<^sub>c"
   using assms
-proof(nominal_induct "\<Delta> @ \<Gamma>" t T avoiding: \<Delta> \<Gamma> B rule: typing.strong_induct)
-  case (T_Var x T)
+  apply(nominal_induct T avoiding: x S rule: ty.strong_induct)
+  by(simp_all add: fresh_at_base(2) cap_subst_def fresh_vrs_list)+
+
+lemma cv_skip_trm_bind: "cv T (VarB x R # \<Gamma>) b = cv T \<Gamma> b"
+  apply(nominal_induct T avoiding: x R \<Gamma> 
+      arbitrary: b rule: ty.strong_induct)
+      apply simp_all
+  subgoal for x1a x2 x3 x R \<Gamma> b
+    apply(subgoal_tac "atom x1a \<sharp> (VarB x R # \<Gamma>)")
+    by(simp_all add: fresh_Cons)
+  subgoal for x1a x2 x3 x R \<Gamma> b
+    apply(subgoal_tac "atom x1a \<sharp> (VarB x R # \<Gamma>)")
+    by(simp_all add: fresh_Cons)
+  done
+
+lemma cv_cap_subst:
+  assumes "atom x \<sharp> cv T \<Gamma> b"
+  shows "cv (T[x \<mapsto> C]\<^sub>c) \<Gamma> b = cv T \<Gamma> b"
+  using assms
+  apply(nominal_induct T avoiding: x C \<Gamma> 
+        arbitrary: b rule: ty.strong_induct)
+  subgoal for x xa C \<Gamma> by auto
+  subgoal for x C \<Gamma> by simp
+  subgoal for x1a x2 x3 x C \<Gamma> b
+    apply(simp add: fresh_append)
+    apply(rule arg_cong2[of _ _ _ _ append];
+          rule arg_cong2[of _ _ _ _ removeAll]; 
+          clarify)
+     apply(drule fresh_removeAll')
+    using fresh_atom fresh_atom_at_base apply blast
+     apply(drule fresh_removeAll')
+    using fresh_at_base(2) fresh_removeAll' by blast
+  subgoal for x1a x2 x3 x C \<Gamma> b
+    apply(simp add: fresh_append)
+    apply safe
+    apply(drule fresh_removeAll')
+    apply(rule arg_cong2[of _ _ _ _ removeAll])
+     apply simp
+    by(simp add: fresh_at_base(2))
+  subgoal for x1a x2 x C \<Gamma> b
+    apply(simp)
+    apply(cases "b")
+     apply(simp_all add: fresh_append cap_subst_def, safe)
+    using fresh_vrs_list by blast
+  done
+
+lemma fresh_lookup:
+  assumes "atom xa \<sharp> ty_dom \<Gamma>"
+  shows "cv (Tvar xa) \<Gamma> b = []"
+  using assms
+  apply(induction \<Gamma>)
+   apply simp
+  subgoal for a \<Gamma>
+    apply(cases a rule: binding.strong_exhaust)
+     apply force
+    apply(simp only: ty_dom.simps tyvrs_of.simps 
+                      fresh_append fresh_Cons fresh_Nil)
+    apply(simp)
+    apply(cases "b")
+     apply safe
+    by argo
+  done
+
+lemma cv_cap_subst':
+  assumes "x \<in> set (cv T \<Gamma> b)" 
+  shows "set C \<subseteq> set (cv (T[x \<mapsto> C]\<^sub>c) \<Gamma> b)"
+  using assms
+  apply(nominal_induct T avoiding: 
+        arbitrary:  rule: ty.strong_induct)
+  
+  oops
+
+
+lemma 
+  assumes a: "(VarB x R # \<Gamma>) \<turnstile> S <: T" 
+  assumes b: "\<turnstile> (VarB x R # \<Gamma>) ok"
+  shows "\<Gamma> \<turnstile> S[x \<mapsto> C]\<^sub>c <: T[x \<mapsto> C]\<^sub>c" 
+  using a
+proof(nominal_induct "VarB x R # \<Gamma>" S T 
+      avoiding: C 
+      rule: subtype_of.strong_induct)
+  case (SA_refl T)
+  then have "\<turnstile> \<Gamma> ok"
+    using validE_append by fast
+  then show ?case 
+    by (rule subtype_of.SA_refl) 
+next
+  case (SA_trans R S T)
   then show ?case by auto
 next
-  case (T_App t C x R T s S)
-  have "set (cv S (\<Delta> @ \<Gamma>) True) \<subseteq> set (cv S (\<Delta> @ B # \<Gamma>) True)" 
-    apply(rule cv_env_weakening[of _ "[B]", simplified])
-    using T_App apply force
-    using T_App typing_ok by auto
-  then show ?case     
-    using typing.T_App
+  case (SA_TVar X T E')
+  have "\<turnstile> (VarB x R # \<Gamma>) ok"
+    using assms by auto
+  then have "atom x \<sharp> T"
+    using SA_TVar.hyps(3) fresh_extract by fastforce
+  then have "T[x \<mapsto> C]\<^sub>c = T"
+    using fresh_capsubst by auto
+  then show ?case
+    using SA_TVar.hyps by auto
+next
+  case (SA_Top T)
+  then show ?case 
+    apply simp
+    apply(rule subtype_of.SA_Top)
+    using SA_Top apply blast
+    apply(subst cv_cap_subst)
+     apply (simp add: cv_skip_trm_bind fresh_Nil)
+    apply(subst (asm) cv_skip_trm_bind)
+    by auto
+next
+  case (SA_arrow S\<^sub>2 S\<^sub>1 y T\<^sub>1 T\<^sub>2)
+
+  then show ?case 
+    apply simp        
     sorry
 next
-  case (T_TApp X t S C T R x)
+  case (SA_all S\<^sub>2 S\<^sub>1 x T\<^sub>1 T\<^sub>2 X)
   then show ?case sorry
 next
-  case (T_Abs x S t T E)
-  then show ?case sorry
-next
-  case (T_TAbs X S t T E)
+  case (SA_captr T C Ca)
+  then have "\<turnstile> \<Gamma> ok"
+    using validE_append by fast
   then show ?case 
+    apply simp
+    apply(rule subtype_of.SA_captr)
+    by auto
+next
+  case (SA_capti S T C E Ca)
+  then show ?case 
+    apply simp
+    apply(rule subtype_of.SA_capti[of _ _ _ _ E])
+     apply fast
+    unfolding cap_subst_def
+    apply(simp only: split: if_splits)
+    apply safe
     
     sorry
 qed
 
-lemma type_weaken':
- "\<Gamma> \<turnstile> t : T \<Longrightarrow>  \<turnstile> (\<Delta>@\<Gamma>) ok \<Longrightarrow> (\<Delta>@\<Gamma>) \<turnstile> t : T"
-  apply (induct \<Delta>)
-  apply simp_all
-  apply (erule validE)
-  apply (insert type_weaken [of "[]", simplified])
-  apply simp_all
-  done
-
 theorem subst_type: 
-  assumes "\<Gamma> \<turnstile> t : T" "\<Gamma> \<turnstile> s : S"
+  assumes "VarB x R # \<Gamma> \<turnstile> t : T" "\<Gamma> \<turnstile> s : S"
           "\<Gamma> \<turnstile> S <: R[x \<mapsto> cv S \<Gamma> True]\<^sub>c"
   shows "\<Gamma> \<turnstile> t[x \<mapsto> s] : T[x \<mapsto> cv S \<Gamma> True]\<^sub>c" 
   using assms
-proof (nominal_induct "\<Gamma>" t T 
+proof (nominal_induct "VarB x R # \<Gamma>" t T 
        avoiding: x s arbitrary: rule: typing.strong_induct)
-  case (T_Var y T \<Gamma>)
-  then show ?case  
-  proof (cases "x = y")
+  case (T_Var y T)
+  then show ?case 
+  proof(cases "x = y")
     case True
-    then show ?thesis using T_Var
-     apply simp
-      sorry
- next
-   case False
-   then show ?thesis 
-     using T_Var
-     apply simp
-     sorry
- qed  
+    then have eq: "T = R" 
+      using T_Var.hyps(1) T_Var.hyps(2) uniqueness_of_ctxt' by force
+    show ?thesis 
+      apply(simp add: True eq)
+      using T_Var.prems(1) T_Var.prems(2) True by blast
+  next
+    case False
+    have "atom x \<sharp> T" 
+      by (metis False T_Var.hyps(1) T_Var.hyps(2) binding.eq_iff(1) binding.fresh(1) fresh_Cons fresh_append in_set_conv_decomp set_ConsD validE(2))
+    then have t: "T = T[x \<mapsto> cv S \<Gamma> True]\<^sub>c"
+      using fresh_capsubst by blast
+    show ?thesis
+      apply(simp add: False t[symmetric])
+      using False T_Var.hyps(1) assms(2) typing_ok by auto
+  qed
 next
-  case (T_App t C x R T s S)
-  then show ?case sorry
+  case (T_Sub t R' T')
+  show ?case 
+    apply(rule typing.T_Sub)
+     apply(rule T_Sub)+
+    using T_Sub
+    sorry
+next
+  case (T_App t C x Ra T s Sa xa sa)
+  then show ?case 
+    apply simp
+    apply(rule typing.T_App)
+  
+    sorry
 next
   case (T_TApp X t S C T R x)
-  then show ?case sorry
+  then show ?case 
+    apply simp
+    sorry
 next
   case (T_Abs x S t T E)
   then show ?case sorry
@@ -1845,6 +1972,7 @@ next
   case (T_TAbs X S t T E)
   then show ?case sorry
 qed
+ 
 
 
 section \<open>Soundness\<close>
@@ -1853,6 +1981,8 @@ lemma abs_eq_binder:
   assumes "\<Gamma> \<turnstile> (\<lambda>y:Q. q): (C \<triangleright> (Arrow x R T))" 
   obtains z where
     "VarB z ((x \<leftrightarrow> z) \<bullet> R) # \<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : ((x \<leftrightarrow> z) \<bullet> T)"
+    "\<Gamma> ; [] ; [VarB z ((x \<leftrightarrow> z) \<bullet> R)] \<turnstile> ((x \<leftrightarrow> z) \<bullet> R) wf"
+    "atom z \<sharp> (s\<^sub>1::trm)" 
   using assms
   apply(cases \<Gamma> "\<lambda>y:Q. q" "C \<triangleright> (Arrow x R T)" rule: typing.cases)
   subgoal for xa S t Ta E
@@ -1861,112 +1991,43 @@ lemma abs_eq_binder:
               "[[atom x]]lst. (R, T) = [[atom xa]]lst. (S, Ta)"
     assume 2: "VarB xa S # \<Gamma> \<turnstile> t : Ta"
     assume 3: "(\<And>z. VarB z ((x \<leftrightarrow> z) \<bullet> R) # \<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : (x \<leftrightarrow> z) \<bullet> T \<Longrightarrow>
-          thesis)" 
+          \<Gamma> ; [] ; [VarB z ((x \<leftrightarrow> z) \<bullet> R)] \<turnstile> (x \<leftrightarrow> z) \<bullet> R wf \<Longrightarrow>
+          atom z \<sharp> s\<^sub>1 \<Longrightarrow> thesis)" 
+    assume 4: "\<Gamma> ; [] ; [VarB xa S] \<turnstile> S wf" 
 
-    obtain z :: vrs where fr: "atom z \<sharp> (\<Gamma>,x,y,xa,q,Q,R,T,t,Ta,S)"
+    obtain z :: vrs where fr: "atom z \<sharp> (\<Gamma>,x,y,xa,q,Q,R,T,t,Ta,S,s\<^sub>1)"
       by(blast intro: obtain_fresh)
     have "atom xa \<sharp> \<Gamma>" 
-   
-    have "(xa \<leftrightarrow> z) \<bullet> \<Gamma> = \<Gamma>"
-      
-    have "(x \<leftrightarrow> z) \<bullet> R = (xa \<leftrightarrow> z) \<bullet> S" 
-         "(x \<leftrightarrow> z) \<bullet> T = (xa \<leftrightarrow> z) \<bullet> Ta" 
-         "(y \<leftrightarrow> z) \<bullet> q = (xa \<leftrightarrow> z) \<bullet> t" 
-      apply -   
+      using "2" typing_ok by blast
+    have o1: "(xa \<leftrightarrow> z) \<bullet> \<Gamma> = \<Gamma>"
+      using \<open>atom xa \<sharp> \<Gamma>\<close> flip_fresh_fresh fr fresh_PairD(1) by blast
+    have o2: "(x \<leftrightarrow> z) \<bullet> R = (xa \<leftrightarrow> z) \<bullet> S" 
+             "(x \<leftrightarrow> z) \<bullet> T = (xa \<leftrightarrow> z) \<bullet> Ta" 
+             "(y \<leftrightarrow> z) \<bullet> q = (xa \<leftrightarrow> z) \<bullet> t" 
+        apply -   
         apply(all \<open>subst Abs1_eq_iff_fresh(3)[symmetric]\<close>)
-           apply((simp add: fresh_Pair fr)? | 
-                 (blast intro: 1 bind_pair_proj_1 bind_pair_proj_2)?)
+      apply(simp add: fresh_Pair fr)
       apply(blast intro: 1 bind_pair_proj_1)
       apply(simp add: fresh_Pair fr)
       apply(blast intro: 1 bind_pair_proj_2)
       apply(simp add: fresh_Pair fr)
       by(blast intro: 1 bind_pair_proj_1)
 
-    then have "VarB z ((x \<leftrightarrow> z) \<bullet> R) #
-          \<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : (x \<leftrightarrow> z) \<bullet> T" 
-      using 2 try0
-      sorry
-    then show ?thesis
-      using 3 by fast
+    have 5: "VarB z ((x \<leftrightarrow> z) \<bullet> R) # \<Gamma> \<turnstile> 
+           (y \<leftrightarrow> z) \<bullet> q : (x \<leftrightarrow> z) \<bullet> T" 
+      using typing.eqvt[OF 2, of "(xa \<leftrightarrow> z)"]
+      by(simp add: o1 o2)
+    have 6: "\<Gamma> ; [] ; [VarB z ((x \<leftrightarrow> z) \<bullet> R)] \<turnstile> ((x \<leftrightarrow> z) \<bullet> R) wf"
+      using valid_ty.eqvt[OF 4, of "(xa \<leftrightarrow> z)"]
+      by(simp add: o1 o2)
+    have 7: "atom z \<sharp> s\<^sub>1"
+      using fr by(simp add: fresh_Pair)
+
+    show ?thesis
+      using 3 5 6 7 by fast
   qed
-    apply(frule bind_pair_proj_1)
-    find_theorems "[[_]]lst. _ = [[_]]lst._"    
+  done
 
-(*
- VarB z ((x \<leftrightarrow> z) \<bullet> R) # \<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : ((x \<leftrightarrow> z) \<bullet> T);
-                   \<Gamma> ; [] ; [VarB x S] \<turnstile> S wf 
-
-\<Gamma> \<turnstile> (Abs x t T) : 
-                      ((removeAllList (cv_trm t E) 
-                                     (cv T E True)) \<triangleright> 
-                        (Arrow x S T))
-
-| T_Abs[intro]: "\<lbrakk> VarB x S # \<Gamma> \<turnstile> t : T;
-                   \<Gamma> ; [] ; [VarB x S] \<turnstile> S wf \<rbrakk> \<Longrightarrow> 
-                  \<Gamma> \<turnstile> (Abs x t T) : 
-                      ((removeAllList (cv_trm t E) 
-                                     (cv T E True)) \<triangleright> 
-                        (Arrow x S T))"
-*)
-
-lemma abs_eq_binder:
-  assumes "\<Gamma> \<turnstile> (\<lambda>y:Q. q): (C \<triangleright> (Arrow x R T))" 
-  obtains z where
-    "\<Gamma> \<turnstile> (\<lambda>z: (y \<leftrightarrow> z) \<bullet> Q. (y \<leftrightarrow> z) \<bullet> q): 
-         (C \<triangleright> (Arrow z ((x \<leftrightarrow> z) \<bullet> R) ((x \<leftrightarrow> z) \<bullet> T)))"
-    "atom z \<sharp> q" "atom z \<sharp> Q" 
-    "atom z \<sharp> R" "atom z \<sharp> T"
-    "atom z \<sharp> y" "atom z \<sharp> x"
-proof -
-  obtain z :: vrs where 1: 
-    "atom z \<sharp> q" "atom z \<sharp> Q" "atom z \<sharp> R" "atom z \<sharp> T"
-    "atom z \<sharp> y" "atom z \<sharp> x"
-    apply(rule obtain_fresh[of "(q,Q,R,T,y,x)", simplified fresh_Pair])
-    by blast
-  
-  then have 2: "(\<lambda>y:Q. q) = (\<lambda>z: (y \<leftrightarrow> z) \<bullet> Q. (y \<leftrightarrow> z) \<bullet> q)"
-    apply simp
-    apply safe
-    subgoal for c
-      by(simp add: flip_eqvt
-          flip_fresh_fresh permute_eqvt permute_flip_at)
-    subgoal for c
-      by(simp add: flip_eqvt
-          flip_fresh_fresh permute_eqvt permute_flip_at)
-    done
-
-  from 1
-  have 3: "(C \<triangleright> (Arrow x R T)) =
-           (C \<triangleright> (Arrow z ((x \<leftrightarrow> z) \<bullet> R) ((x \<leftrightarrow> z) \<bullet> T)))" 
-    apply simp
-    apply safe
-    subgoal for c
-      by(simp add: flip_eqvt
-          flip_fresh_fresh permute_eqvt permute_flip_at)
-    subgoal for c
-      by(simp add: flip_eqvt
-          flip_fresh_fresh permute_eqvt permute_flip_at)
-    done
-
-  from assms
-  show ?thesis 
-    by (simp add: 1 "2" "3" that)
-qed
-
-lemma 
-  assumes "atom z \<sharp> q" "atom z \<sharp> x"
-  shows "q[x \<mapsto> s] = ((x \<leftrightarrow> z) \<bullet> q)[z \<mapsto> s]"
-  using assms
-  apply(induction q x s rule: subst_trm.induct)
-  subgoal for xa
-    apply simp
-    apply safe
-    by(simp add: fresh_at_base(2))
-  subgoal for x y t t\<^sub>1 T
-    apply simp
-
-    sorry oops
-  
 theorem preservation: 
   assumes "\<Gamma> \<turnstile> t : T" "t \<longmapsto> t'"
   shows "\<Gamma> \<turnstile> t' : T" 
@@ -1984,33 +2045,22 @@ next
       have "\<Gamma> \<turnstile> (\<lambda>y:Q. q): (C \<triangleright> (Arrow x R T))" 
         using E_Abs(1) T_App by auto
       then obtain z where r:
-        "\<Gamma> \<turnstile> (\<lambda>z:(y \<leftrightarrow> z) \<bullet> Q.
-               (y \<leftrightarrow> z) \<bullet> q) : 
-             (C \<triangleright> Arrow z ((x \<leftrightarrow> z) \<bullet> R) ((x \<leftrightarrow> z) \<bullet> T))"
-        "atom z \<sharp> q" "atom z \<sharp> Q"
-        "atom z \<sharp> R" "atom z \<sharp> T"
-        "atom z \<sharp> y" "atom z \<sharp> x"
+        "VarB z ((x \<leftrightarrow> z) \<bullet> R) # \<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : ((x \<leftrightarrow> z) \<bullet> T)"
+        "\<Gamma> ; [] ; [VarB z ((x \<leftrightarrow> z) \<bullet> R)] \<turnstile> ((x \<leftrightarrow> z) \<bullet> R) wf"
+        "atom z \<sharp> s\<^sub>1"
         using abs_eq_binder by blast
-      define Q' q' R' T' where 
+      define Q' q' R' T' where swap_def:
         "Q' = (y \<leftrightarrow> z) \<bullet> Q" "q' = (y \<leftrightarrow> z) \<bullet> q"
         "R' = (x \<leftrightarrow> z) \<bullet> R" "T' = (x \<leftrightarrow> z) \<bullet> T"
-      then have "\<Gamma> \<turnstile> (\<lambda>z: Q'. q') : (C \<triangleright> Arrow z R' T')" 
-        using r by fast
-             
-      then have "\<Gamma> \<turnstile> (y \<leftrightarrow> z) \<bullet> q : (x \<leftrightarrow> z) \<bullet> T"
-       
+      then have "VarB z R' # \<Gamma> \<turnstile> q' : T'" 
+                "(y \<leftrightarrow> z) \<bullet> q[y \<mapsto> s\<^sub>1] = q'[z \<mapsto> s\<^sub>1]"
+        using r(1) apply blast
+        unfolding swap_def 
+        by (simp add: flip_fresh_fresh local.E_Abs(3) r(3))
+      have "(x \<leftrightarrow> z) \<bullet> T[x \<mapsto> cv S \<Gamma> True]\<^sub>c =
+            T'[z \<mapsto> cv S \<Gamma> True]\<^sub>c" 
         sorry
-      from this(2-7) 
-      have "q[x \<mapsto> s\<^sub>1] = ((x \<leftrightarrow> z) \<bullet> q)[z \<mapsto> s\<^sub>1]"
-      apply(induction q x s\<^sub>1 rule: subst_trm.induct)
-        subgoal for xa
-          apply simp
-          apply safe
-          by(simp add: fresh_at_base(2))
-        subgoal for x' y' t t\<^sub>1 T\<^sub>1
-          apply simp
-          sorry
-        sorry
+      thm subst_type
       show ?thesis 
         apply(simp add: E_Abs)
 
