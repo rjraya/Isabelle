@@ -1,0 +1,5 @@
+theory Experiment2
+  imports Main
+begin
+
+end
