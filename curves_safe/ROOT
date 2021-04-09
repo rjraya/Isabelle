@@ -1,9 +1,0 @@
-session Hales = HOL +
-  options [document = pdf, document_output = "output"]
-sessions
-  "HOL-Library"
-  "HOL-Algebra"
-theories
-  "Hales"
-document_files
-  "root.tex"

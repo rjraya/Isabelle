@@ -1,2 +1,0 @@
-\contentsline {section}{\numberline {1}Affine Edwards curves}{1}{section.1}
-\contentsline {section}{\numberline {2}Extension}{3}{section.2}

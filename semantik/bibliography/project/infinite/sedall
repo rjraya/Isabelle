@@ -1,6 +1,0 @@
-for i in *.ML *.thy *.html 
-do
-echo $i
-sed -f sedscript $i >new/$i
-cmp $i new/$i && rm new/$i && echo "no change" || (wc $i new/$i && cp -p $i old)
-done

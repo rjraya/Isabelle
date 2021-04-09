@@ -1,4 +1,0 @@
-\beamer@sectionintoc {1}{Motivation}{2}{0}{1}
-\beamer@sectionintoc {2}{Affine Edwards curves}{6}{0}{2}
-\beamer@sectionintoc {3}{Projective Edwards Curves}{12}{0}{3}
-\beamer@sectionintoc {4}{Final thoughts}{20}{0}{4}
