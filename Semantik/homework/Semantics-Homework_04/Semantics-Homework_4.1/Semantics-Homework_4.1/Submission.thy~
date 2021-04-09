@@ -1,0 +1,212 @@
+theory Submission
+  imports Defs
+begin
+
+fun exec :: "com \<Rightarrow> state \<Rightarrow> nat \<Rightarrow> state \<times> nat" where
+"exec SKIP s f = (s, f)"
+| "exec (x::=v) s f = (s(x:=aval v s), f)"
+| "exec (c1;;c2) s f = (
+    let (s, f') = exec c1 s f in exec c2 s f')"
+| "exec (IF b THEN c1 ELSE c2) s f =
+    (if bval b s then exec c1 s f else exec c2 s f)"
+| "exec (WHILE b DO c) s (Suc f) = (
+    if bval b s then
+      (let (s, f') = exec c s f in
+        if f > 0 then exec (WHILE b DO c) s (min f f') else (s, 0)
+      ) else (s, Suc f))"
+| "exec _ s 0 = (s, 0)"
+
+lemma exec_equiv_bigstep: "(\<exists>f f'. exec c s f = (s', f') \<and> f' > 0) \<longleftrightarrow> (c,s) \<Rightarrow> s'"
+  oops
+
+paragraph "Step 1"
+
+fun while_free :: "com \<Rightarrow> bool" where
+"while_free SKIP \<longleftrightarrow> True" |
+"while_free (Assign v expr) \<longleftrightarrow> True" |
+"while_free (Seq c1 c2) \<longleftrightarrow> (while_free c1 \<and> while_free c2)" |
+"while_free (If b c1 c2) \<longleftrightarrow> (while_free c1 \<and> while_free c2)" |
+"while_free (While b c) \<longleftrightarrow> False"
+
+paragraph "Step 2"
+
+lemma while_not_decrease: 
+  "exec c s f = (s',f') \<Longrightarrow> while_free c \<Longrightarrow> f \<le> f'"
+proof(induction c s f arbitrary: s' f' rule: exec.induct)
+case (2 x v s f)
+then show ?case by (simp split: prod.splits)
+next
+  case (3 c1 c2 s f)
+  then show ?case by(force split: prod.splits)
+next
+case (4 b c1 c2 s f)
+  then show ?case by(auto split: if_splits)
+qed auto+
+  
+theorem while_free_fuel: "while_free c \<Longrightarrow> \<exists>f s' f'. exec c s f = (s', f') \<and> f' > 0"
+by (metis not_one_le_zero old.prod.exhaust while_not_decrease zero_less_iff_neq_zero)
+
+paragraph "Step 3"
+
+text \<open>Show this directly with one induction proof (using Isar)\<close>
+theorem exec_imp_bigstep: "exec c s f = (s', f') \<Longrightarrow> f' > 0 \<Longrightarrow> (c,s) \<Rightarrow> s'"
+  oops
+(*proof(induction c s f arbitrary: s' f' rule: exec.induct)
+  case (1 s f)
+  then show ?case by auto
+next
+case (2 x v s f)
+  then show ?case by auto
+next
+  case (3 c1 c2 s f)
+   note prems = this
+   from this have 
+     first: "exec c1 s f = (s2, f'') \<Longrightarrow> 0 < f'' \<Longrightarrow> (c1, s) \<Rightarrow> s2" by auto
+   from prems have 
+     rest: "(s2, f'') = exec c1 s f \<Longrightarrow>
+      exec c2 s2 f'' = (s', f') \<Longrightarrow> 0 < f' \<Longrightarrow> (c2, s2) \<Rightarrow> s'" by blast
+   from first prems have 
+     "(c1,s) \<Rightarrow> s2"
+   from this prems first rest 
+       show ?case  
+   
+    sorry
+next
+  case (4 b c1 c2 s f)
+  then show ?case by (auto split: if_splits)
+next
+  case (5 b c s f)
+  then show ?case 
+    by (auto split: if_splits prod.splits) (fastforce simp: WhileTrue)
+next
+  case (6 v va s)
+  then show ?case by(auto)
+qed*)
+ 
+
+
+text \<open>We show that the amount of fuel can never increase during an execution.\<close>
+lemma exec_fuel_nonincreasing:
+  "exec c s f = (s', f') \<Longrightarrow> f' \<le> f"
+proof -
+  assume "exec c s f = (s', f')"
+  then show "f' \<le> f"
+  proof(induction c s f arbitrary: s' f' rule: exec.induct) 
+    case (3 c1 c2 s f)
+      then show ?case by (auto split: prod.splits) (fastforce)
+  next
+    case (4 b c1 c2 s f) then show ?case by (auto split: if_splits)
+  next
+    case (5 b c s f)
+      then show ?case 
+        by(auto simp add: le_Suc_eq split: if_splits prod.splits)
+  qed auto+
+qed
+
+
+text \<open>Show the following helpful lemma from which we get the two corollaries below,
+which will be useful in the final proof:\<close>
+lemma exec_add: 
+ "exec c s f = (s', f') \<Longrightarrow> 
+  f' > 0 \<Longrightarrow> exec c s (f + k) = (s', f' + k)"
+proof(induction c s f arbitrary: s' f' rule: exec.induct)
+next
+  case (3 c1 c2 s f)
+  then show ?case
+    using exec_fuel_nonincreasing by (simp split: prod.splits) (fastforce)
+next
+  case (5 b c s f)
+  then show ?case 
+    by(auto split: prod.splits if_splits)
+      (metis Pair_inject exec.simps(6) min_0R min_add_distrib_left neq0_conv)+
+qed auto+
+
+lemma exec_mono:
+  "exec c s f = (s', f') \<Longrightarrow> f' > 0 \<Longrightarrow> f1 \<ge> f \<Longrightarrow> \<exists>f2. f2 \<ge> f' \<and> exec c s f1 = (s', f2)"
+  by (auto simp: exec_add dest: le_Suc_ex)
+
+lemma exec_mono':
+  "exec c s f = (s', f') \<Longrightarrow> f' > 0 \<Longrightarrow> f2 \<ge> f' \<Longrightarrow> \<exists>f1. f1 \<ge> f \<and> exec c s f1 = (s', f2)"
+  by (metis exec_add le_Suc_ex le_add_same_cancel1)
+
+text \<open>Use induction and the auxiliary lemmas above.\<close>
+
+(*"exec (WHILE b DO c) s (Suc f) = (
+    if bval b s then
+      (let (s, f') = exec c s f in
+        if f > 0 then exec (WHILE b DO c) s (min f f') else (s, 0)
+      ) else (s, Suc f))"*)
+
+lemma whileLemma:
+ "exec c s\<^sub>1 f\<^sub>1 = (s\<^sub>2,f\<^sub>2) \<Longrightarrow> exec (WHILE b DO c) s\<^sub>2 f\<^sub>2 = (s\<^sub>3,f\<^sub>3) \<Longrightarrow> 
+   bval b s\<^sub>1 \<Longrightarrow> f\<^sub>1 > 0 \<Longrightarrow> f\<^sub>2 > 0 \<Longrightarrow> 
+   exec (WHILE b DO c) s\<^sub>1 f\<^sub>1 = (s\<^sub>3,f\<^sub>3)"
+ 
+  sorry
+                                                                
+theorem bigstep_imp_exec: "cs \<Rightarrow> s' \<Longrightarrow> (c,s) = cs \<Longrightarrow> \<exists>f f'. f' > 0 \<and> exec c s f = (s', f')"
+proof(induction arbitrary: c s rule: big_step.induct)
+case (Skip s)
+  then show ?case by auto 
+next
+  case (Assign x a s)
+  then show ?case by auto
+next
+  case (Seq c\<^sub>1 s\<^sub>1 s\<^sub>2 c\<^sub>2 s\<^sub>3)
+  note seq = this
+  from this have first: "\<exists>f f'. 0 < f' \<and> exec c\<^sub>1 s\<^sub>1 f  = (s\<^sub>2, f')" by auto
+  from seq have second: "\<exists>f f'. 0 < f' \<and> exec c\<^sub>2 s\<^sub>2 f  = (s\<^sub>3,f')" by auto
+  from first obtain f\<^sub>1 f\<^sub>2 where first_cond: "0 < f\<^sub>2 \<and> exec c\<^sub>1 s\<^sub>1 f\<^sub>1  = (s\<^sub>2, f\<^sub>2)" by auto
+  from second obtain f\<^sub>3 f\<^sub>4 where second_cond: "0 < f\<^sub>4 \<and> exec c\<^sub>2 s\<^sub>2 f\<^sub>3  = (s\<^sub>3, f\<^sub>4)" by auto
+  show ?case
+  proof(cases "f\<^sub>2 \<le> f\<^sub>3")
+    case True
+    from this first_cond exec_mono'[of c\<^sub>1 s\<^sub>1 f\<^sub>1 s\<^sub>2 f\<^sub>2 f\<^sub>3]  show ?thesis 
+    by (metis exec.simps(3) local.Seq(5) prod.sel(1) prod.sel(2) second_cond split_conv)
+  next
+    case False
+    from this second_cond exec_mono[of c\<^sub>2 s\<^sub>2 f\<^sub>3 s\<^sub>3 f\<^sub>4 f\<^sub>2] show ?thesis
+    by (metis (full_types) Seq.prems exec.simps(3) first_cond nat_le_linear neq0_conv not_le prod.sel(1) prod.sel(2) split_conv) 
+  qed
+next
+  case (IfTrue b s c\<^sub>1 t c\<^sub>2)
+  then show ?case by auto 
+next
+  case (IfFalse b s c\<^sub>2 t c\<^sub>1)
+  then show ?case by auto 
+next
+  case (WhileFalse b s c)
+  then show ?case by (auto split: prod.splits) (meson exec.simps(5) lessI)
+next
+  case (WhileTrue b s\<^sub>1 d s\<^sub>2 s\<^sub>3)
+  note wtrue = this
+  from this have first: "\<exists>f f'. 0 < f' \<and> exec d s\<^sub>1 f  = (s\<^sub>2, f')" by auto
+  from wtrue have eq: "s = s\<^sub>1 \<and> c = (WHILE b DO d)" by auto
+  from wtrue have second: "\<exists>f f'. 0 < f' \<and> exec (WHILE b DO d) s\<^sub>2 f  = (s\<^sub>3,f')" by auto
+  from first obtain f\<^sub>1 f\<^sub>2 where first_cond: "0 < f\<^sub>2 \<and> exec d s\<^sub>1 f\<^sub>1  = (s\<^sub>2, f\<^sub>2)" by auto
+  from second obtain f\<^sub>3 f\<^sub>4 where second_cond: "0 < f\<^sub>4 \<and> exec (WHILE b DO d) s\<^sub>2 f\<^sub>3  = (s\<^sub>3, f\<^sub>4)" by auto
+  show ?case
+  proof(cases "f\<^sub>2 \<le> f\<^sub>3")
+    case True
+    from this first_cond exec_mono'[of d s\<^sub>1 f\<^sub>1 s\<^sub>2 f\<^sub>2 f\<^sub>3] have 
+     "\<exists>f1\<ge>f\<^sub>1. exec d s\<^sub>1 f1 = (s\<^sub>2, f\<^sub>3)" by auto
+    from this obtain f\<^sub>5 where "f\<^sub>5 \<ge> f\<^sub>1 \<and> exec d s\<^sub>1 f\<^sub>5 = (s\<^sub>2, f\<^sub>3)" by auto
+    from this wtrue(1) second_cond have "exec (WHILE b DO d) s\<^sub>1 f\<^sub>5 = (s\<^sub>3, f\<^sub>5)"  
+      show ?thesis
+        apply(auto)
+      sorry
+  next
+    case False
+    from this second_cond exec_mono[of "(WHILE b DO d)" s\<^sub>2 f\<^sub>3 s\<^sub>3 f\<^sub>4 f\<^sub>2] show ?thesis 
+      
+      sorry
+  qed
+qed 
+
+theorem bigstep_imp_exec: "(c,s) \<Rightarrow> s' \<Longrightarrow> \<exists>f f'. f' > 0 \<and> exec c s f = (s', f')"
+  sorry
+
+corollary exec_equiv_bigstep: "(\<exists>f f'. exec c s f = (s', f') \<and> f' > 0) \<longleftrightarrow> (c,s) \<Rightarrow> s'"
+  by (metis bigstep_imp_exec exec_imp_bigstep)
+
+end

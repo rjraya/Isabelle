@@ -1,0 +1,38 @@
+theory Submission
+  imports Defs
+begin
+
+context
+  fixes f :: "'a set \<Rightarrow> 'a set" and x\<^sub>0 :: "'a set"
+  assumes "mono f" and post_fixpoint: "x\<^sub>0 \<subseteq> f x\<^sub>0"
+begin
+
+theorem postfix_step: "\<Union> {(f^^i)(x\<^sub>0) | i :: nat. True} \<subseteq> \<Union> {(f^^(Suc i))(x\<^sub>0) | i :: nat. True}"
+  sorry
+
+end
+
+context
+  fixes f :: "'a set \<Rightarrow> 'a set"
+  assumes continuous: "\<And>X. X\<noteq>{} \<Longrightarrow> f (\<Union>X) = \<Union>(f ` X)"
+begin
+
+theorem mono: "x \<subseteq> y \<Longrightarrow> f x \<subseteq> f y"
+  sorry
+
+lemma lfp_fold: "f (lfp f) = lfp f"  
+  using lfp_unfold mono unfolding mono_def by blast
+    
+theorem lfp_ge: "\<Union>{(f^^i) {} | i. True} \<subseteq> lfp f"
+  sorry
+
+theorem lfp_le: "lfp f \<subseteq> \<Union>{(f^^i) {} | i. True}" (is "_ \<subseteq> \<Union>?S")
+  sorry
+
+corollary
+  "lfp f = \<Union>{(f^^i) {} | i. True}"
+  using lfp_le lfp_ge ..
+
+end
+
+end

@@ -1,0 +1,30 @@
+\begin{thebibliography}{1}
+
+\bibitem{Er01}
+P.~Erd{\H o}s.
+\newblock A selection of problems and results in combinatorics.
+\newblock In {\em Recent trends in combinatorics (Matrahaza, 1995)}, pages
+  1--6. Cambridge Univ. Press, Cambridge, 1995.
+
+\bibitem{ConcreteMath}
+R.~Graham, D.~Knuth, and O.~Patashnik.
+\newblock {\em Concrete mathematics}.
+\newblock Addison-Wesley, Reading, MA, 1989.
+
+\bibitem{greenwade93}
+G.~D. Greenwade.
+\newblock The {C}omprehensive {T}ex {A}rchive {N}etwork ({CTAN}).
+\newblock {\em TUGBoat}, 14(3):342--351, 1993.
+
+\bibitem{knuth92}
+D.~Knuth.
+\newblock Two notes on notation.
+\newblock {\em Amer. Math. Monthly}, 99:403--422, 1992.
+
+\bibitem{Simpson}
+H.~Simpson.
+\newblock Proof of the {R}iemann {H}ypothesis.
+\newblock preprint (2003), available at
+  \texttt{http://www.math.drofnats.edu/riemann.ps}, 2003.
+
+\end{thebibliography}

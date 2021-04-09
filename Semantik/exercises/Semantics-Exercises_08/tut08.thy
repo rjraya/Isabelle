@@ -1,0 +1,92 @@
+theory tut08
+  imports (*"IMP2.VCG"*) 
+   (*"/cygdrive/c/Users/rraya/semantics1819_public/IMP2_transitional/Examples"
+          *)
+   "/cygdrive/c/Users/rraya/Isabelle/semantics1819_public/IMP2/Examples"
+begin
+
+(* if (n mod 2 == 0) then r = (x*x)^(n/2) else  *)
+(* let exp_odd = (n-1)/2 in (let exp_even = n/2 in
+              if True then (x*x)^exp_odd else  (x*x)^exp_even ):: bool 
+*)
+
+lemma aux: "x * (x*x) ^ nat (n div 2) = x ^ nat n" if "n mod 2 = 1" " n > 0" for x :: int
+proof - 
+  have *: " 2 * nat (n div 2) = nat n - 1" 
+    by (smt even_nat_iff nat_2 nat_div_distrib numeral_2_eq_2 odd_iff_mod_2_eq_one odd_two_times_div_two_nat that(1) that(2))
+  have "x * x = x ^ 2" by (simp add: power2_eq_square)
+  then have "(x*x) ^ nat (n div 2) = x ^(2 *  nat (n div 2))"
+    apply simp
+    using semiring_normalization_rules(31) by blast
+  then show ?thesis
+    by (smt "*" One_nat_def even_nat_iff odd_Suc_minus_one odd_iff_mod_2_eq_one power_Suc that(1) that(2))
+qed  
+
+program_spec ex_by_sq
+assumes "n\<ge>0"
+ensures "r = x\<^sub>0 ^ nat n\<^sub>0"
+defines \<open>
+ r = 1;
+ while (n \<noteq> 0)
+  @invariant\<open>n \<ge> 0 \<and>  r*x^nat n = x\<^sub>0 ^nat n\<^sub>0\<close>
+  @variant\<open>nat n\<close>
+ {
+  if (n mod 2 == 1) {
+   r = r * x
+  };
+  x = x * x;
+  n = n / 2
+ }
+\<close>
+  apply vcg_cs
+  subgoal
+    (* (2) tells it to rewrite the second occurrence ! 
+       (asm) tells to rewrite in the assumption 
+        we can also say to rewrite the second part of the assumption with (asm) (2) *)
+    apply(subst (asm) aux[symmetric])  
+    apply(auto simp: algebra_simps)
+  done
+  apply(simp add: semiring_normalization_rules)
+  apply(simp add: nat_mult_distrib semiring_normalization_rules)
+  done
+
+(*
+Write a program that checks whether a certain element x is contained in an array a. If
+a contains x, your program should \return" the least index at which x can be found in
+some variable. Otherwise your program should set the same variable to the array upper
+bound. Specify this property formally and prove that your program fulfills this property
+*)
+  
+program_spec first_occur
+assumes "l \<le> h"
+ensures "if l = h then (\<forall> i \<in> {l\<^sub>0..<h\<^sub>0}. a i \<noteq> x) else (a l = x)"
+defines \<open>
+ while (l < h \<and> a[l] \<noteq> x)
+  @invariant\<open>l \<le> h \<and> l\<^sub>0 \<le> l \<and> (\<forall> i \<in> {l\<^sub>0..<l}. a i \<noteq> x)\<close>
+  @variant\<open>nat (h - l)\<close>
+ {
+   l = l+1
+ }
+\<close>
+  apply vcg_cs
+   apply auto
+  done
+
+program_spec rotate_right
+  assumes "0 < n"
+  ensures "\<forall> i \<in> {0..n}. a i = a\<^sub>0 ((i-1) mod n)"
+defines \<open>
+ i = n-1;
+
+ while (i < n)
+  @invariant\<open>\<forall> j \<in> {i..<n}. a j = a\<^sub>0 (j-1)\<close>
+  @variant\<open>nat (h - l)\<close>
+ {
+   z = a[i];
+   a[i] = a[i-1];
+   i = i + 1
+ }
+\<close>
+
+
+end 

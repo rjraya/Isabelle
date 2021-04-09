@@ -1,0 +1,66 @@
+{fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>' x0 y0 = x0*y0 - x1*y1"
+        unfolding \<delta>'_def delta_minus_def 
+        apply(simp add: algebra_simps as)
+        apply(subst power2_eq_square[symmetric],subst t_expr(1))
+        by(simp add: d_nz)}
+      note \<delta>_plus_expr = this
+      
+      {fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>_plus x0 y0 = -x0*x1+y0*y1"
+        unfolding \<delta>_plus_def delta_x_def 
+        by(simp add: algebra_simps t_nz as)}
+      note \<delta>_plus_expr = this
+
+      {fix x0 y0 :: real
+      assume as:"x0 \<noteq> 0" "y0 \<noteq> 0"
+      have "\<delta>_minus x0 y0 = x0*y1+x1*y0"
+        unfolding \<delta>_minus_def delta_y_def 
+        by(simp add: algebra_simps t_nz as)}
+      note \<delta>_minus_expr = this
+      
+      {fix x0 y0 :: real
+      assume "x0 \<noteq> 0" "y0 \<noteq> 0" 
+      define q where "q = 1 / (x0 * y0 * x1 * y1)"
+      have "q*x0*y0*x1*y1 - 1 = 0" 
+        using q_def \<open>x0 \<noteq> 0\<close> \<open>y0 \<noteq> 0\<close> \<open>x1 \<noteq> 0\<close> \<open>y1 \<noteq> 0\<close> by auto}    
+    
+    {fix x0 y0 :: real
+    assume "\<delta>_plus x0 y0 = 0" 
+    define q where "q = 1 / (x0 * y0 * x1 * y1)"
+    define gb1 where "gb1 = 1 - q * y1^2 - t^2 * y1^2 + q * y1^4"
+    define gb2 where "gb2 = -q - t^2 + q * x1^2 + q * y1^2"
+    define gb3 where "gb3 = 1 - x1^2 - y1^2 + t^2 * x1^2 * y1^2"
+    define gb4 where "gb4 = y0^2 - x1^2"
+    define gb5 where "gb5 = x0 - q * x1 * y0 * y1^3"       
+    
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dplus_0 = this
+    {fix x0 y0 :: real
+    assume "\<delta>_minus x0 y0 = 0" "x0 \<noteq> 0" "y0 \<noteq> 0"
+    define q where "q = 1 / (x0 * y0 * x1 * y1)"
+    define gb1 where "gb1 = q + t^2"
+    define gb2 where "gb2 = -1 + t^2 * y1^4"
+    define gb3 where "gb3 = x1^2 + y1^2"
+    define gb4 where "gb4 = y0^2 + y1^2"
+    define gb5 where "gb5 = x0 + t^2 * x1 * y0 * y1^3"      
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = q * (x0^2 - y1^2))"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = y0^2 - x1^2)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra
+    have "(\<exists> q1 q2 q3 q4 q5. q1 * gb1 + q2 * gb2 + q3 * gb3 +
+                             q4 * gb4 + q5 * gb5 = x0 * y0 - x1 * y1)"
+      unfolding gb1_def gb2_def gb3_def gb4_def gb5_def by algebra}
+    note case_dminus_0 = this

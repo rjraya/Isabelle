@@ -1,0 +1,134 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.0 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\datalist[entry]{nty/global//global/global}
+  \entry{chaieb2008automated}{thesis}{}
+    \name{author}{1}{}{%
+      {{hash=CA}{%
+         family={Chaieb},
+         familyi={C\bibinitperiod},
+         given={Amine},
+         giveni={A\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{CA1}
+    \strng{fullhash}{CA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{C}
+    \field{sortinithash}{C}
+    \field{title}{Automated methods for formal proofs in simple arithmetics and
+  algebra}
+    \list{institution}{1}{%
+      {Technische Universit{\"a}t M{\"u}nchen}%
+    }
+    \field{type}{phdthesis}
+    \field{year}{2008}
+  \endentry
+
+  \entry{hales2016group}{article}{}
+    \name{author}{1}{}{%
+      {{hash=HT}{%
+         family={Hales},
+         familyi={H\bibinitperiod},
+         given={Thomas},
+         giveni={T\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{HT1}
+    \strng{fullhash}{HT1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{H}
+    \field{sortinithash}{H}
+    \field{title}{The group law for Edwards curves}
+    \field{journaltitle}{arXiv preprint arXiv:1610.05278}
+    \field{year}{2016}
+  \endentry
+
+  \entry{harrison2007automating}{inproceedings}{}
+    \name{author}{1}{}{%
+      {{hash=HJ}{%
+         family={Harrison},
+         familyi={H\bibinitperiod},
+         given={John},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \list{organization}{1}{%
+      {Springer}%
+    }
+    \strng{namehash}{HJ1}
+    \strng{fullhash}{HJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{H}
+    \field{sortinithash}{H}
+    \field{booktitle}{International Conference on Automated Deduction}
+    \field{pages}{51\bibrangedash 66}
+    \field{title}{Automating elementary number-theoretic proofs using
+  Gr{\"o}bner bases}
+    \field{year}{2007}
+  \endentry
+
+  \entry{noschinskipattern}{inproceedings}{}
+    \name{author}{2}{}{%
+      {{hash=NL}{%
+         family={Noschinski},
+         familyi={N\bibinitperiod},
+         given={Lars},
+         giveni={L\bibinitperiod},
+      }}%
+      {{hash=TC}{%
+         family={Traut},
+         familyi={T\bibinitperiod},
+         given={Christoph},
+         giveni={C\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{NLTC1}
+    \strng{fullhash}{NLTC1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{N}
+    \field{sortinithash}{N}
+    \field{booktitle}{Proceedings of Isabelle Workshop}
+    \field{title}{Pattern-based Subterm Selection in Isabelle}
+    \field{year}{2014}
+  \endentry
+
+  \entry{wenzel2019isabelle}{misc}{}
+    \name{author}{1}{}{%
+      {{hash=WM}{%
+         family={Wenzel},
+         familyi={W\bibinitperiod},
+         given={Makarius},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{WM1}
+    \strng{fullhash}{WM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{sortinit}{W}
+    \field{sortinithash}{W}
+    \field{title}{The Isabelle/Isar Reference Manual}
+    \field{year}{2019}
+  \endentry
+\enddatalist
+\endinput

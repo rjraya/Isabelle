@@ -1,0 +1,2 @@
+IMP2 version stripped down for first lecture. No local variables, no program analysis or modifies, simple one-pass VCG.
+

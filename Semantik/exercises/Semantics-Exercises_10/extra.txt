@@ -1,0 +1,43 @@
+(*
+Consider if true ? SKIP, true ? IF[] FI fi and SKIP
+
+lemma "terminating (c,s) ? c ~?g c' ?
+       terminating (c', s) "
+
+lemma wp_equiv: "c ~?g c' ? wp c = wp c'" 
+  unfolding wp_def equiv_gc_def
+  oops
+*)
+
+
+(*
+fun first_com :: "com ? com" where
+"first_com (c1;;c2) = first_com c1" |
+"first_com c = c"
+
+lemma case_1: "¬ BB gcs s  ? ¬ terminating (IF gcs FI;; c, s)"
+  by (meson BB_def IfBlockE SeqE must_imp_may)
+thm Nat.measure_induct[of size terminating]
+
+lemma "terminating (c1;;c2,s) ? terminating (first_com (c1;;c2),s)"
+  apply(induction c1 arbitrary: c2 )
+  apply (simp add: skip_terminates)
+     apply (simp add: assign_terminates)
+  using terminating_assoc apply fastforce
+   apply simp
+   defer 1
+  apply simp
+  oops
+
+
+lemma "terminating (c1;;c2,s) ?  terminating (c1,s)"
+  apply(induction c1 arbitrary: c2 s)
+      apply (simp add: skip_terminates)
+     apply (simp add: assign_terminates)
+    
+  
+
+
+lemma wp_seq_eq: "wp (c1;;c2) Q s = wp c1 (wp c2 Q) s"
+  unfolding wp_def
+*) 
